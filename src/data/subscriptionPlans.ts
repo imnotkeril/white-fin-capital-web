@@ -1,0 +1,306 @@
+// Subscription plans data for White Fin Capital
+
+import { Subscription } from '@/types';
+
+export const subscriptionPlans: Subscription[] = [
+  {
+    id: 'essential',
+    name: 'Essential',
+    price: 39,
+    originalPrice: 49,
+    period: 'monthly',
+    description: 'Perfect for individual investors getting started with professional analysis',
+    features: [
+      'Weekly Market Analysis',
+      'Monthly Performance Reports',
+      'Basic Trade Alerts (5 per month)',
+      'Educational Content Library',
+      'Email Support',
+      'Mobile App Access',
+    ],
+    isPopular: false,
+  },
+  {
+    id: 'professional',
+    name: 'Professional',
+    price: 99,
+    originalPrice: 129,
+    period: 'monthly',
+    description: 'For active traders seeking comprehensive market insights and real-time alerts',
+    features: [
+      'Everything in Essential',
+      'Real-time Trade Alerts (Unlimited)',
+      'Daily Market Updates',
+      'Advanced Technical Analysis',
+      'Portfolio Analytics Dashboard',
+      'Live Monthly Webinars',
+      'Priority Email Support',
+      'Risk Management Tools',
+      'Sector Rotation Alerts',
+      'Commodity & Crypto Coverage',
+    ],
+    isPopular: true,
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    price: 299,
+    period: 'monthly',
+    description: 'For institutions and serious investors requiring premium research and support',
+    features: [
+      'Everything in Professional',
+      'Custom Research Reports',
+      'Direct Analyst Access',
+      'Institutional-Grade Analytics',
+      'API Access for Integration',
+      'Dedicated Account Manager',
+      'Custom Alert Configurations',
+      'White-label Solutions',
+      'Priority Phone Support',
+      'Quarterly Strategy Reviews',
+      'Custom Risk Parameters',
+      'Multi-user Team Access',
+    ],
+    isPopular: false,
+    isEnterprise: true,
+  },
+];
+
+// Annual pricing (with discount)
+export const annualSubscriptionPlans: Subscription[] = subscriptionPlans.map(plan => ({
+  ...plan,
+  period: 'annual' as const,
+  price: Math.round(plan.price * 12 * 0.75), // 25% discount
+  originalPrice: plan.originalPrice ? Math.round(plan.originalPrice * 12) : undefined,
+}));
+
+// Plan comparison features
+export const planComparisonFeatures = [
+  {
+    category: 'Research & Analysis',
+    features: [
+      {
+        name: 'Weekly Market Analysis',
+        essential: true,
+        professional: true,
+        enterprise: true,
+      },
+      {
+        name: 'Daily Market Updates',
+        essential: false,
+        professional: true,
+        enterprise: true,
+      },
+      {
+        name: 'Custom Research Reports',
+        essential: false,
+        professional: false,
+        enterprise: true,
+      },
+      {
+        name: 'Institutional Analytics',
+        essential: false,
+        professional: false,
+        enterprise: true,
+      },
+    ],
+  },
+  {
+    category: 'Trade Alerts',
+    features: [
+      {
+        name: 'Basic Trade Alerts',
+        essential: '5 per month',
+        professional: 'Unlimited',
+        enterprise: 'Unlimited',
+      },
+      {
+        name: 'Real-time Notifications',
+        essential: false,
+        professional: true,
+        enterprise: true,
+      },
+      {
+        name: 'Custom Alert Rules',
+        essential: false,
+        professional: false,
+        enterprise: true,
+      },
+      {
+        name: 'Multi-asset Coverage',
+        essential: 'Stocks only',
+        professional: 'All assets',
+        enterprise: 'All assets',
+      },
+    ],
+  },
+  {
+    category: 'Tools & Features',
+    features: [
+      {
+        name: 'Portfolio Analytics',
+        essential: false,
+        professional: true,
+        enterprise: true,
+      },
+      {
+        name: 'Risk Management Tools',
+        essential: false,
+        professional: true,
+        enterprise: true,
+      },
+      {
+        name: 'API Access',
+        essential: false,
+        professional: false,
+        enterprise: true,
+      },
+      {
+        name: 'Mobile App',
+        essential: true,
+        professional: true,
+        enterprise: true,
+      },
+    ],
+  },
+  {
+    category: 'Support & Education',
+    features: [
+      {
+        name: 'Email Support',
+        essential: 'Standard',
+        professional: 'Priority',
+        enterprise: '24/7 Dedicated',
+      },
+      {
+        name: 'Educational Content',
+        essential: true,
+        professional: true,
+        enterprise: true,
+      },
+      {
+        name: 'Live Webinars',
+        essential: false,
+        professional: 'Monthly',
+        enterprise: 'Weekly',
+      },
+      {
+        name: 'Direct Analyst Access',
+        essential: false,
+        professional: false,
+        enterprise: true,
+      },
+    ],
+  },
+];
+
+// Pricing FAQs
+export const pricingFAQs = [
+  {
+    question: 'Can I cancel my subscription anytime?',
+    answer: 'Yes, you can cancel your subscription at any time. There are no long-term contracts or cancellation fees. Your access will continue until the end of your current billing period.',
+  },
+  {
+    question: 'What payment methods do you accept?',
+    answer: 'We accept all major credit cards (Visa, MasterCard, American Express) and PayPal. For Enterprise plans, we also accept wire transfers and ACH payments.',
+  },
+  {
+    question: 'Do you offer a free trial?',
+    answer: 'Yes, all new subscribers get a 14-day free trial of the Professional plan. No credit card required to start your trial.',
+  },
+  {
+    question: 'Can I upgrade or downgrade my plan?',
+    answer: 'Absolutely. You can change your plan at any time from your account dashboard. Upgrades take effect immediately, while downgrades take effect at the next billing cycle.',
+  },
+  {
+    question: 'Is there a money-back guarantee?',
+    answer: 'Yes, we offer a 30-day money-back guarantee for all plans. If you\'re not satisfied with our service, contact us within 30 days for a full refund.',
+  },
+  {
+    question: 'Do you offer discounts for annual subscriptions?',
+    answer: 'Yes, annual subscriptions receive a 25% discount compared to monthly billing. This is automatically applied when you select annual billing.',
+  },
+];
+
+// Special offers
+export const specialOffers = [
+  {
+    id: 'new-user',
+    title: 'New User Special',
+    description: 'Get 50% off your first month',
+    code: 'WELCOME50',
+    discount: 50,
+    type: 'percentage',
+    validUntil: '2025-12-31',
+    applicablePlans: ['essential', 'professional'],
+  },
+  {
+    id: 'annual-discount',
+    title: 'Annual Savings',
+    description: 'Save 25% with annual billing',
+    discount: 25,
+    type: 'percentage',
+    permanent: true,
+    applicablePlans: ['essential', 'professional', 'enterprise'],
+  },
+];
+
+// Enterprise features (for custom pricing)
+export const enterpriseFeatures = [
+  'Custom research on specific securities or sectors',
+  'White-label platform for financial advisors',
+  'Dedicated relationship manager',
+  'Custom integrations and API access',
+  'On-site training and education',
+  'Custom risk management parameters',
+  'Multi-user accounts with role-based access',
+  'Priority customer support (phone, email, chat)',
+  'Quarterly business reviews and strategy sessions',
+  'Custom reporting and analytics',
+];
+
+// Usage limits by plan
+export const usageLimits = {
+  essential: {
+    tradeAlerts: 5,
+    customWatchlists: 3,
+    portfolios: 1,
+    reportHistory: '3 months',
+    apiCalls: 0,
+  },
+  professional: {
+    tradeAlerts: -1, // unlimited
+    customWatchlists: 10,
+    portfolios: 5,
+    reportHistory: '12 months',
+    apiCalls: 1000,
+  },
+  enterprise: {
+    tradeAlerts: -1, // unlimited
+    customWatchlists: -1, // unlimited
+    portfolios: -1, // unlimited
+    reportHistory: 'unlimited',
+    apiCalls: 10000,
+  },
+};
+
+// Success stories by plan
+export const planSuccessStories = {
+  essential: {
+    customerName: 'Michael T.',
+    result: '+18.3% return in 6 months',
+    quote: 'The weekly analysis helped me identify trends I was missing on my own.',
+  },
+  professional: {
+    customerName: 'Sarah L.',
+    result: '+31.7% return in 12 months',
+    quote: 'Real-time alerts and portfolio analytics completely transformed my trading results.',
+  },
+  enterprise: {
+    customerName: 'hedge fund ABC Capital',
+    result: '+47.2% return with 12% lower volatility',
+    quote: 'Custom research and direct analyst access gave us the edge we needed.',
+  },
+};
+
+export default subscriptionPlans;
