@@ -39,9 +39,9 @@ module.exports = {
           950: '#042f2e',
         },
         accent: {
-          red: '#dc2626', // For Subscribe buttons like reference
-          green: '#059669',
-          yellow: '#d97706',
+          coral: '#0891b2', // Professional coral-blue
+          emerald: '#059669', // Keep emerald for success states
+          amber: '#0369a1', // Ocean amber instead of yellow
         },
         background: {
           DEFAULT: 'var(--color-background)',

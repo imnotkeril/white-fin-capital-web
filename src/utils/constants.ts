@@ -51,11 +51,11 @@ export const THEME = {
   storageKey: 'white-fin-theme',
   colors: {
     primary: '#90bff9',
-    primaryDark: '#05192c',
-    accent: '#dc2626',
+    secondary: '#7dd3fc',
     success: '#059669',
-    warning: '#d97706',
-    error: '#dc2626',
+    error: '#0369a1', // Ocean blue instead of red
+    warning: '#0891b2', // Ocean teal instead of yellow
+    neutral: '#64748b',
   },
 } as const;
 
