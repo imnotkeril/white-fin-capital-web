@@ -95,7 +95,7 @@ const SubscriptionSection: React.FC = () => {
             const IconComponent = planIcons[plan.id as keyof typeof planIcons] || Shield;
             const isPopular = plan.isPopular;
             const isEnterprise = plan.isEnterprise;
-            
+
             return (
               <Card
                 key={plan.id}
@@ -119,11 +119,11 @@ const SubscriptionSection: React.FC = () => {
                     <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                       <IconComponent className="w-8 h-8 text-primary-500" />
                     </div>
-                    
+
                     <h3 className="text-2xl font-bold text-text-primary mb-2">
                       {plan.name}
                     </h3>
-                    
+
                     <p className="text-text-secondary text-sm mb-6">
                       {plan.description}
                     </p>
@@ -138,7 +138,7 @@ const SubscriptionSection: React.FC = () => {
                           /{plan.period === 'monthly' ? 'mo' : 'year'}
                         </span>
                       </div>
-                      
+
                       {plan.originalPrice && (
                         <div className="flex items-center justify-center gap-2 mt-2">
                           <span className="text-text-tertiary line-through">
@@ -291,7 +291,7 @@ const SubscriptionSection: React.FC = () => {
             <h3 className="font-semibold text-text-primary mb-2">Money-Back Guarantee</h3>
             <p className="text-text-secondary text-sm">30-day full refund if not satisfied</p>
           </div>
-          
+
           <div className="text-center">
             <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <Zap className="w-8 h-8 text-blue-600 dark:text-blue-400" />
@@ -299,7 +299,7 @@ const SubscriptionSection: React.FC = () => {
             <h3 className="font-semibold text-text-primary mb-2">Instant Access</h3>
             <p className="text-text-secondary text-sm">Get started immediately after signup</p>
           </div>
-          
+
           <div className="text-center">
             <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <Crown className="w-8 h-8 text-purple-600 dark:text-purple-400" />
@@ -314,7 +314,7 @@ const SubscriptionSection: React.FC = () => {
           <h3 className="text-3xl font-bold text-text-primary text-center mb-12">
             Frequently Asked Questions
           </h3>
-          
+
           <div className="space-y-4">
             {pricingFAQs.map((faq, index) => (
               <Card key={index} className="overflow-hidden">
@@ -332,7 +332,7 @@ const SubscriptionSection: React.FC = () => {
                     <ChevronDown className="w-5 h-5 text-text-secondary" />
                   )}
                 </button>
-                
+
                 {expandedFAQ === index && (
                   <div className="px-6 pb-6">
                     <p className="text-text-secondary leading-relaxed pl-8">
