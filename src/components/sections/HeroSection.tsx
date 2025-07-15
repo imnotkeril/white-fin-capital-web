@@ -48,7 +48,7 @@ const HeroSection: React.FC = () => {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden hero-background"
+      className="relative min-h-screen pt-20 flex items-center justify-center overflow-hidden hero-background"
     >
       {/* Ocean Background Effects */}
       <div className="absolute inset-0">
@@ -190,44 +190,6 @@ const HeroSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Trust Indicators */}
-        <div className="glass rounded-2xl p-8 mb-12">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-status-positive to-pastel-mint rounded-2xl flex items-center justify-center">
-                <Shield className="w-8 h-8 text-white" />
-              </div>
-              <div className="text-left">
-                <h3 className="text-text-primary font-semibold text-lg">SEC Registered</h3>
-                <p className="text-text-secondary text-sm">Fully regulated investment advisor</p>
-              </div>
-            </div>
-
-            <div className="w-px h-12 bg-border hidden md:block" />
-
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-900 rounded-2xl flex items-center justify-center">
-                <TrendingUp className="w-8 h-8 text-white" />
-              </div>
-              <div className="text-left">
-                <h3 className="text-text-primary font-semibold text-lg">10+ Years</h3>
-                <p className="text-text-secondary text-sm">Market experience & expertise</p>
-              </div>
-            </div>
-
-            <div className="w-px h-12 bg-border hidden md:block" />
-
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-pastel-purple to-pastel-coral rounded-2xl flex items-center justify-center">
-                <BarChart3 className="w-8 h-8 text-white" />
-              </div>
-              <div className="text-left">
-                <h3 className="text-text-primary font-semibold text-lg">$100M+</h3>
-                <p className="text-text-secondary text-sm">Assets under analysis</p>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Newsletter Signup */}
         <div className="max-w-md mx-auto mb-16">

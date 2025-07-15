@@ -66,7 +66,6 @@ const App: React.FC = () => {
           {/* Toast Notifications Container */}
           <div id="toast-container" className="fixed top-4 right-4 z-50 space-y-2" />
 
-          {/* УДАЛЕНО: Нижняя декоративная линия - теперь она будет частью футера */}
         </div>
       </AppProvider>
     </ThemeProvider>
