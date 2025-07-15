@@ -51,7 +51,7 @@ const ServicesSection: React.FC = () => {
           </h2>
           <p className="text-xl text-text-secondary max-w-3xl mx-auto leading-relaxed">
             Comprehensive financial research and analysis tools designed to give you
-            the edge in today's complex markets.
+            the edge in today&apos;s complex markets.
           </p>
         </div>
 

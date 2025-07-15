@@ -88,7 +88,7 @@ const ContactSection: React.FC = () => {
             Get In Touch
           </h2>
           <p className="text-xl text-text-secondary max-w-3xl mx-auto leading-relaxed">
-            Ready to elevate your investment strategy? We're here to help.
+            Ready to elevate your investment strategy? We&apos;re here to help.
             Reach out for consultations, questions, or partnership opportunities.
           </p>
         </div>

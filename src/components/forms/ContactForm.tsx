@@ -54,7 +54,7 @@ const ContactForm: React.FC = () => {
         setIsSubmitted(true);
         notifySuccess(
           'Message Sent!',
-          'Thank you for contacting us. We\'ll get back to you within 24 hours.'
+          'Thank you for contacting us. We&apos;ll get back to you within 24 hours.'
         );
       } catch (error: any) {
         notifyError(
