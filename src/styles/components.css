@@ -20,6 +20,10 @@
   box-shadow: 0 0 20px rgba(144, 191, 249, 0.4);
 }
 
+.dark .btn-primary:hover {
+  box-shadow: 0 0 25px rgba(144, 191, 249, 0.5);
+}
+
 .btn-secondary {
   @apply bg-transparent text-primary-900 border-2 border-primary-900;
   @apply hover:bg-primary-900 hover:text-white;
@@ -28,6 +32,16 @@
 
 .btn-secondary:hover {
   transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(144, 191, 249, 0.3);
+}
+
+.dark .btn-secondary {
+  @apply text-primary-500 border-primary-500;
+}
+
+.dark .btn-secondary:hover {
+  @apply bg-primary-500 text-primary-900;
+  box-shadow: 0 0 20px rgba(144, 191, 249, 0.4);
 }
 
 .btn-glass {
@@ -38,6 +52,12 @@
 
 .btn-glass:hover {
   transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(144, 191, 249, 0.3);
+  border-color: rgba(144, 191, 249, 0.4);
+}
+
+.dark .btn-glass:hover {
+  box-shadow: 0 0 20px rgba(144, 191, 249, 0.4);
 }
 
 .btn-sm {
@@ -77,110 +97,119 @@
   height: 200px;
 }
 
-/* === ЛАЗЕРНЫЕ ЛИНИИ === */
-.laser-border {
+/* === НЕОНОВЫЕ PREMIUM КАРТОЧКИ === */
+.premium-card {
+  @apply card-ocean p-8;
   position: relative;
-  background: #1e293b;
+  background: var(--color-navy-800);
   color: white;
-  border-radius: 16px;
-  padding: 32px;
-  margin: 20px 0;
-  overflow: hidden;
-  cursor: pointer;
+  border: 1px solid rgba(144, 191, 249, 0.3);
   transition: all 0.3s ease;
 }
 
-/* Верхняя линия */
-.laser-border::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(144, 191, 249, 0.8), transparent);
-  transition: left 0.6s ease;
+.premium-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0 30px rgba(144, 191, 249, 0.4);
+  border-color: rgba(144, 191, 249, 0.6);
 }
 
-/* Правая линия */
-.laser-border::after {
-  content: '';
-  position: absolute;
-  top: -100%;
-  right: 0;
-  width: 2px;
-  height: 100%;
-  background: linear-gradient(180deg, transparent, rgba(144, 191, 249, 0.8), transparent);
-  transition: top 0.6s ease 0.2s;
+.dark .premium-card:hover {
+  box-shadow: 0 0 35px rgba(144, 191, 249, 0.5);
 }
 
-/* Нижняя линия */
-.laser-border .bottom-line {
-  position: absolute;
-  bottom: 0;
-  right: -100%;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(270deg, transparent, rgba(144, 191, 249, 0.8), transparent);
-  transition: right 0.6s ease 0.4s;
+/* === ALERT КОМПОНЕНТЫ === */
+.alert {
+  @apply rounded-lg p-4 border-l-4;
 }
 
-/* Левая линия */
-.laser-border .left-line {
-  position: absolute;
-  bottom: -100%;
-  left: 0;
-  width: 2px;
-  height: 100%;
-  background: linear-gradient(0deg, transparent, rgba(144, 191, 249, 0.8), transparent);
-  transition: bottom 0.6s ease 0.6s;
+.alert-success {
+  @apply bg-green-50 border-l-green-400 text-green-800;
 }
 
-/* При hover - линии проходят по периметру */
-.laser-border:hover::before {
-  left: 0;
+.alert-error {
+  @apply bg-red-50 border-l-red-400 text-red-800;
 }
 
-.laser-border:hover::after {
-  top: 0;
+.alert-warning {
+  @apply bg-yellow-50 border-l-yellow-400 text-yellow-800;
 }
 
-.laser-border:hover .bottom-line {
-  right: 0;
+.alert-info {
+  @apply bg-blue-50 border-l-blue-400 text-blue-800;
 }
 
-.laser-border:hover .left-line {
-  bottom: 0;
+.dark .alert-success {
+  @apply bg-green-900/20 text-green-300;
 }
 
-.laser-border:hover {
-  box-shadow: 0 0 30px rgba(144, 191, 249, 0.3);
-  transform: translateY(-2px);
+.dark .alert-error {
+  @apply bg-red-900/20 text-red-300;
 }
 
-/* === КАРТОЧКИ === */
-.card {
-  @apply rounded-2xl overflow-hidden transition-all duration-300;
-  @apply bg-background border border-border;
+.dark .alert-warning {
+  @apply bg-yellow-900/20 text-yellow-300;
 }
 
-.card-glass {
-  @apply glass border-transparent;
+.dark .alert-info {
+  @apply bg-blue-900/20 text-blue-300;
 }
 
-.card-ocean {
-  @apply card-ocean;
+/* === MODAL КОМПОНЕНТЫ === */
+.modal-backdrop {
+  @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-50;
 }
 
-.card-hover {
-  @apply hover-lift cursor-pointer;
+.modal-content {
+  @apply bg-background border border-border rounded-xl shadow-xl;
+  @apply max-w-md w-full mx-4 p-6;
 }
 
-.card-interactive {
-  @apply interactive-card;
+/* === BADGE КОМПОНЕНТЫ === */
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
 }
 
-/* === ФОРМЫ === */
+.badge-primary {
+  @apply bg-primary-100 text-primary-800;
+}
+
+.badge-secondary {
+  @apply bg-gray-100 text-gray-800;
+}
+
+.badge-success {
+  @apply bg-green-100 text-green-800;
+}
+
+.badge-error {
+  @apply bg-red-100 text-red-800;
+}
+
+.badge-warning {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.dark .badge-primary {
+  @apply bg-primary-900/30 text-primary-400;
+}
+
+.dark .badge-secondary {
+  @apply bg-gray-800/30 text-gray-400;
+}
+
+.dark .badge-success {
+  @apply bg-green-900/30 text-green-400;
+}
+
+.dark .badge-error {
+  @apply bg-red-900/30 text-red-400;
+}
+
+.dark .badge-warning {
+  @apply bg-yellow-900/30 text-yellow-400;
+}
+
+/* === ФОРМ КОМПОНЕНТЫ === */
 .form-group {
   @apply space-y-2;
 }
@@ -190,22 +219,29 @@
 }
 
 .form-input {
-  @apply w-full px-4 py-3 border-2 border-border rounded-lg;
-  @apply bg-background text-text-primary placeholder-text-tertiary;
-  @apply focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20;
-  @apply transition-all duration-200;
-}
-
-.form-input:focus {
-  @apply outline-none;
+  @apply w-full px-3 py-2 border border-border rounded-md;
+  @apply bg-background text-text-primary;
+  @apply focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+  @apply transition-colors duration-200;
 }
 
 .form-textarea {
-  @apply form-input resize-y min-h-[100px];
+  @apply form-input resize-vertical min-h-[100px];
 }
 
 .form-select {
-  @apply form-input appearance-none bg-no-repeat bg-right pr-10;
+  @apply form-input;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.dark .form-select {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
 }
 
@@ -302,7 +338,7 @@
 
 /* === СТАТИСТИЧЕСКИЕ КАРТОЧКИ === */
 .stat-card {
-  @apply metric-card;
+  @apply metric-card neon-glow;
 }
 
 .stat-value {
@@ -348,7 +384,7 @@
 
 /* === TEAM КАРТОЧКИ === */
 .team-card {
-  @apply card-ocean text-center p-6;
+  @apply card-ocean text-center p-6 neon-glow;
 }
 
 .team-avatar {
@@ -379,8 +415,7 @@
 
 /* === PRICING КАРТОЧКИ === */
 .pricing-card {
-  @apply card-ocean p-8 text-center;
-  @apply hover-lift;
+  @apply card-ocean p-8 text-center neon-glow;
 }
 
 .pricing-popular {
