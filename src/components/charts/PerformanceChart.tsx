@@ -36,6 +36,8 @@ interface PerformanceChartProps {
   showBenchmark?: boolean;
 }
 
+type CombinedChartDataPoint = ChartDataPoint & { portfolio: number; 'S&P 500'?: number };
+
 const PerformanceChart: React.FC<PerformanceChartProps> = ({
   data,
   className = '',
