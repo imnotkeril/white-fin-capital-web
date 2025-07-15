@@ -316,26 +316,6 @@ const SubscriptionSection: React.FC = () => {
             ))}
           </div>
         </div>
-
-        {/* Call to Action */}
-        <div className="text-center">
-          <div className="bg-gradient-to-r from-primary-500/10 to-ocean-500/10 rounded-2xl p-8 border border-primary-500/20">
-            <h3 className="text-2xl font-bold text-text-primary mb-4">
-              Ready to Get Started?
-            </h3>
-            <p className="text-text-secondary mb-6 max-w-2xl mx-auto">
-              Join thousands of successful investors who trust White Fin Capital for their financial decisions.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="primary" size="lg">
-                Start Free Trial
-              </Button>
-              <Button variant="outline" size="lg">
-                Schedule Demo
-              </Button>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );

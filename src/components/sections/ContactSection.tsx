@@ -177,33 +177,6 @@ const ContactSection: React.FC = () => {
             </Card>
           </div>
         </div>
-
-        {/* FAQ or Additional Info Section */}
-        <Card ocean padding="lg" className="text-center">
-          <h3 className="text-2xl font-bold text-text-primary mb-6">
-            Ready to Start Your Investment Journey?
-          </h3>
-          <p className="text-text-secondary mb-8 max-w-2xl mx-auto">
-            Join thousands of investors who trust White Fin Capital for professional market
-            analysis and investment guidance. Let's discuss how we can help achieve your financial goals.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => document.querySelector('#pricing')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              View Pricing Plans
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => document.querySelector('.contact-form')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              Schedule Consultation
-            </Button>
-          </div>
-        </Card>
       </div>
     </section>
   );

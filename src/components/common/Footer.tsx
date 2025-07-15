@@ -28,6 +28,7 @@ const Footer: React.FC = () => {
   const { theme } = useTheme();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const { actualTheme } = useTheme();
 
   const { values, errors, handleChange, handleSubmit, isValid, resetForm } = useForm<NewsletterFormData>({
     initialValues: { email: '' },
@@ -124,9 +125,9 @@ const Footer: React.FC = () => {
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-12 h-12 rounded-xl overflow-hidden">
                   <img
-                    src="/logo.png"
+                    src={actualTheme === 'dark' ? "/logo-dark.png" : "/logo.png"}
                     alt={`${COMPANY.name} Logo`}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain transition-opacity duration-300"
                   />
                 </div>
                 <div>
