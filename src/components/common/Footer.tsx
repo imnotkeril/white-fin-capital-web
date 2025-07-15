@@ -30,7 +30,7 @@ const Footer: React.FC = () => {
   const [subscriptionStatus, setSubscriptionStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const { actualTheme } = useTheme();
 
-  const { values, errors, handleChange, handleSubmit, isValid, resetForm } = useForm<NewsletterFormData>({
+  const { values, errors, handleChange, handleSubmit, isValid, reset } = useForm<NewsletterFormData>({
     initialValues: { email: '' },
     validationRules: {
       email: {
@@ -45,7 +45,7 @@ const Footer: React.FC = () => {
         console.log('Newsletter subscription:', data);
         await new Promise(resolve => setTimeout(resolve, 1000));
         setSubscriptionStatus('success');
-        resetForm();
+        reset();
         setTimeout(() => setSubscriptionStatus('idle'), 3000);
       } catch (error) {
         console.error('Subscription error:', error);
