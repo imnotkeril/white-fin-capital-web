@@ -6,7 +6,7 @@ export default function Document() {
     <Html>
       <Head>
         {/* Простой фавикон */}
-        <link rel="icon" href="/logo-dark2.png" />
+        <link rel="icon" href="/favicon.png" />
 
         {/* Метатеги для SEO */}
         <meta name="description" content="White Fin Capital - Professional financial research and market analysis" />
