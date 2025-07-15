@@ -231,8 +231,8 @@ export const TeamCard: React.FC<ExtendedCardProps & {
     hover
     neonGlow
     className={cn("text-center", className)}
-    image={avatar}
-    imageAlt={name}
+    image={avatar!}
+    imageAlt={name!}
     {...props}
   >
     <div className="space-y-4">
