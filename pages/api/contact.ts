@@ -134,7 +134,7 @@ async function saveToDatabase(contactData: ContactRequest): Promise<ContactRespo
 
   return {
     id: contactRecord.id,
-    status: 'sent',
+    status: 'received',
     timestamp: contactRecord.createdAt,
   };
 }
