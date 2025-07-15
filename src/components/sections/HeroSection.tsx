@@ -238,20 +238,6 @@ const HeroSection: React.FC = () => {
             )}
           </form>
         </div>
-
-        {/* Scroll Down Indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-          <button
-            onClick={handleScrollDown}
-            className="flex flex-col items-center text-text-secondary hover:text-text-primary transition-colors group focus-ring rounded-lg p-2"
-            aria-label="Scroll down"
-          >
-            <span className="text-sm mb-2 group-hover:translate-y-1 transition-transform">
-              Scroll down
-            </span>
-            <ArrowDown className="w-5 h-5 animate-bounce" />
-          </button>
-        </div>
       </div>
 
       {/* Background decorative elements */}

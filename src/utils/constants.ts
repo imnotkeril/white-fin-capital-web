@@ -22,7 +22,7 @@ export const NAVIGATION_ITEMS = [
   { id: 'performance', label: 'Performance', href: '#performance', section: 'performance' },
   { id: 'services', label: 'Services', href: '#services', section: 'services' },
   { id: 'team', label: 'Team', href: '#team', section: 'team' },
-  { id: 'pricing', label: 'Pricing', href: '#pricing', section: 'subscription' },
+  { id: 'pricing', label: 'Pricing', href: '#pricing', section: 'pricing' },
   { id: 'contact', label: 'Contact', href: '#contact', section: 'contact' },
 ] as const;
 

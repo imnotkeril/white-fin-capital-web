@@ -125,8 +125,12 @@ const Footer: React.FC = () => {
             {/* Logo & Company Info */}
             <div>
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-pastel-mint rounded-xl flex items-center justify-center">
-                  <span className="text-white font-bold text-xl">🌊</span>
+                <div className="w-12 h-12 rounded-xl overflow-hidden">
+                  <img
+                    src="/logo.png"
+                    alt={`${COMPANY.name} Logo`}
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <div>
                   <h3 className="font-bold text-xl text-text-primary">
@@ -143,71 +147,82 @@ const Footer: React.FC = () => {
                 data-driven insights from our expert team.
               </p>
 
-              {/* Contact Info */}
-              <div className="space-y-3">
+              {/* Contact Info - УБРАНЫ ПОВТОРЕНИЯ */}
+              <div className="space-y-4">
                 <div className="flex items-center text-text-secondary">
                   <Mail className="w-5 h-5 mr-3 text-primary-500" />
-                  <span className="text-sm">contact@whitefincapital.com</span>
+                  <a
+                    href={`mailto:${COMPANY.email}`}
+                    className="hover:text-text-primary transition-colors"
+                  >
+                    {COMPANY.email}
+                  </a>
                 </div>
+
                 <div className="flex items-center text-text-secondary">
                   <Phone className="w-5 h-5 mr-3 text-primary-500" />
-                  <span className="text-sm">+1 (555) 123-4567</span>
+                  <a
+                    href={`tel:${COMPANY.phone}`}
+                    className="hover:text-text-primary transition-colors"
+                  >
+                    {COMPANY.phone}
+                  </a>
                 </div>
-                <div className="flex items-center text-text-secondary">
-                  <MapPin className="w-5 h-5 mr-3 text-primary-500" />
-                  <span className="text-sm">New York, NY</span>
+
+                <div className="flex items-start text-text-secondary">
+                  <MapPin className="w-5 h-5 mr-3 mt-0.5 text-primary-500 flex-shrink-0" />
+                  <span>
+                    {COMPANY.address.street}<br />
+                    {COMPANY.address.city}, {COMPANY.address.state} {COMPANY.address.zip}
+                  </span>
                 </div>
               </div>
             </div>
 
             {/* Newsletter Subscription */}
             <div className="glass rounded-xl p-6">
-              <h4 className="font-semibold text-text-primary mb-3 flex items-center">
-                <Send className="w-5 h-5 mr-2 text-primary-500" />
-                Stay Updated
-              </h4>
-              <p className="text-text-secondary text-sm mb-4">
-                Get the latest market insights and research reports.
-              </p>
+              <div className="flex items-center gap-3 mb-4">
+                <Send className="w-5 h-5 text-primary-500" />
+                <h3 className="font-semibold text-text-primary">Stay Updated</h3>
+              </div>
 
               {subscriptionStatus === 'success' ? (
-                <div className="status-positive text-center py-3">
+                <div className="text-accent-green font-medium">
                   ✓ Successfully subscribed!
                 </div>
               ) : subscriptionStatus === 'error' ? (
-                <div className="status-negative text-center py-3">
-                  ✗ Something went wrong. Please try again.
+                <div className="text-accent-red font-medium">
+                  ✗ Subscription failed. Please try again.
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-3">
-                  <div>
+                <>
+                  <p className="text-text-secondary text-sm mb-4">
+                    Get the latest market insights and research reports.
+                  </p>
+
+                  <form onSubmit={handleSubmit} className="flex gap-3">
                     <input
                       type="email"
                       name="email"
                       value={values.email}
                       onChange={handleChange}
                       placeholder="Enter your email"
-                      className={`form-input ${
-                        errors.email ? 'border-status-negative focus:border-status-negative focus:ring-status-negative/20' : ''
-                      }`}
+                      className="flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-background text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
                     />
-                    {errors.email && (
-                      <p className="form-error">{errors.email}</p>
-                    )}
-                  </div>
-
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="sm"
-                    fullWidth
-                    loading={isSubmitting}
-                    disabled={!isValid || isSubmitting}
-                    icon={<Send className="w-4 h-4" />}
-                  >
-                    Subscribe
-                  </Button>
-                </form>
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      size="sm"
+                      loading={isSubmitting}
+                      disabled={!isValid || isSubmitting}
+                    >
+                      Subscribe
+                    </Button>
+                  </form>
+                  {errors.email && (
+                    <p className="text-accent-red text-xs mt-2">{errors.email}</p>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -215,12 +230,12 @@ const Footer: React.FC = () => {
           {/* Footer Links */}
           <div className="lg:col-span-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {footerSections.map((section, index) => (
-                <div key={index}>
-                  <h3 className="font-semibold text-text-primary mb-6">
+              {footerSections.map((section, sectionIndex) => (
+                <div key={sectionIndex}>
+                  <h4 className="font-semibold text-text-primary mb-4">
                     {section.title}
-                  </h3>
-                  <ul className="space-y-4">
+                  </h4>
+                  <ul className="space-y-3">
                     {section.links.map((link, linkIndex) => (
                       <li key={linkIndex}>
                         <button
@@ -240,9 +255,9 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Social Links */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-border">
-          <div className="flex space-x-6">
+        {/* Social Links & Scroll to Top */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-8 pt-8 border-t border-border">
+          <div className="flex space-x-4">
             {Object.entries(SOCIAL_LINKS).map(([platform, url]) => {
               const Icon = socialIcons[platform as keyof typeof socialIcons];
               if (!Icon) return null;
@@ -253,7 +268,7 @@ const Footer: React.FC = () => {
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-3 rounded-lg glass hover:bg-white/10 text-text-secondary hover:text-primary-500 transition-all duration-200 hover:-translate-y-1"
+                  className="p-3 rounded-lg glass hover:bg-white/10 dark:hover:bg-white/5 text-text-secondary hover:text-primary-500 transition-all duration-200 hover:-translate-y-1"
                   aria-label={`Follow us on ${platform}`}
                 >
                   <Icon className="w-5 h-5" />
@@ -265,7 +280,7 @@ const Footer: React.FC = () => {
           {/* Scroll to Top */}
           <button
             onClick={scrollToTop}
-            className="p-3 rounded-lg glass hover:bg-white/10 text-text-secondary hover:text-primary-500 transition-all duration-200 hover:-translate-y-1 group"
+            className="p-3 rounded-lg glass hover:bg-white/10 dark:hover:bg-white/5 text-text-secondary hover:text-primary-500 transition-all duration-200 hover:-translate-y-1 group"
             aria-label="Scroll to top"
           >
             <ArrowUp className="w-5 h-5 group-hover:scale-110 transition-transform" />
@@ -275,15 +290,15 @@ const Footer: React.FC = () => {
 
       {/* Bottom Footer */}
       <div className="border-t border-border">
-        <div className="container py-8">
+        <div className="container py-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             {/* Copyright */}
             <div className="text-text-secondary text-sm">
               © {new Date().getFullYear()} {COMPANY.name}. All rights reserved.
             </div>
 
-            {/* Legal Links */}
-            <div className="flex flex-wrap items-center gap-6">
+            {/* Legal Links with proper spacing */}
+            <div className="flex flex-wrap items-center gap-8">
               <div className="flex items-center text-text-secondary text-sm">
                 <Shield className="w-4 h-4 mr-2" />
                 <span>GDPR Compliant</span>

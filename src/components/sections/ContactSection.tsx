@@ -31,7 +31,7 @@ const ContactSection: React.FC = () => {
       description: 'Speak with our team',
       value: COMPANY.phone,
       action: `tel:${COMPANY.phone}`,
-      color: 'bg-status-positive/10 text-status-positive',
+      color: 'bg-primary-500/20 text-primary-500',
     },
     {
       icon: MapPin,
@@ -39,14 +39,14 @@ const ContactSection: React.FC = () => {
       description: 'Our office location',
       value: `${COMPANY.address.street}, ${COMPANY.address.city}`,
       action: `https://maps.google.com/?q=${encodeURIComponent(COMPANY.address.street + ', ' + COMPANY.address.city)}`,
-      color: 'bg-pastel-purple/10 text-pastel-purple',
+      color: 'bg-dark-blue/10 text-dark-blue dark:bg-light-blue/20 dark:text-light-blue',
     },
     {
       icon: Clock,
       title: 'Business Hours',
       description: 'Monday - Friday',
       value: '9:00 AM - 6:00 PM EST',
-      color: 'bg-pastel-coral/10 text-pastel-coral',
+      color: 'bg-light-blue/20 text-dark-blue dark:bg-primary-500/20 dark:text-white',
     },
   ];
 
@@ -93,68 +93,56 @@ const ContactSection: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
           {/* Contact Form */}
-          <div>
-            <Card ocean padding="lg">
-              <div className="mb-8">
-                <h3 className="text-2xl font-bold text-text-primary mb-4 flex items-center gap-3">
-                  <MessageCircle className="w-6 h-6 text-primary-500" />
-                  Send Us a Message
-                </h3>
-                <p className="text-text-secondary">
-                  Fill out the form below and we'll get back to you within 24 hours.
-                </p>
-              </div>
-
-              <ContactForm />
-            </Card>
-          </div>
+          <Card ocean padding="lg" className="h-fit">
+            <h3 className="text-2xl font-bold text-text-primary mb-6 flex items-center gap-3">
+              <Send className="w-6 h-6 text-primary-500" />
+              Send us a Message
+            </h3>
+            <ContactForm />
+          </Card>
 
           {/* Contact Information */}
           <div className="space-y-8">
             {/* Contact Methods */}
-            <div>
-              <h3 className="text-2xl font-bold text-text-primary mb-6">
+            <Card ocean padding="lg">
+              <h3 className="text-xl font-bold text-text-primary mb-6 flex items-center gap-3">
+                <MessageCircle className="w-6 h-6 text-primary-500" />
                 Contact Information
               </h3>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {contactMethods.map((method, index) => {
                   const IconComponent = method.icon;
                   return (
-                    <Card
+                    <div
                       key={index}
-                      ocean
-                      interactive={!!method.action}
-                      className={cn(
-                        'p-6',
-                        method.action ? 'cursor-pointer' : ''
-                      )}
                       onClick={() => handleContactMethodClick(method.action)}
+                      className={cn(
+                        'p-4 rounded-lg transition-all duration-200 group',
+                        method.action ? 'cursor-pointer hover:scale-105' : '',
+                        'glass hover:bg-white/5'
+                      )}
                     >
-                      <div className="flex items-start gap-4">
-                        <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', method.color)}>
-                          <IconComponent className="w-6 h-6" />
-                        </div>
-
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-text-primary mb-1">
-                            {method.title}
-                          </h4>
-                          <p className="text-text-secondary text-sm mb-2">
-                            {method.description}
-                          </p>
-                          <p className="text-text-primary font-medium text-sm">
-                            {method.value}
-                          </p>
-                        </div>
+                      <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center mb-3', method.color)}>
+                        <IconComponent className="w-5 h-5" />
                       </div>
-                    </Card>
+                      <h4 className="font-semibold text-text-primary mb-1">
+                        {method.title}
+                      </h4>
+                      <p className="text-text-secondary text-sm mb-2">
+                        {method.description}
+                      </p>
+                      <p className="text-text-primary font-medium text-sm">
+                        {method.value}
+                      </p>
+                    </div>
                   );
                 })}
               </div>
-            </div>
+            </Card>
 
             {/* Office Locations */}
             <Card ocean padding="lg">
@@ -164,7 +152,7 @@ const ContactSection: React.FC = () => {
               </h3>
 
               <div className="space-y-6">
-                {/* Headquarters */}
+                {/* New York Office */}
                 <div>
                   <h4 className="font-semibold text-text-primary mb-2">
                     Headquarters - New York
@@ -222,38 +210,38 @@ const ContactSection: React.FC = () => {
               </div>
             </Card>
 
-            {/* Quick Contact CTA - ИСПРАВЛЕН ГРАДИЕНТ */}
+            {/* Quick Contact CTA */}
             <Card className="p-8 glass border-primary-500/20">
               <div className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-900 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                   <Send className="w-8 h-8 text-white" />
                 </div>
 
                 <h3 className="text-xl font-bold text-text-primary mb-4">
                   Need Immediate Assistance?
                 </h3>
-                <p className="text-text-secondary mb-6 leading-relaxed">
-                  Our team is available for urgent inquiries and consultation requests.
-                  Don't hesitate to reach out.
+                <p className="text-text-secondary mb-6">
+                  Our team is available to help with urgent inquiries and consultations.
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Button
                     variant="primary"
                     size="md"
-                    onClick={() => window.open(`mailto:${COMPANY.email}`, '_blank')}
-                    icon={<Mail className="w-4 h-4" />}
-                  >
-                    Email Now
-                  </Button>
-
-                  <Button
-                    variant="secondary"
-                    size="md"
-                    onClick={() => window.open(`tel:${COMPANY.phone}`, '_blank')}
+                    fullWidth
+                    onClick={() => window.open(`tel:${COMPANY.phone}`, '_self')}
                     icon={<Phone className="w-4 h-4" />}
                   >
                     Call Now
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="md"
+                    fullWidth
+                    onClick={() => window.open(`mailto:${COMPANY.email}`, '_blank')}
+                    icon={<Mail className="w-4 h-4" />}
+                  >
+                    Email Us
                   </Button>
                 </div>
               </div>
@@ -261,36 +249,32 @@ const ContactSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Bottom CTA Section */}
-        <div className="mt-16 text-center">
-          <Card ocean padding="lg">
-            <h3 className="text-3xl font-bold text-text-primary mb-4">
-              Ready to Get Started?
-            </h3>
-            <p className="text-lg text-text-secondary mb-8 max-w-2xl mx-auto">
-              Join thousands of investors who trust White Fin Capital for professional
-              market analysis and investment guidance.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={() => window.location.href = '#pricing'}
-              >
-                View Pricing Plans
-              </Button>
-
-              <Button
-                variant="secondary"
-                size="lg"
-                onClick={() => window.location.href = '#performance'}
-              >
-                See Our Track Record
-              </Button>
-            </div>
-          </Card>
-        </div>
+        {/* FAQ or Additional Info Section */}
+        <Card ocean padding="lg" className="text-center">
+          <h3 className="text-2xl font-bold text-text-primary mb-6">
+            Ready to Start Your Investment Journey?
+          </h3>
+          <p className="text-text-secondary mb-8 max-w-2xl mx-auto">
+            Join thousands of investors who trust White Fin Capital for professional market
+            analysis and investment guidance. Let's discuss how we can help achieve your financial goals.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={() => document.querySelector('#pricing')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              View Pricing Plans
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => document.querySelector('.contact-form')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              Schedule Consultation
+            </Button>
+          </div>
+        </Card>
       </div>
     </section>
   );
