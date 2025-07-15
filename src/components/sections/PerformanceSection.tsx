@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Download, Calendar, TrendingUp, Award, Shield, Target } from 'lucide-react';
+import { Download, TrendingUp, Award, BarChart3, PieChart } from 'lucide-react';
 import {
   mockPerformanceChartData,
   mockKPIData,
@@ -9,54 +9,189 @@ import {
 import { formatPerformanceValue, formatDate } from '@/utils/formatting';
 import { cn } from '@/utils/helpers';
 import Button from '@/components/common/Button';
-import Card from '@/components/common/Card';
+import Card, { MetricCard } from '@/components/common/Card';
 import PerformanceChart from '@/components/charts/PerformanceChart';
-import { KPIGrid } from '@/components/charts/KPICounter';
+import { KPICounter, KPIGrid } from '@/components/charts/KPICounter';
+
+interface PeriodData {
+  currentReturn: number;
+  bestDay: number;
+  worstDay: number;
+  volatility: number;
+  maxDrawdown: number;
+  alpha: number;
+  beta: number;
+  totalTrades: number;
+}
 
 const PerformanceSection: React.FC = () => {
-  const [selectedTab, setSelectedTab] = useState<'overview' | 'trades' | 'analytics'>('overview');
-  const [selectedPeriod, setSelectedPeriod] = useState<'ytd' | '1y' | '2y' | 'all'>('ytd');
+  const [selectedTab, setSelectedTab] = useState<'overview' | 'trades'>('overview');
+  const [selectedPeriod, setSelectedPeriod] = useState<'1m' | '3m' | '6m' | '1y' | '2y' | 'all'>('1y');
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: TrendingUp },
     { id: 'trades', label: 'Trade Journal', icon: Award },
-    { id: 'analytics', label: 'Analytics', icon: Target },
   ] as const;
+
+  const periods = [
+    { id: '1m', label: '1 Month' },
+    { id: '3m', label: '3 Months' },
+    { id: '6m', label: '6 Months' },
+    { id: '1y', label: '1 Year' },
+    { id: '2y', label: '2 Years' },
+    { id: 'all', label: 'All Time' },
+  ] as const;
+
+  // Статистика сверху - общая за все время (без last period)
+  const topKPIData = [
+    {
+      label: 'Total Return',
+      value: 24.7,
+      format: 'percentage' as const,
+      trend: 'up' as const,
+    },
+    {
+      label: 'Win Rate',
+      value: 68.5,
+      format: 'percentage' as const,
+      trend: 'up' as const,
+    },
+    {
+      label: 'Average Gain',
+      value: 8.3,
+      format: 'percentage' as const,
+      trend: 'up' as const,
+    },
+    {
+      label: 'Average Loss',
+      value: -4.1,
+      format: 'percentage' as const,
+      trend: 'down' as const,
+    },
+    {
+      label: 'Sharpe Ratio',
+      value: 1.84,
+      format: 'number' as const,
+      trend: 'up' as const,
+    },
+    {
+      label: 'Sortino Ratio',
+      value: 2.41,
+      format: 'number' as const,
+      trend: 'up' as const,
+    },
+  ];
+
+  // Статистика под графиком - зависит от выбранного периода
+  const periodDataMap: Record<string, PeriodData> = {
+    '1m': {
+      currentReturn: 3.2,
+      bestDay: 2.1,
+      worstDay: -1.8,
+      volatility: 15.2,
+      maxDrawdown: -3.1,
+      alpha: 1.2,
+      beta: 0.92,
+      totalTrades: 8,
+    },
+    '3m': {
+      currentReturn: 8.7,
+      bestDay: 3.4,
+      worstDay: -2.8,
+      volatility: 14.8,
+      maxDrawdown: -5.2,
+      alpha: 2.1,
+      beta: 0.88,
+      totalTrades: 23,
+    },
+    '6m': {
+      currentReturn: 15.3,
+      bestDay: 4.2,
+      worstDay: -3.1,
+      volatility: 13.9,
+      maxDrawdown: -6.8,
+      alpha: 3.8,
+      beta: 0.85,
+      totalTrades: 47,
+    },
+    '1y': {
+      currentReturn: 24.7,
+      bestDay: 4.8,
+      worstDay: -4.2,
+      volatility: 14.2,
+      maxDrawdown: -8.3,
+      alpha: 5.2,
+      beta: 0.87,
+      totalTrades: 97,
+    },
+    '2y': {
+      currentReturn: 42.1,
+      bestDay: 5.1,
+      worstDay: -4.5,
+      volatility: 15.1,
+      maxDrawdown: -12.4,
+      alpha: 7.8,
+      beta: 0.89,
+      totalTrades: 203,
+    },
+    'all': {
+      currentReturn: 67.8,
+      bestDay: 5.3,
+      worstDay: -5.2,
+      volatility: 14.7,
+      maxDrawdown: -15.2,
+      alpha: 12.4,
+      beta: 0.86,
+      totalTrades: 312,
+    },
+  };
+
+  const currentPeriodData = periodDataMap[selectedPeriod];
 
   // Filter recent trades for display
   const recentTrades = useMemo(() => {
-    return mockClosedTrades.slice(0, 8);
+    return mockClosedTrades.slice(0, 12);
   }, []);
 
   const handleDownloadReport = () => {
-    // TODO: Implement report download
     console.log('Downloading performance report...');
   };
 
+  const getPerformanceTrend = (value: number): 'positive' | 'negative' | 'neutral' => {
+    if (value > 0) return 'positive';
+    if (value < 0) return 'negative';
+    return 'neutral';
+  };
+
   return (
-    <section id="performance" className="section bg-background">
+    <section id="performance" className="section-padding bg-background">
       <div className="container">
         {/* Section Header */}
         <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-3 glass rounded-full px-6 py-3 mb-6">
+            <BarChart3 className="w-5 h-5 text-primary-500" />
+            <span className="text-text-primary font-medium">Performance Dashboard</span>
+          </div>
+
           <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
             Track Record & Performance
           </h2>
           <p className="text-xl text-text-secondary max-w-3xl mx-auto leading-relaxed">
-            Transparent results with complete trade history. Every recommendation is tracked and 
+            Transparent results with complete trade history. Every recommendation is tracked and
             documented for full accountability and continuous improvement.
           </p>
         </div>
 
-        {/* Performance Highlights */}
-        <div className="mb-12">
-          <KPIGrid data={mockKPIData} columns={3} size="md" />
+        {/* Top Statistics - All Time (with animations) */}
+        <div className="mb-16">
+          <KPIGrid data={topKPIData} columns={3} size="md" />
         </div>
 
         {/* Performance Tab Navigation */}
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Tab Navigation */}
           <div className="lg:w-64 flex-shrink-0">
-            <div className="bg-background-secondary rounded-xl p-2">
+            <div className="glass rounded-xl p-2 space-y-2">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
@@ -67,7 +202,7 @@ const PerformanceSection: React.FC = () => {
                       'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200',
                       selectedTab === tab.id
                         ? 'bg-primary-500 text-white shadow-md'
-                        : 'text-text-secondary hover:text-text-primary hover:bg-background-tertiary'
+                        : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
                     )}
                   >
                     <Icon className="w-5 h-5" />
@@ -76,11 +211,13 @@ const PerformanceSection: React.FC = () => {
                 );
               })}
             </div>
-            
+
             {/* Download Report */}
-            <Card className="mt-6" padding="md">
+            <Card ocean padding="md" className="mt-6">
               <div className="text-center">
-                <Download className="w-8 h-8 text-primary-500 mx-auto mb-3" />
+                <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-900 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <Download className="w-6 h-6 text-white" />
+                </div>
                 <h3 className="font-semibold text-text-primary mb-2">
                   Performance Report
                 </h3>
@@ -88,7 +225,7 @@ const PerformanceSection: React.FC = () => {
                   Download detailed analytics and trade history
                 </p>
                 <Button
-                  variant="outline"
+                  variant="primary"
                   size="sm"
                   fullWidth
                   onClick={handleDownloadReport}
@@ -104,128 +241,198 @@ const PerformanceSection: React.FC = () => {
           <div className="flex-1">
             {selectedTab === 'overview' && (
               <div className="space-y-8">
-                {/* Performance Chart */}
-                <Card className="p-8">
+                {/* Performance Chart with Period Selector */}
+                <Card ocean padding="lg">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <h3 className="text-xl font-semibold text-text-primary">
+                      Portfolio Performance vs S&P 500
+                    </h3>
+
+                    {/* Period Selector */}
+                    <div className="flex bg-background-secondary rounded-lg p-1 gap-1">
+                      {periods.map((period) => (
+                        <button
+                          key={period.id}
+                          onClick={() => setSelectedPeriod(period.id)}
+                          className={cn(
+                            'px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200',
+                            selectedPeriod === period.id
+                              ? 'bg-primary-500 text-white shadow-sm'
+                              : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                          )}
+                        >
+                          {period.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   <PerformanceChart
                     data={mockPerformanceChartData}
-                    title="Cumulative Returns"
                     height={400}
-                    chartType="area"
+                    period={selectedPeriod}
+                    showBenchmark={true}
+                    benchmarkData={[]} // TODO: Add S&P 500 data
                   />
                 </Card>
 
-                {/* Key Metrics Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <Card className="text-center" padding="lg">
-                    <Shield className="w-8 h-8 text-blue-500 mx-auto mb-3" />
-                    <h3 className="font-semibold text-text-primary mb-1">Risk Management</h3>
-                    <p className="text-2xl font-bold text-blue-500">-8.3%</p>
-                    <p className="text-sm text-text-secondary">Max Drawdown</p>
-                  </Card>
+                {/* Period-Specific Statistics */}
+                <div>
+                  <h3 className="text-lg font-semibold text-text-primary mb-6 flex items-center gap-2">
+                    <PieChart className="w-5 h-5 text-primary-500" />
+                    Statistics for {periods.find(p => p.id === selectedPeriod)?.label}
+                  </h3>
 
-                  <Card className="text-center" padding="lg">
-                    <TrendingUp className="w-8 h-8 text-green-500 mx-auto mb-3" />
-                    <h3 className="font-semibold text-text-primary mb-1">Sharpe Ratio</h3>
-                    <p className="text-2xl font-bold text-green-500">1.84</p>
-                    <p className="text-sm text-text-secondary">Risk-Adjusted</p>
-                  </Card>
-
-                  <Card className="text-center" padding="lg">
-                    <Award className="w-8 h-8 text-purple-500 mx-auto mb-3" />
-                    <h3 className="font-semibold text-text-primary mb-1">Consistency</h3>
-                    <p className="text-2xl font-bold text-purple-500">14.2%</p>
-                    <p className="text-sm text-text-secondary">Volatility</p>
-                  </Card>
-
-                  <Card className="text-center" padding="lg">
-                    <Target className="w-8 h-8 text-orange-500 mx-auto mb-3" />
-                    <h3 className="font-semibent text-text-primary mb-1">Alpha</h3>
-                    <p className="text-2xl font-bold text-orange-500">+5.2%</p>
-                    <p className="text-sm text-text-secondary">vs Benchmark</p>
-                  </Card>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <MetricCard
+                      label="Current Return"
+                      value={`${currentPeriodData.currentReturn > 0 ? '+' : ''}${currentPeriodData.currentReturn}%`}
+                      trend={getPerformanceTrend(currentPeriodData.currentReturn)}
+                      ocean
+                      interactive
+                    />
+                    <MetricCard
+                      label="Best Day"
+                      value={`+${currentPeriodData.bestDay}%`}
+                      trend="positive"
+                      ocean
+                      interactive
+                    />
+                    <MetricCard
+                      label="Worst Day"
+                      value={`${currentPeriodData.worstDay}%`}
+                      trend="negative"
+                      ocean
+                      interactive
+                    />
+                    <MetricCard
+                      label="Volatility"
+                      value={`${currentPeriodData.volatility}%`}
+                      trend="neutral"
+                      ocean
+                      interactive
+                    />
+                    <MetricCard
+                      label="Max Drawdown"
+                      value={`${currentPeriodData.maxDrawdown}%`}
+                      trend="negative"
+                      ocean
+                      interactive
+                    />
+                    <MetricCard
+                      label="Alpha"
+                      value={`+${currentPeriodData.alpha}%`}
+                      trend="positive"
+                      ocean
+                      interactive
+                    />
+                    <MetricCard
+                      label="Beta"
+                      value={currentPeriodData.beta.toString()}
+                      trend="neutral"
+                      ocean
+                      interactive
+                    />
+                    <MetricCard
+                      label="Total Trades"
+                      value={currentPeriodData.totalTrades.toString()}
+                      trend="neutral"
+                      ocean
+                      interactive
+                    />
+                  </div>
                 </div>
               </div>
             )}
 
             {selectedTab === 'trades' && (
-              <div className="space-y-6">
-                {/* Trade Statistics */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-accent-green">
-                      {mockTradeStats.wins}
-                    </p>
-                    <p className="text-sm text-text-secondary">Wins</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-accent-red">
-                      {mockTradeStats.losses}
-                    </p>
-                    <p className="text-sm text-text-secondary">Losses</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-primary-500">
-                      {mockTradeStats.winRate}%
-                    </p>
-                    <p className="text-sm text-text-secondary">Win Rate</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-text-primary">
-                      {mockTradeStats.profitFactor}
-                    </p>
-                    <p className="text-sm text-text-secondary">Profit Factor</p>
-                  </div>
+              <div className="space-y-8">
+                {/* Trade Summary */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  <MetricCard
+                    label="Total Trades"
+                    value={mockTradeStats.wins + mockTradeStats.losses}
+                    trend="neutral"
+                    ocean
+                  />
+                  <MetricCard
+                    label="Winning Trades"
+                    value={mockTradeStats.wins}
+                    trend="positive"
+                    ocean
+                  />
+                  <MetricCard
+                    label="Losing Trades"
+                    value={mockTradeStats.losses}
+                    trend="negative"
+                    ocean
+                  />
+                  <MetricCard
+                    label="Win Rate"
+                    value={`${mockTradeStats.winRate}%`}
+                    trend="positive"
+                    ocean
+                  />
                 </div>
 
-                {/* Trades Table */}
-                <Card>
+                {/* Recent Trades Table */}
+                <Card ocean padding="lg">
+                  <h3 className="text-xl font-semibold text-text-primary mb-6">
+                    Recent Trades
+                  </h3>
+
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-border">
-                          <th className="text-left p-4 font-semibold text-text-primary">Ticker</th>
-                          <th className="text-left p-4 font-semibold text-text-primary">Type</th>
-                          <th className="text-left p-4 font-semibold text-text-primary">Entry Date</th>
-                          <th className="text-left p-4 font-semibold text-text-primary">Entry Price</th>
-                          <th className="text-left p-4 font-semibold text-text-primary">Exit Date</th>
-                          <th className="text-left p-4 font-semibold text-text-primary">Exit Price</th>
-                          <th className="text-right p-4 font-semibold text-text-primary">P&L</th>
+                          <th className="text-left py-3 px-4 text-text-secondary font-medium">Symbol</th>
+                          <th className="text-left py-3 px-4 text-text-secondary font-medium">Type</th>
+                          <th className="text-left py-3 px-4 text-text-secondary font-medium">Entry Date</th>
+                          <th className="text-left py-3 px-4 text-text-secondary font-medium">Entry Price</th>
+                          <th className="text-left py-3 px-4 text-text-secondary font-medium">Exit Date</th>
+                          <th className="text-left py-3 px-4 text-text-secondary font-medium">Exit Price</th>
+                          <th className="text-right py-3 px-4 text-text-secondary font-medium">P&L</th>
                         </tr>
                       </thead>
                       <tbody>
                         {recentTrades.map((trade, index) => {
-                          const performance = formatPerformanceValue(trade.profitLossPercent || 0);
+                          const profitLoss = trade.profitLossPercent || 0;
                           return (
-                            <tr key={trade.id} className="border-b border-border hover:bg-background-secondary/50">
-                              <td className="p-4 font-medium text-text-primary">{trade.ticker}</td>
-                              <td className="p-4">
+                            <tr key={trade.id} className="border-b border-border/50 hover:bg-white/5 transition-colors">
+                              <td className="py-3 px-4 text-text-primary font-medium">
+                                {trade.ticker}
+                              </td>
+                              <td className="py-3 px-4">
                                 <span className={cn(
-                                  'px-2 py-1 rounded text-xs font-medium',
-                                  trade.type === 'long' 
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                    : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                  'px-2 py-1 rounded-md text-xs font-medium',
+                                  trade.type === 'long'
+                                    ? 'bg-status-positive/20 text-status-positive'
+                                    : 'bg-status-negative/20 text-status-negative'
                                 )}>
                                   {trade.type.toUpperCase()}
                                 </span>
                               </td>
-                              <td className="p-4 text-text-secondary">
-                                {formatDate(trade.entryDate, 'short')}
+                              <td className="py-3 px-4 text-text-secondary text-sm">
+                                {formatDate(trade.entryDate)}
                               </td>
-                              <td className="p-4 text-text-secondary">
+                              <td className="py-3 px-4 text-text-secondary text-sm">
                                 ${trade.entryPrice.toLocaleString()}
                               </td>
-                              <td className="p-4 text-text-secondary">
-                                {trade.exitDate ? formatDate(trade.exitDate, 'short') : '-'}
+                              <td className="py-3 px-4 text-text-secondary text-sm">
+                                {trade.exitDate ? formatDate(trade.exitDate) : '-'}
                               </td>
-                              <td className="p-4 text-text-secondary">
-                                ${trade.exitPrice?.toLocaleString() || '-'}
+                              <td className="py-3 px-4 text-text-secondary text-sm">
+                                {trade.exitPrice ? `$${trade.exitPrice.toLocaleString()}` : '-'}
                               </td>
                               <td className={cn(
-                                'p-4 text-right font-semibold',
-                                `text-${performance.color === 'success' ? 'accent-green' : 
-                                          performance.color === 'error' ? 'accent-red' : 'text-secondary'}`
+                                'py-3 px-4 text-right font-semibold',
+                                profitLoss > 0
+                                  ? 'text-status-positive'
+                                  : profitLoss < 0
+                                  ? 'text-status-negative'
+                                  : 'text-text-secondary'
                               )}>
-                                {performance.formatted}
+                                {profitLoss > 0 ? '+' : ''}{profitLoss.toFixed(2)}%
                               </td>
                             </tr>
                           );
@@ -233,66 +440,18 @@ const PerformanceSection: React.FC = () => {
                       </tbody>
                     </table>
                   </div>
-                  
-                  <div className="p-4 border-t border-border text-center">
-                    <p className="text-sm text-text-secondary mb-2">
-                      * An asterisk next to the price signifies an average entry
+
+                  <div className="mt-6 pt-6 border-t border-border text-center">
+                    <p className="text-sm text-text-secondary mb-4">
+                      Showing {recentTrades.length} most recent trades
                     </p>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => console.log('View complete trade journal')}
+                    >
                       View Complete Trade Journal
                     </Button>
-                  </div>
-                </Card>
-              </div>
-            )}
-
-            {selectedTab === 'analytics' && (
-              <div className="space-y-8">
-                {/* Risk Metrics */}
-                <Card>
-                  <h3 className="text-xl font-semibold text-text-primary mb-6">Risk Analytics</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div>
-                      <p className="text-text-secondary text-sm mb-1">Volatility</p>
-                      <p className="text-2xl font-bold text-text-primary">14.2%</p>
-                    </div>
-                    <div>
-                      <p className="text-text-secondary text-sm mb-1">Beta</p>
-                      <p className="text-2xl font-bold text-text-primary">0.87</p>
-                    </div>
-                    <div>
-                      <p className="text-text-secondary text-sm mb-1">Sortino Ratio</p>
-                      <p className="text-2xl font-bold text-text-primary">2.41</p>
-                    </div>
-                    <div>
-                      <p className="text-text-secondary text-sm mb-1">Information Ratio</p>
-                      <p className="text-2xl font-bold text-text-primary">1.23</p>
-                    </div>
-                  </div>
-                </Card>
-
-                {/* Performance Attribution */}
-                <Card>
-                  <h3 className="text-xl font-semibold text-text-primary mb-6">
-                    Performance Attribution
-                  </h3>
-                  <div className="space-y-4">
-                    {[
-                      { name: 'Security Selection', contribution: 12.3 },
-                      { name: 'Market Timing', contribution: 8.7 },
-                      { name: 'Asset Allocation', contribution: 3.7 },
-                      { name: 'Currency Effects', contribution: -0.2 },
-                    ].map((item) => (
-                      <div key={item.name} className="flex justify-between items-center">
-                        <span className="text-text-secondary">{item.name}</span>
-                        <span className={cn(
-                          'font-semibold',
-                          item.contribution > 0 ? 'text-accent-green' : 'text-accent-red'
-                        )}>
-                          {item.contribution > 0 ? '+' : ''}{item.contribution}%
-                        </span>
-                      </div>
-                    ))}
                   </div>
                 </Card>
               </div>

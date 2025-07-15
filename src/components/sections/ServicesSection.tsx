@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { 
-  TrendingUp, 
-  Bell, 
-  BarChart3, 
-  BookOpen, 
-  ArrowRight, 
+import {
+  TrendingUp,
+  Bell,
+  BarChart3,
+  BookOpen,
+  ArrowRight,
   CheckCircle,
   PlayCircle,
   Users,
@@ -48,7 +48,7 @@ const ServicesSection: React.FC = () => {
             Our Services
           </h2>
           <p className="text-xl text-text-secondary max-w-3xl mx-auto leading-relaxed">
-            Comprehensive financial research and analysis tools designed to give you 
+            Comprehensive financial research and analysis tools designed to give you
             the edge in today's complex markets.
           </p>
         </div>
@@ -88,7 +88,7 @@ const ServicesSection: React.FC = () => {
                     return <IconComponent className="w-24 h-24 text-primary-500" />;
                   })()}
                 </div>
-                
+
                 {/* Mock Interface Elements */}
                 <div className="mt-6 space-y-3">
                   <div className="flex items-center justify-between">
@@ -98,7 +98,7 @@ const ServicesSection: React.FC = () => {
                     </div>
                     <span className="text-xs text-text-tertiary">Updated 2 min ago</span>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="h-2 bg-primary-200 rounded-full">
                       <div className="h-2 bg-primary-500 rounded-full w-3/4"></div>
@@ -124,7 +124,7 @@ const ServicesSection: React.FC = () => {
               <h3 className="text-3xl font-bold text-text-primary mb-4">
                 {services[activeService].title}
               </h3>
-              
+
               <p className="text-lg text-text-secondary mb-8 leading-relaxed">
                 {services[activeService].description}
               </p>
@@ -157,7 +157,7 @@ const ServicesSection: React.FC = () => {
                 >
                   Get Started
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   size="lg"
@@ -178,7 +178,7 @@ const ServicesSection: React.FC = () => {
               Our Research Process
             </h3>
             <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-              A systematic approach combining fundamental analysis, technical indicators, 
+              A systematic approach combining fundamental analysis, technical indicators,
               and risk management for superior results.
             </p>
           </div>
@@ -233,11 +233,11 @@ const ServicesSection: React.FC = () => {
                 <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                   <IconComponent className="w-8 h-8 text-primary-500" />
                 </div>
-                
+
                 <h4 className="text-lg font-semibold text-text-primary mb-3">
                   {differentiator.title}
                 </h4>
-                
+
                 <p className="text-text-secondary text-sm">
                   {differentiator.description}
                 </p>
@@ -253,10 +253,10 @@ const ServicesSection: React.FC = () => {
               Ready to Transform Your Investment Strategy?
             </h3>
             <p className="text-lg text-text-secondary mb-8 max-w-2xl mx-auto">
-              Join thousands of investors who rely on our research for superior returns 
+              Join thousands of investors who rely on our research for superior returns
               and risk management.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 variant="primary"
@@ -266,7 +266,7 @@ const ServicesSection: React.FC = () => {
               >
                 Start Free Trial
               </Button>
-              
+
               <Button
                 variant="outline"
                 size="lg"
@@ -275,7 +275,7 @@ const ServicesSection: React.FC = () => {
                 Schedule Consultation
               </Button>
             </div>
-            
+
             <div className="flex justify-center items-center gap-6 mt-8 text-sm text-text-tertiary">
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-accent-green" />

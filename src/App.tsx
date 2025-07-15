@@ -17,18 +17,25 @@ const App: React.FC = () => {
   useEffect(() => {
     // Client-side only initialization to avoid SSR issues
     if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('white-fin-theme') || 'dark';
+      // Initialize ocean theme
+      const savedTheme = localStorage.getItem('white-fin-theme') || 'light';
       document.documentElement.classList.add(savedTheme, `theme-${savedTheme}`);
+
+      // Add ocean-specific classes to body
+      document.body.classList.add('ocean-theme');
+
+      // Set up smooth scrolling
+      document.documentElement.style.scrollBehavior = 'smooth';
     }
 
     // Add any initial setup here
-    console.log('White Fin Capital - Web Application Initialized');
+    console.log('🌊 White Fin Capital - Ocean Theme Initialized');
   }, []);
 
   return (
-    <ThemeProvider defaultTheme="dark">
+    <ThemeProvider defaultTheme="light" storageKey="white-fin-theme">
       <AppProvider>
-        <div className="min-h-screen bg-background text-text-primary">
+        <div className="min-h-screen bg-background text-text-primary ocean-theme">
           {/* Header */}
           <Header />
 
@@ -56,8 +63,11 @@ const App: React.FC = () => {
           {/* Footer */}
           <Footer />
 
-          {/* Toast Notifications Container (if using a toast library) */}
+          {/* Toast Notifications Container */}
           <div id="toast-container" className="fixed top-4 right-4 z-50 space-y-2" />
+
+          {/* Ocean Decorative Elements */}
+          <div className="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-primary-500/20 via-pastel-mint/30 to-primary-500/20 pointer-events-none" />
         </div>
       </AppProvider>
     </ThemeProvider>

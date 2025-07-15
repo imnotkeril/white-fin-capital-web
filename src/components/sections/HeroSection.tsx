@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { ArrowDown, TrendingUp, BarChart3, Shield } from 'lucide-react';
+import { ArrowDown, TrendingUp, BarChart3, Shield, Waves } from 'lucide-react';
 import { COMPANY } from '@/utils/constants';
 import { scrollToElement } from '@/utils/helpers';
 import Button from '@/components/common/Button';
 import { useForm } from '@/hooks/useForm';
-import { validateEmail } from '@/utils/validation';
+import { useTheme } from '@/context/ThemeContext';
 
 interface NewsletterFormData {
   email: string;
@@ -12,6 +12,7 @@ interface NewsletterFormData {
 
 const HeroSection: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { actualTheme } = useTheme();
 
   const { values, errors, handleChange, handleSubmit, isValid } = useForm<NewsletterFormData>({
     initialValues: { email: '' },
@@ -26,7 +27,7 @@ const HeroSection: React.FC = () => {
       try {
         // TODO: Implement newsletter subscription
         console.log('Newsletter subscription:', data);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
         alert('Thank you for subscribing!');
       } catch (error) {
         console.error('Subscription error:', error);
@@ -45,149 +46,204 @@ const HeroSection: React.FC = () => {
   };
 
   return (
-    <section 
-      id="hero" 
-      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+    <section
+      id="hero"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden hero-background"
     >
-      {/* Ocean Background with Gradient */}
-      <div className="absolute inset-0 ocean-gradient">
-        {/* Overlay for better text readability */}
-        <div className="absolute inset-0 bg-black/20" />
-      </div>
+      {/* Ocean Background Effects */}
+      <div className="absolute inset-0">
+        {/* Floating Ocean Elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Animated waves */}
+          <div className="absolute bottom-0 left-0 w-full h-32 opacity-20">
+            <svg
+              className="w-full h-full"
+              viewBox="0 0 1200 120"
+              preserveAspectRatio="none"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M0,60 C150,100 300,0 450,40 C600,80 750,20 900,60 C1050,100 1200,20 1200,40 L1200,120 L0,120 Z"
+                fill="url(#wave-gradient)"
+                className="animate-wave"
+              />
+              <defs>
+                <linearGradient id="wave-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="var(--color-light-blue)" stopOpacity="0.3" />
+                  <stop offset="50%" stopColor="var(--color-pastel-mint)" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="var(--color-light-blue)" stopOpacity="0.3" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
 
-      {/* Floating Ocean Elements */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Animated waves */}
-        <div className="absolute bottom-0 left-0 w-full h-32 opacity-30">
-          <svg
-            className="w-full h-full"
-            viewBox="0 0 1200 120"
-            preserveAspectRatio="none"
-          >
-            <path
-              d="M0,60 C150,100 350,0 600,60 C850,120 1050,20 1200,60 V120 H0 Z"
-              fill="rgba(255,255,255,0.1)"
-              className="animate-pulse"
-            />
-          </svg>
-        </div>
-
-        {/* Floating icons */}
-        <div className="absolute top-1/4 left-1/4 text-white/20 float-animation">
-          <TrendingUp size={40} />
-        </div>
-        <div className="absolute top-1/3 right-1/4 text-white/20 float-animation" style={{ animationDelay: '1s' }}>
-          <BarChart3 size={48} />
-        </div>
-        <div className="absolute bottom-1/3 left-1/6 text-white/20 float-animation" style={{ animationDelay: '2s' }}>
-          <Shield size={36} />
+          {/* Floating particles */}
+          <div className="absolute inset-0">
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className={`absolute w-2 h-2 bg-primary-500/30 rounded-full float-animation`}
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  animationDelay: `${i * 0.5}s`,
+                  animationDuration: `${3 + Math.random() * 2}s`,
+                }}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 container mx-auto px-4 text-center">
-        <div className="max-w-4xl mx-auto">
-          {/* Main Heading */}
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-            Where Deep Research
-            <br />
-            <span className="text-gradient-gold">Meets Financial Markets</span>
-          </h1>
+      <div className="relative z-10 text-center px-4 max-w-6xl mx-auto">
+        {/* Hero Text */}
+        <div className="space-y-8 mb-12">
+          <div className="space-y-6">
+            {/* Main Headline */}
+            <h1 className="text-5xl md:text-7xl font-bold leading-tight text-text-primary">
+              Where Deep Research
+              <br />
+              <span className="text-primary-500 dark:text-primary-300">
+                Meets Financial Markets
+              </span>
+            </h1>
 
-          {/* Subtitle */}
-          <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Navigate global markets with professional-grade analysis and data-driven insights from our expert research team
-          </p>
-
-          {/* Newsletter Signup */}
-          <div className="max-w-md mx-auto mb-12">
-            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1">
-                <input
-                  type="email"
-                  placeholder="Your email address..."
-                  value={values.email}
-                  onChange={(e) => handleChange('email')(e.target.value)}
-                  className={`w-full px-4 py-3 rounded-lg bg-white/90 backdrop-blur-sm border-0 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all ${
-                    errors.email ? 'ring-2 ring-red-400' : ''
-                  }`}
-                />
-                {errors.email && (
-                  <p className="text-red-200 text-sm mt-1 text-left">{errors.email}</p>
-                )}
-              </div>
-              
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                loading={isSubmitting}
-                disabled={!isValid || isSubmitting}
-                className="px-8 whitespace-nowrap"
-              >
-                Subscribe
-              </Button>
-            </form>
-            
-            <p className="text-white/70 text-sm mt-3">
-              Join <span className="text-yellow-300 font-semibold">50,000+</span> investors for a FREE market analysis
+            {/* Subtitle */}
+            <p className="text-xl md:text-2xl text-text-secondary max-w-4xl mx-auto leading-relaxed">
+              Navigate global markets with professional-grade analysis and data-driven insights
+              from our expert research team. Make informed decisions with confidence.
             </p>
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button
-              variant="secondary"
+              variant="primary"
               size="lg"
               onClick={handleExploreClick}
-              className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 min-w-[180px]"
+              icon={<TrendingUp className="w-5 h-5" />}
+              ripple
             >
               Explore Analysis
             </Button>
-            
+
             <Button
-              variant="outline"
+              variant="glass"
               size="lg"
-              onClick={() => scrollToElement('#contact')}
-              className="bg-transparent border-white/50 text-white hover:bg-white/10 min-w-[180px]"
+              onClick={() => scrollToElement('#team')}
+              icon={<Shield className="w-5 h-5" />}
+              ripple
             >
-              Learn More
+              Meet Our Team
             </Button>
           </div>
+        </div>
 
-          {/* Key Features */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-            <div className="glass p-6 rounded-xl text-center hover-lift">
-              <TrendingUp className="w-12 h-12 text-yellow-300 mx-auto mb-4" />
-              <h3 className="text-white font-semibold text-lg mb-2">Expert Analysis</h3>
-              <p className="text-white/80 text-sm">
-                Deep market research and technical analysis from seasoned professionals
-              </p>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+          <div className="glass p-6 rounded-xl text-center hover-lift interactive-card">
+            <TrendingUp className="w-12 h-12 text-primary-500 mx-auto mb-4 float-animation" />
+            <h3 className="text-text-primary font-semibold text-lg mb-2">Expert Analysis</h3>
+            <p className="text-text-secondary text-sm">
+              Deep market research and technical analysis from seasoned professionals
+            </p>
+          </div>
+
+          <div className="glass p-6 rounded-xl text-center hover-lift interactive-card">
+            <BarChart3 className="w-12 h-12 text-pastel-mint mx-auto mb-4 float-animation" style={{ animationDelay: '0.2s' }} />
+            <h3 className="text-text-primary font-semibold text-lg mb-2">Real-Time Data</h3>
+            <p className="text-text-secondary text-sm">
+              Live market insights and performance tracking with detailed metrics
+            </p>
+          </div>
+
+          <div className="glass p-6 rounded-xl text-center hover-lift interactive-card">
+            <Shield className="w-12 h-12 text-pastel-coral mx-auto mb-4 float-animation" style={{ animationDelay: '0.4s' }} />
+            <h3 className="text-text-primary font-semibold text-lg mb-2">Risk Management</h3>
+            <p className="text-text-secondary text-sm">
+              Comprehensive risk assessment and portfolio protection strategies
+            </p>
+          </div>
+        </div>
+
+        {/* Trust Indicators */}
+        <div className="glass rounded-2xl p-8 mb-12">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-status-positive to-pastel-mint rounded-2xl flex items-center justify-center">
+                <Shield className="w-8 h-8 text-white" />
+              </div>
+              <div className="text-left">
+                <h3 className="text-text-primary font-semibold text-lg">SEC Registered</h3>
+                <p className="text-text-secondary text-sm">Fully regulated investment advisor</p>
+              </div>
             </div>
-            
-            <div className="glass p-6 rounded-xl text-center hover-lift">
-              <BarChart3 className="w-12 h-12 text-blue-300 mx-auto mb-4" />
-              <h3 className="text-white font-semibold text-lg mb-2">Real-Time Data</h3>
-              <p className="text-white/80 text-sm">
-                Live market insights and performance tracking with detailed metrics
-              </p>
+
+            <div className="w-px h-12 bg-border hidden md:block" />
+
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-900 rounded-2xl flex items-center justify-center">
+                <TrendingUp className="w-8 h-8 text-white" />
+              </div>
+              <div className="text-left">
+                <h3 className="text-text-primary font-semibold text-lg">10+ Years</h3>
+                <p className="text-text-secondary text-sm">Market experience & expertise</p>
+              </div>
             </div>
-            
-            <div className="glass p-6 rounded-xl text-center hover-lift">
-              <Shield className="w-12 h-12 text-green-300 mx-auto mb-4" />
-              <h3 className="text-white font-semibold text-lg mb-2">Risk Management</h3>
-              <p className="text-white/80 text-sm">
-                Comprehensive risk assessment and portfolio protection strategies
-              </p>
+
+            <div className="w-px h-12 bg-border hidden md:block" />
+
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-pastel-purple to-pastel-coral rounded-2xl flex items-center justify-center">
+                <BarChart3 className="w-8 h-8 text-white" />
+              </div>
+              <div className="text-left">
+                <h3 className="text-text-primary font-semibold text-lg">$100M+</h3>
+                <p className="text-text-secondary text-sm">Assets under analysis</p>
+              </div>
             </div>
           </div>
+        </div>
+
+        {/* Newsletter Signup */}
+        <div className="max-w-md mx-auto mb-16">
+          <form onSubmit={handleSubmit} className="glass rounded-2xl p-6">
+            <h3 className="text-text-primary font-semibold text-lg mb-4">
+              Get Market Insights
+            </h3>
+            <div className="flex gap-3">
+              <input
+                type="email"
+                name="email"
+                value={values.email}
+                onChange={handleChange}
+                placeholder="Enter your email"
+                className={`form-input flex-1 ${
+                  errors.email ? 'border-status-negative focus:border-status-negative focus:ring-status-negative/20' : ''
+                }`}
+              />
+              <Button
+                type="submit"
+                variant="primary"
+                loading={isSubmitting}
+                disabled={!isValid || isSubmitting}
+              >
+                Subscribe
+              </Button>
+            </div>
+            {errors.email && (
+              <p className="form-error mt-2">{errors.email}</p>
+            )}
+          </form>
         </div>
 
         {/* Scroll Down Indicator */}
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
           <button
             onClick={handleScrollDown}
-            className="flex flex-col items-center text-white/70 hover:text-white transition-colors group"
+            className="flex flex-col items-center text-text-secondary hover:text-text-primary transition-colors group focus-ring rounded-lg p-2"
             aria-label="Scroll down"
           >
             <span className="text-sm mb-2 group-hover:translate-y-1 transition-transform">
@@ -197,6 +253,12 @@ const HeroSection: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Background decorative elements */}
+      <div className="absolute top-1/4 left-10 w-4 h-4 bg-primary-500/30 rounded-full animate-pulse" />
+      <div className="absolute top-1/3 right-20 w-6 h-6 bg-pastel-mint/40 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+      <div className="absolute bottom-1/4 left-1/4 w-3 h-3 bg-pastel-coral/50 rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+      <div className="absolute bottom-1/3 right-1/3 w-5 h-5 bg-primary-500/20 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }} />
     </section>
   );
 };
