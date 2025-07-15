@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowDown, TrendingUp, BarChart3, Shield, Waves } from 'lucide-react';
 import { COMPANY } from '@/utils/constants';
-import { scrollToElement } from '@/utils/helpers';
+import { scrollToElement, cn } from '@/utils/helpers';
 import Button from '@/components/common/Button';
 import { useForm } from '@/hooks/useForm';
 import { useTheme } from '@/context/ThemeContext';
@@ -83,7 +83,7 @@ const HeroSection: React.FC = () => {
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className={`absolute w-2 h-2 bg-primary-500/30 rounded-full float-animation`}
+                className={`absolute w-2 h-2 bg-primary-500/30 rounded-full animate-pulse`}
                 style={{
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
@@ -124,35 +124,41 @@ const HeroSection: React.FC = () => {
               size="lg"
               onClick={handleExploreClick}
               icon={<TrendingUp className="w-5 h-5" />}
-              ripple
             >
               Explore Analysis
             </Button>
-
-
           </div>
         </div>
 
-        {/* Quick Stats */}
+        {/* Quick Stats - ИСПРАВЛЕНО: добавлены неоновые hover эффекты как в ContactSection */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          <div className="glass p-6 rounded-xl text-center hover-lift interactive-card">
-            <TrendingUp className="w-12 h-12 text-primary-500 mx-auto mb-4 float-animation" />
+          <div className={cn(
+            "glass p-6 rounded-xl text-center transition-all duration-200 group cursor-pointer",
+            "hover:-translate-y-1 hover:bg-white/10 dark:hover:bg-white/5"
+          )}>
+            <TrendingUp className="w-12 h-12 text-primary-500 mx-auto mb-4" />
             <h3 className="text-text-primary font-semibold text-lg mb-2">Expert Analysis</h3>
             <p className="text-text-secondary text-sm">
               Deep market research and technical analysis from seasoned professionals
             </p>
           </div>
 
-          <div className="glass p-6 rounded-xl text-center hover-lift interactive-card">
-            <BarChart3 className="w-12 h-12 text-pastel-mint mx-auto mb-4 float-animation" style={{ animationDelay: '0.2s' }} />
+          <div className={cn(
+            "glass p-6 rounded-xl text-center transition-all duration-200 group cursor-pointer",
+            "hover:-translate-y-1 hover:bg-white/10 dark:hover:bg-white/5"
+          )}>
+            <BarChart3 className="w-12 h-12 text-pastel-mint mx-auto mb-4" />
             <h3 className="text-text-primary font-semibold text-lg mb-2">Real-Time Data</h3>
             <p className="text-text-secondary text-sm">
               Live market insights and performance tracking with detailed metrics
             </p>
           </div>
 
-          <div className="glass p-6 rounded-xl text-center hover-lift interactive-card">
-            <Shield className="w-12 h-12 text-pastel-coral mx-auto mb-4 float-animation" style={{ animationDelay: '0.4s' }} />
+          <div className={cn(
+            "glass p-6 rounded-xl text-center transition-all duration-200 group cursor-pointer",
+            "hover:-translate-y-1 hover:bg-white/10 dark:hover:bg-white/5"
+          )}>
+            <Shield className="w-12 h-12 text-pastel-coral mx-auto mb-4" />
             <h3 className="text-text-primary font-semibold text-lg mb-2">Risk Management</h3>
             <p className="text-text-secondary text-sm">
               Comprehensive risk assessment and portfolio protection strategies
