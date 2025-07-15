@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Download, TrendingUp, Award, BarChart3, PieChart } from 'lucide-react';
 import {
   mockPerformanceChartData,
+  mockBenchmarkChartData,
   mockKPIData,
   mockClosedTrades,
   mockTradeStats,
@@ -42,7 +43,7 @@ const PerformanceSection: React.FC = () => {
     { id: 'all', label: 'All Time' },
   ] as const;
 
-  // Статистика сверху - общая за все время (без last period)
+  // Статистика сверху - общая за все время (БЕЗ полосок и анимаций)
   const topKPIData = [
     {
       label: 'Total Return',
@@ -82,7 +83,7 @@ const PerformanceSection: React.FC = () => {
     },
   ];
 
-  // Статистика под графиком - зависит от выбранного периода
+  // Статистика по периодам
   const periodDataMap: Record<string, PeriodData> = {
     '1m': {
       currentReturn: 3.2,
@@ -148,7 +149,12 @@ const PerformanceSection: React.FC = () => {
 
   const currentPeriodData = periodDataMap[selectedPeriod];
 
-  // Filter recent trades for display
+  // Бенчмарк данные (S&P 500) - используем готовые данные
+  const benchmarkData = useMemo(() => {
+    return mockBenchmarkChartData;
+  }, []);
+
+  // Отфильтрованные трейды для отображения
   const recentTrades = useMemo(() => {
     return mockClosedTrades.slice(0, 12);
   }, []);
@@ -163,35 +169,83 @@ const PerformanceSection: React.FC = () => {
     return 'neutral';
   };
 
+  const getStatusColor = (value: number) => {
+    if (value > 0) return 'text-[#86efac]'; // pastel-green
+    if (value < 0) return 'text-[#fca5a5]'; // pastel-red
+    return 'text-[#bf9ffb]'; // pastel-purple
+  };
+
+  const getStatusBgColor = (value: number) => {
+    if (value > 0) return 'bg-[#86efac]/10'; // pastel-green background
+    if (value < 0) return 'bg-[#fca5a5]/10'; // pastel-red background
+    return 'bg-[#bf9ffb]/10'; // pastel-purple background
+  };
+
   return (
-    <section id="performance" className="section-padding bg-background">
+    <section id="performance" className="section-padding" style={{ background: '#05192c' }}>
       <div className="container">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-3 glass rounded-full px-6 py-3 mb-6">
-            <BarChart3 className="w-5 h-5 text-primary-500" />
-            <span className="text-text-primary font-medium">Performance Dashboard</span>
+          <div className="inline-flex items-center gap-3 rounded-full px-6 py-3 mb-6"
+               style={{
+                 background: 'rgba(255, 255, 255, 0.7)',
+                 backdropFilter: 'blur(20px)',
+                 border: '1px solid rgba(144, 191, 249, 0.2)'
+               }}>
+            <BarChart3 className="w-5 h-5" style={{ color: '#90bff9' }} />
+            <span className="text-white font-medium">Performance Dashboard</span>
           </div>
 
-          <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
             Track Record & Performance
           </h2>
-          <p className="text-xl text-text-secondary max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-white/80 max-w-3xl mx-auto leading-relaxed">
             Transparent results with complete trade history. Every recommendation is tracked and
             documented for full accountability and continuous improvement.
           </p>
         </div>
 
-        {/* Top Statistics - All Time (with animations) */}
+        {/* Top Statistics - All Time (БЕЗ полосок) */}
         <div className="mb-16">
-          <KPIGrid data={topKPIData} columns={3} size="md" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {topKPIData.map((kpi) => (
+              <div
+                key={kpi.label}
+                className="text-center p-6 rounded-2xl"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(144, 191, 249, 0.2)',
+                }}
+              >
+                <div className="text-white/70 text-sm mb-2 uppercase tracking-wide">
+                  {kpi.label}
+                </div>
+                <div className={cn(
+                  "text-3xl font-bold mb-2",
+                  kpi.trend === 'up' ? 'text-[#86efac]' :
+                  kpi.trend === 'down' ? 'text-[#fca5a5]' : 'text-[#bf9ffb]'
+                )}>
+                  {kpi.format === 'percentage' ?
+                    `${kpi.value > 0 ? '+' : ''}${kpi.value}%` :
+                    kpi.value
+                  }
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Performance Tab Navigation */}
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Tab Navigation */}
           <div className="lg:w-64 flex-shrink-0">
-            <div className="glass rounded-xl p-2 space-y-2">
+            <div className="rounded-xl p-2 space-y-2"
+                 style={{
+                   background: 'rgba(255, 255, 255, 0.05)',
+                   backdropFilter: 'blur(20px)',
+                   border: '1px solid rgba(144, 191, 249, 0.2)',
+                 }}>
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
@@ -201,40 +255,16 @@ const PerformanceSection: React.FC = () => {
                     className={cn(
                       'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200',
                       selectedTab === tab.id
-                        ? 'bg-primary-500 text-white shadow-md'
-                        : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                        ? 'bg-[#90bff9] text-[#05192c] shadow-sm'
+                        : 'text-white/70 hover:text-white hover:bg-white/5'
                     )}
                   >
                     <Icon className="w-5 h-5" />
-                    <span className="font-medium">{tab.label}</span>
+                    {tab.label}
                   </button>
                 );
               })}
             </div>
-
-            {/* Download Report */}
-            <Card ocean padding="md" className="mt-6">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-900 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <Download className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="font-semibold text-text-primary mb-2">
-                  Performance Report
-                </h3>
-                <p className="text-sm text-text-secondary mb-4">
-                  Download detailed analytics and trade history
-                </p>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  fullWidth
-                  onClick={handleDownloadReport}
-                  icon={<Download className="w-4 h-4" />}
-                >
-                  Download PDF
-                </Button>
-              </div>
-            </Card>
           </div>
 
           {/* Tab Content */}
@@ -242,23 +272,29 @@ const PerformanceSection: React.FC = () => {
             {selectedTab === 'overview' && (
               <div className="space-y-8">
                 {/* Performance Chart with Period Selector */}
-                <Card ocean padding="lg">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                    <h3 className="text-xl font-semibold text-text-primary">
+                <div className="rounded-2xl p-6"
+                     style={{
+                       background: 'rgba(255, 255, 255, 0.05)',
+                       backdropFilter: 'blur(20px)',
+                       border: '1px solid rgba(144, 191, 249, 0.2)',
+                     }}>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <h3 className="text-2xl font-semibold text-white">
                       Portfolio Performance vs S&P 500
                     </h3>
 
-                    {/* Period Selector */}
-                    <div className="flex bg-background-secondary rounded-lg p-1 gap-1">
+                    {/* ЕДИНСТВЕННЫЙ селектор периодов */}
+                    <div className="flex rounded-lg p-1"
+                         style={{ background: '#0f2337' }}>
                       {periods.map((period) => (
                         <button
                           key={period.id}
                           onClick={() => setSelectedPeriod(period.id)}
                           className={cn(
-                            'px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200',
+                            'text-xs font-medium px-4 py-2 rounded-md transition-all duration-200',
                             selectedPeriod === period.id
-                              ? 'bg-primary-500 text-white shadow-sm'
-                              : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                              ? 'bg-[#90bff9] text-[#05192c] shadow-sm'
+                              : 'text-white/70 hover:text-white hover:bg-white/5'
                           )}
                         >
                           {period.label}
@@ -267,79 +303,112 @@ const PerformanceSection: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* График БЕЗ встроенного селектора периодов и БЕЗ дублирующих статистик */}
                   <PerformanceChart
                     data={mockPerformanceChartData}
                     height={400}
-                    period={selectedPeriod}
+                    showPeriodSelector={false} // УБИРАЕМ встроенный селектор
                     showBenchmark={true}
-                    benchmarkData={[]} // TODO: Add S&P 500 data
+                    benchmarkData={benchmarkData} // ДОБАВЛЯЕМ бенчмарк
+                    chartType="area"
                   />
-                </Card>
 
-                {/* Period-Specific Statistics */}
-                <div>
-                  <h3 className="text-lg font-semibold text-text-primary mb-6 flex items-center gap-2">
-                    <PieChart className="w-5 h-5 text-primary-500" />
-                    Statistics for {periods.find(p => p.id === selectedPeriod)?.label}
-                  </h3>
+                  {/* ЕДИНСТВЕННАЯ статистика под графиком - зависит от selectedPeriod */}
+                  <div className="mt-8">
+                    <h4 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                      <PieChart className="w-5 h-5" style={{ color: '#90bff9' }} />
+                      Statistics for {periods.find(p => p.id === selectedPeriod)?.label}
+                    </h4>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <MetricCard
-                      label="Current Return"
-                      value={`${currentPeriodData.currentReturn > 0 ? '+' : ''}${currentPeriodData.currentReturn}%`}
-                      trend={getPerformanceTrend(currentPeriodData.currentReturn)}
-                      ocean
-                      interactive
-                    />
-                    <MetricCard
-                      label="Best Day"
-                      value={`+${currentPeriodData.bestDay}%`}
-                      trend="positive"
-                      ocean
-                      interactive
-                    />
-                    <MetricCard
-                      label="Worst Day"
-                      value={`${currentPeriodData.worstDay}%`}
-                      trend="negative"
-                      ocean
-                      interactive
-                    />
-                    <MetricCard
-                      label="Volatility"
-                      value={`${currentPeriodData.volatility}%`}
-                      trend="neutral"
-                      ocean
-                      interactive
-                    />
-                    <MetricCard
-                      label="Max Drawdown"
-                      value={`${currentPeriodData.maxDrawdown}%`}
-                      trend="negative"
-                      ocean
-                      interactive
-                    />
-                    <MetricCard
-                      label="Alpha"
-                      value={`+${currentPeriodData.alpha}%`}
-                      trend="positive"
-                      ocean
-                      interactive
-                    />
-                    <MetricCard
-                      label="Beta"
-                      value={currentPeriodData.beta.toString()}
-                      trend="neutral"
-                      ocean
-                      interactive
-                    />
-                    <MetricCard
-                      label="Total Trades"
-                      value={currentPeriodData.totalTrades.toString()}
-                      trend="neutral"
-                      ocean
-                      interactive
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      <div className="text-center p-4 rounded-xl"
+                           style={{
+                             background: getStatusBgColor(currentPeriodData.currentReturn),
+                             border: `1px solid ${currentPeriodData.currentReturn > 0 ? '#86efac' : currentPeriodData.currentReturn < 0 ? '#fca5a5' : '#bf9ffb'}`,
+                           }}>
+                        <div className="text-white/70 text-sm mb-1">Current Return</div>
+                        <div className={cn("text-xl font-bold", getStatusColor(currentPeriodData.currentReturn))}>
+                          {currentPeriodData.currentReturn > 0 ? '+' : ''}{currentPeriodData.currentReturn}%
+                        </div>
+                      </div>
+
+                      <div className="text-center p-4 rounded-xl"
+                           style={{
+                             background: 'rgba(134, 239, 172, 0.1)',
+                             border: '1px solid #86efac',
+                           }}>
+                        <div className="text-white/70 text-sm mb-1">Best Day</div>
+                        <div className="text-xl font-bold text-[#86efac]">
+                          +{currentPeriodData.bestDay}%
+                        </div>
+                      </div>
+
+                      <div className="text-center p-4 rounded-xl"
+                           style={{
+                             background: 'rgba(252, 165, 165, 0.1)',
+                             border: '1px solid #fca5a5',
+                           }}>
+                        <div className="text-white/70 text-sm mb-1">Worst Day</div>
+                        <div className="text-xl font-bold text-[#fca5a5]">
+                          {currentPeriodData.worstDay}%
+                        </div>
+                      </div>
+
+                      <div className="text-center p-4 rounded-xl"
+                           style={{
+                             background: 'rgba(191, 159, 251, 0.1)',
+                             border: '1px solid #bf9ffb',
+                           }}>
+                        <div className="text-white/70 text-sm mb-1">Volatility</div>
+                        <div className="text-xl font-bold text-[#bf9ffb]">
+                          {currentPeriodData.volatility}%
+                        </div>
+                      </div>
+
+                      <div className="text-center p-4 rounded-xl"
+                           style={{
+                             background: 'rgba(252, 165, 165, 0.1)',
+                             border: '1px solid #fca5a5',
+                           }}>
+                        <div className="text-white/70 text-sm mb-1">Max Drawdown</div>
+                        <div className="text-xl font-bold text-[#fca5a5]">
+                          {currentPeriodData.maxDrawdown}%
+                        </div>
+                      </div>
+
+                      <div className="text-center p-4 rounded-xl"
+                           style={{
+                             background: 'rgba(134, 239, 172, 0.1)',
+                             border: '1px solid #86efac',
+                           }}>
+                        <div className="text-white/70 text-sm mb-1">Alpha</div>
+                        <div className="text-xl font-bold text-[#86efac]">
+                          +{currentPeriodData.alpha}%
+                        </div>
+                      </div>
+
+                      <div className="text-center p-4 rounded-xl"
+                           style={{
+                             background: 'rgba(191, 159, 251, 0.1)',
+                             border: '1px solid #bf9ffb',
+                           }}>
+                        <div className="text-white/70 text-sm mb-1">Beta</div>
+                        <div className="text-xl font-bold text-[#bf9ffb]">
+                          {currentPeriodData.beta}
+                        </div>
+                      </div>
+
+                      <div className="text-center p-4 rounded-xl"
+                           style={{
+                             background: 'rgba(191, 159, 251, 0.1)',
+                             border: '1px solid #bf9ffb',
+                           }}>
+                        <div className="text-white/70 text-sm mb-1">Total Trades</div>
+                        <div className="text-xl font-bold text-[#bf9ffb]">
+                          {currentPeriodData.totalTrades}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -349,111 +418,118 @@ const PerformanceSection: React.FC = () => {
               <div className="space-y-8">
                 {/* Trade Summary */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  <MetricCard
-                    label="Total Trades"
-                    value={mockTradeStats.wins + mockTradeStats.losses}
-                    trend="neutral"
-                    ocean
-                  />
-                  <MetricCard
-                    label="Winning Trades"
-                    value={mockTradeStats.wins}
-                    trend="positive"
-                    ocean
-                  />
-                  <MetricCard
-                    label="Losing Trades"
-                    value={mockTradeStats.losses}
-                    trend="negative"
-                    ocean
-                  />
-                  <MetricCard
-                    label="Win Rate"
-                    value={`${mockTradeStats.winRate}%`}
-                    trend="positive"
-                    ocean
-                  />
+                  <div className="text-center p-4 rounded-xl"
+                       style={{
+                         background: 'rgba(191, 159, 251, 0.1)',
+                         border: '1px solid #bf9ffb',
+                       }}>
+                    <div className="text-white/70 text-sm mb-1">Total Trades</div>
+                    <div className="text-xl font-bold text-[#bf9ffb]">
+                      {mockTradeStats.wins + mockTradeStats.losses}
+                    </div>
+                  </div>
+
+                  <div className="text-center p-4 rounded-xl"
+                       style={{
+                         background: 'rgba(134, 239, 172, 0.1)',
+                         border: '1px solid #86efac',
+                       }}>
+                    <div className="text-white/70 text-sm mb-1">Winning Trades</div>
+                    <div className="text-xl font-bold text-[#86efac]">
+                      {mockTradeStats.wins}
+                    </div>
+                  </div>
+
+                  <div className="text-center p-4 rounded-xl"
+                       style={{
+                         background: 'rgba(252, 165, 165, 0.1)',
+                         border: '1px solid #fca5a5',
+                       }}>
+                    <div className="text-white/70 text-sm mb-1">Losing Trades</div>
+                    <div className="text-xl font-bold text-[#fca5a5]">
+                      {mockTradeStats.losses}
+                    </div>
+                  </div>
+
+                  <div className="text-center p-4 rounded-xl"
+                       style={{
+                         background: 'rgba(134, 239, 172, 0.1)',
+                         border: '1px solid #86efac',
+                       }}>
+                    <div className="text-white/70 text-sm mb-1">Win Rate</div>
+                    <div className="text-xl font-bold text-[#86efac]">
+                      {mockTradeStats.winRate}%
+                    </div>
+                  </div>
                 </div>
 
-                {/* Recent Trades Table */}
-                <Card ocean padding="lg">
-                  <h3 className="text-xl font-semibold text-text-primary mb-6">
-                    Recent Trades
-                  </h3>
+                {/* Recent Trades Table с цветами */}
+                <div className="rounded-2xl p-6"
+                     style={{
+                       background: 'rgba(255, 255, 255, 0.05)',
+                       backdropFilter: 'blur(20px)',
+                       border: '1px solid rgba(144, 191, 249, 0.2)',
+                     }}>
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-semibold text-white">
+                      Recent Trades
+                    </h3>
+                    <Button
+                      onClick={handleDownloadReport}
+                      className="flex items-center gap-2"
+                      style={{ background: '#90bff9', color: '#05192c' }}
+                    >
+                      <Download className="w-4 h-4" />
+                      Download PDF
+                    </Button>
+                  </div>
 
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-border">
-                          <th className="text-left py-3 px-4 text-text-secondary font-medium">Symbol</th>
-                          <th className="text-left py-3 px-4 text-text-secondary font-medium">Type</th>
-                          <th className="text-left py-3 px-4 text-text-secondary font-medium">Entry Date</th>
-                          <th className="text-left py-3 px-4 text-text-secondary font-medium">Entry Price</th>
-                          <th className="text-left py-3 px-4 text-text-secondary font-medium">Exit Date</th>
-                          <th className="text-left py-3 px-4 text-text-secondary font-medium">Exit Price</th>
-                          <th className="text-right py-3 px-4 text-text-secondary font-medium">P&L</th>
+                        <tr className="border-b border-white/10">
+                          <th className="text-left py-3 text-white/70 font-medium">Symbol</th>
+                          <th className="text-left py-3 text-white/70 font-medium">Type</th>
+                          <th className="text-left py-3 text-white/70 font-medium">Entry Date</th>
+                          <th className="text-left py-3 text-white/70 font-medium">Entry Price</th>
+                          <th className="text-left py-3 text-white/70 font-medium">Exit Date</th>
+                          <th className="text-left py-3 text-white/70 font-medium">Exit Price</th>
+                          <th className="text-right py-3 text-white/70 font-medium">P&L</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {recentTrades.map((trade, index) => {
-                          const profitLoss = trade.profitLossPercent || 0;
-                          return (
-                            <tr key={trade.id} className="border-b border-border/50 hover:bg-white/5 transition-colors">
-                              <td className="py-3 px-4 text-text-primary font-medium">
-                                {trade.ticker}
-                              </td>
-                              <td className="py-3 px-4">
-                                <span className={cn(
-                                  'px-2 py-1 rounded-md text-xs font-medium',
-                                  trade.type === 'long'
-                                    ? 'bg-status-positive/20 text-status-positive'
-                                    : 'bg-status-negative/20 text-status-negative'
-                                )}>
-                                  {trade.type.toUpperCase()}
-                                </span>
-                              </td>
-                              <td className="py-3 px-4 text-text-secondary text-sm">
-                                {formatDate(trade.entryDate)}
-                              </td>
-                              <td className="py-3 px-4 text-text-secondary text-sm">
-                                ${trade.entryPrice.toLocaleString()}
-                              </td>
-                              <td className="py-3 px-4 text-text-secondary text-sm">
-                                {trade.exitDate ? formatDate(trade.exitDate) : '-'}
-                              </td>
-                              <td className="py-3 px-4 text-text-secondary text-sm">
-                                {trade.exitPrice ? `$${trade.exitPrice.toLocaleString()}` : '-'}
-                              </td>
-                              <td className={cn(
-                                'py-3 px-4 text-right font-semibold',
-                                profitLoss > 0
-                                  ? 'text-status-positive'
-                                  : profitLoss < 0
-                                  ? 'text-status-negative'
-                                  : 'text-text-secondary'
-                              )}>
-                                {profitLoss > 0 ? '+' : ''}{profitLoss.toFixed(2)}%
-                              </td>
-                            </tr>
-                          );
-                        })}
+                        {recentTrades.map((trade) => (
+                          <tr key={trade.id} className="border-b border-white/5">
+                            <td className="py-3 text-white font-medium">{trade.ticker}</td>
+                            <td className="py-3 text-white/70 uppercase">{trade.type}</td>
+                            <td className="py-3 text-white/70">{formatDate(trade.entryDate)}</td>
+                            <td className="py-3 text-white/70">${trade.entryPrice.toLocaleString()}</td>
+                            <td className="py-3 text-white/70">{formatDate(trade.exitDate!)}</td>
+                            <td className="py-3 text-white/70">${trade.exitPrice!.toLocaleString()}</td>
+                            <td className={cn(
+                              "py-3 text-right font-bold",
+                              trade.profitLossPercent! > 0 ? 'text-[#86efac]' : 'text-[#fca5a5]'
+                            )}>
+                              {trade.profitLossPercent! > 0 ? '+' : ''}{trade.profitLossPercent!.toFixed(2)}%
+                            </td>
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
                   </div>
 
-                  <div className="mt-6 pt-6 border-t border-border text-center">
-                    <p className="text-sm text-text-secondary mb-4">
-                      Showing {recentTrades.length} most recent trades
+                  <div className="mt-6 text-center">
+                    <p className="text-white/50 text-sm mb-4">
+                      Showing 8 most recent trades
                     </p>
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => console.log('View complete trade journal')}
+                      variant="secondary"
+                      className="text-white border-white/20 hover:bg-white/10"
                     >
                       View Complete Trade Journal
                     </Button>
                   </div>
-                </Card>
+                </div>
               </div>
             )}
           </div>

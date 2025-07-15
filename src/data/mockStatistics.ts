@@ -59,7 +59,43 @@ export const mockKPIData: KPIData[] = [
   },
 ];
 
-// Recent closed trades
+// Portfolio performance chart data
+export const mockPerformanceChartData: ChartDataPoint[] = [
+  { date: '2025-01-01', value: 0 },
+  { date: '2025-01-15', value: 2.1 },
+  { date: '2025-02-01', value: 3.8 },
+  { date: '2025-02-15', value: 2.9 },
+  { date: '2025-03-01', value: 5.2 },
+  { date: '2025-03-15', value: 7.1 },
+  { date: '2025-04-01', value: 6.8 },
+  { date: '2025-04-15', value: 9.2 },
+  { date: '2025-05-01', value: 11.5 },
+  { date: '2025-05-15', value: 10.8 },
+  { date: '2025-06-01', value: 14.2 },
+  { date: '2025-06-15', value: 16.8 },
+  { date: '2025-07-01', value: 19.5 },
+  { date: '2025-07-13', value: 24.7 },
+];
+
+// S&P 500 benchmark data - примерно на 30% ниже нашей производительности
+export const mockBenchmarkChartData: ChartDataPoint[] = [
+  { date: '2025-01-01', value: 0 },
+  { date: '2025-01-15', value: 1.2 },
+  { date: '2025-02-01', value: 2.1 },
+  { date: '2025-02-15', value: 1.8 },
+  { date: '2025-03-01', value: 3.1 },
+  { date: '2025-03-15', value: 4.2 },
+  { date: '2025-04-01', value: 3.9 },
+  { date: '2025-04-15', value: 5.8 },
+  { date: '2025-05-01', value: 7.2 },
+  { date: '2025-05-15', value: 6.8 },
+  { date: '2025-06-01', value: 8.9 },
+  { date: '2025-06-15', value: 10.1 },
+  { date: '2025-07-01', value: 11.8 },
+  { date: '2025-07-13', value: 14.2 },
+];
+
+// Recent closed trades с цветами для P&L
 export const mockClosedTrades: Trade[] = [
   {
     id: '1',
@@ -81,7 +117,7 @@ export const mockClosedTrades: Trade[] = [
     entryPrice: 67.53,
     exitDate: new Date('2025-06-16'),
     exitPrice: 73.75,
-    profitLoss: 6.22,
+    profitLoss: 622,
     profitLossPercent: 9.21,
     status: 'closed',
   },
@@ -90,10 +126,10 @@ export const mockClosedTrades: Trade[] = [
     ticker: 'XPEV',
     type: 'long',
     entryDate: new Date('2025-05-12'),
-    entryPrice: 21.00,
+    entryPrice: 21,
     exitDate: new Date('2025-06-13'),
     exitPrice: 18.53,
-    profitLoss: -2.47,
+    profitLoss: -247,
     profitLossPercent: -11.76,
     status: 'closed',
   },
@@ -105,7 +141,7 @@ export const mockClosedTrades: Trade[] = [
     entryPrice: 806.94,
     exitDate: new Date('2025-06-11'),
     exitPrice: 871.23,
-    profitLoss: 64.29,
+    profitLoss: 6429,
     profitLossPercent: 7.97,
     status: 'closed',
   },
@@ -117,7 +153,7 @@ export const mockClosedTrades: Trade[] = [
     entryPrice: 257.59,
     exitDate: new Date('2025-06-11'),
     exitPrice: 280.66,
-    profitLoss: 23.07,
+    profitLoss: 2307,
     profitLossPercent: 8.96,
     status: 'closed',
   },
@@ -129,7 +165,7 @@ export const mockClosedTrades: Trade[] = [
     entryPrice: 33.67,
     exitDate: new Date('2025-06-09'),
     exitPrice: 36.38,
-    profitLoss: 2.71,
+    profitLoss: 271,
     profitLossPercent: 8.05,
     status: 'closed',
   },
@@ -138,10 +174,10 @@ export const mockClosedTrades: Trade[] = [
     ticker: 'HDB',
     type: 'long',
     entryDate: new Date('2025-04-16'),
-    entryPrice: 69.20,
+    entryPrice: 69.2,
     exitDate: new Date('2025-06-05'),
     exitPrice: 75.71,
-    profitLoss: 6.51,
+    profitLoss: 651,
     profitLossPercent: 9.41,
     status: 'closed',
   },
@@ -159,92 +195,15 @@ export const mockClosedTrades: Trade[] = [
   },
 ];
 
-// Performance chart data (cumulative returns)
-export const mockPerformanceChartData: ChartDataPoint[] = [
-  { date: '2025-01-01', value: 0, label: 'Start of Year' },
-  { date: '2025-01-15', value: 2.1, label: 'Mid January' },
-  { date: '2025-02-01', value: 3.8, label: 'February' },
-  { date: '2025-02-15', value: 5.2, label: 'Mid February' },
-  { date: '2025-03-01', value: 7.9, label: 'March' },
-  { date: '2025-03-15', value: 9.4, label: 'Mid March' },
-  { date: '2025-04-01', value: 12.1, label: 'April' },
-  { date: '2025-04-15', value: 14.8, label: 'Mid April' },
-  { date: '2025-05-01', value: 18.3, label: 'May' },
-  { date: '2025-05-15', value: 21.2, label: 'Mid May' },
-  { date: '2025-06-01', value: 23.5, label: 'June' },
-  { date: '2025-06-15', value: 22.1, label: 'Mid June' },
-  { date: '2025-07-01', value: 24.2, label: 'July' },
-  { date: '2025-07-13', value: 24.7, label: 'Current' },
-];
-
-// Monthly performance breakdown
-export const mockMonthlyPerformance = [
-  { month: 'Jan 2025', return: 2.1, trades: 8 },
-  { month: 'Feb 2025', return: 1.7, trades: 7 },
-  { month: 'Mar 2025', return: 4.1, trades: 9 },
-  { month: 'Apr 2025', return: 2.7, trades: 11 },
-  { month: 'May 2025', return: 6.2, trades: 14 },
-  { month: 'Jun 2025', return: -1.4, trades: 16 },
-  { month: 'Jul 2025', return: 2.1, trades: 8 },
-];
-
-// Asset allocation data
-export const mockAssetAllocation = [
-  { name: 'Equities', value: 45, color: '#3b82f6' },
-  { name: 'Commodities', value: 25, color: '#f59e0b' },
-  { name: 'Crypto', value: 20, color: '#8b5cf6' },
-  { name: 'Bonds', value: 10, color: '#10b981' },
-];
-
-// Sector performance data
-export const mockSectorPerformance = [
-  { sector: 'Technology', return: 18.3, allocation: 25 },
-  { sector: 'Healthcare', return: 12.7, allocation: 15 },
-  { sector: 'Financial', return: 9.4, allocation: 20 },
-  { sector: 'Energy', return: 31.2, allocation: 12 },
-  { sector: 'Consumer', return: 6.8, allocation: 18 },
-  { sector: 'Industrial', return: 14.1, allocation: 10 },
-];
-
-// Risk metrics
-export const mockRiskMetrics = {
-  volatility: 14.2,
-  maxDrawdown: -8.3,
-  sharpeRatio: 1.84,
-  sortino: 2.41,
-  beta: 0.87,
-  alpha: 5.2,
-  informationRatio: 1.23,
-  trackingError: 3.8,
-};
-
-// Trade statistics summary
+// Trade statistics для торгового журнала
 export const mockTradeStats = {
   wins: 50,
   losses: 47,
   winRate: 68.5,
-  avgWin: 8.3,
-  avgLoss: -4.1,
-  bestTrade: 31.2,
-  worstTrade: -11.76,
-  avgHoldingPeriod: 18, // days
-  profitFactor: 2.02,
-};
-
-// Generate mock data for different time periods
-export const generateMockDataForPeriod = (period: 'ytd' | '1y' | '2y' | 'all') => {
-  const baseReturn = 24.7;
-  const multiplier = {
-    ytd: 1,
-    '1y': 1.8,
-    '2y': 2.4,
-    all: 3.2,
-  };
-
-  return {
-    ...mockStatistics,
-    totalReturn: baseReturn * multiplier[period],
-    totalTrades: Math.floor(mockStatistics.totalTrades * multiplier[period]),
-    period: period.toUpperCase(),
-  };
+  averageWin: 8.3,
+  averageLoss: -4.1,
+  totalProfitLoss: 24.7,
+  maxDrawdown: -8.3,
+  sharpeRatio: 1.84,
+  sortinоRatio: 2.41,
 };
