@@ -94,7 +94,7 @@ const ContactForm: React.FC = () => {
           <ul className="text-sm text-text-secondary space-y-2 max-w-md mx-auto">
             <li className="flex items-center gap-2">
               <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
-              We'll review your inquiry within 2-4 hours
+              We&apos;ll review your inquiry within 2-4 hours
             </li>
             <li className="flex items-center gap-2">
               <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
