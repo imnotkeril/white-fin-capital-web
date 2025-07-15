@@ -1,4 +1,4 @@
-// Main types for White Fin Capital
+// Main types for White Fin Capital - ИСПРАВЛЕНО
 
 // User Types
 export interface User {
@@ -47,7 +47,7 @@ export interface ButtonProps extends ComponentProps {
 
 export interface CardProps extends ComponentProps {
   hover?: boolean;
-  padding?: 'sm' | 'md' | 'lg';
+  padding?: 'sm' | 'md' | 'lg' | 'xl' | 'none'; // ИСПРАВЛЕНО: добавлены xl и none
 }
 
 // Chart Types
@@ -72,12 +72,29 @@ export interface ThemeContextType {
   setTheme: (theme: Theme) => void;
 }
 
-// App Context Types
+// ИСПРАВЛЕНО: Notification добавлен в AppContextType
+export interface Notification {
+  id: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  title: string;
+  message?: string;
+  duration?: number;
+  timestamp: Date;
+}
+
+// App Context Types - ИСПРАВЛЕНО
 export interface AppContextType {
   user: User | null;
   setUser: (user: User | null) => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
+  notifications: Notification[];
+  isInitialized: boolean;
+  addNotification: (notification: Omit<Notification, 'id' | 'timestamp'>) => void;
+  removeNotification: (id: string) => void;
+  clearNotifications: () => void;
+  logout: () => void;
+  resetApp: () => void;
 }
 
 // Navigation Types
@@ -100,7 +117,29 @@ export interface FormState<T> {
   isSubmitting: boolean;
 }
 
-// Statistics Types
+// ИСПРАВЛЕНО: Добавлены отсутствующие типы
+export interface Statistics {
+  totalReturn: number;
+  winRate: number;
+  totalTrades: number;
+  averageGain: number;
+  averageLoss: number;
+  period: string;
+  lastUpdated: Date;
+}
+
+export interface Trade {
+  id: string;
+  symbol: string;
+  type: 'LONG' | 'SHORT';
+  entryPrice: number;
+  exitPrice: number;
+  pnl: number;
+  return: number;
+  entryDate: string;
+  closedAt: string;
+}
+
 export interface StatisticData {
   id: string;
   date: string;
@@ -138,16 +177,31 @@ export interface TeamMember {
   twitter?: string;
 }
 
-// Subscription Types
+// ИСПРАВЛЕНО: переименовано из Subscription в SubscriptionPlan
 export interface SubscriptionPlan {
   id: string;
   name: string;
   price: number;
-  currency: string;
-  interval: 'monthly' | 'yearly';
+  originalPrice?: number;
+  period: 'monthly' | 'yearly';
+  description: string;
   features: string[];
-  popular?: boolean;
-  badge?: string;
+  isPopular?: boolean;
+  isEnterprise?: boolean;
+}
+
+// ИСПРАВЛЕНО: добавлен Service тип
+export interface Service {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  features: ServiceFeature[];
+}
+
+export interface ServiceFeature {
+  title: string;
+  description: string;
 }
 
 // Contact Form Types
@@ -170,16 +224,6 @@ export interface SubscriptionFormData {
   billingInterval: 'monthly' | 'yearly';
 }
 
-// Notification Types
-export interface Notification {
-  id: string;
-  type: 'success' | 'error' | 'warning' | 'info';
-  title: string;
-  message?: string;
-  duration?: number;
-  timestamp: Date;
-}
-
 // File Upload Types
 export interface FileUpload {
   file: File;
@@ -200,3 +244,8 @@ export interface CSVData {
     uploadedAt: string;
   };
 }
+
+// ИСПРАВЛЕНО: добавлен ValidationSchema тип
+export type ValidationSchema<T> = {
+  [K in keyof T]?: Array<(value: T[K]) => string | null>;
+};

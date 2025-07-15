@@ -127,6 +127,7 @@ export function useApi<T = any>(
         message: error.message || 'An unexpected error occurred',
         statusCode: error.statusCode || 500,
         details: error.details,
+        timestamp: new Date().toISOString(),
       };
 
       // Retry logic
@@ -204,9 +205,9 @@ export function useApi<T = any>(
 // Helper function to determine if an error should not be retried
 function isNonRetryableError(error: ApiError): boolean {
   // Don't retry client errors (4xx) except for specific cases
-  if (error.statusCode >= 400 && error.statusCode < 500) {
+  if (error.statusCode && error.statusCode >= 400 && error.statusCode < 500) {
     // Retry on rate limiting or temporary client errors
-    return ![408, 429, 503, 504].includes(error.statusCode);
+    return ![408, 429, 503, 504].includes(error.statusCode || 0);
   }
 
   // Retry server errors (5xx)
@@ -255,7 +256,8 @@ export function useApiQuery<T>(
         }
       };
     }
-  }, [enabled, refetchInterval, api.loading]); // eslint-disable-line
+    return undefined;
+  }, [enabled, refetchInterval, api.loading]);
 
   const refetch = useCallback(() => {
     return api.execute();

@@ -105,19 +105,7 @@ root.render(
   </React.StrictMode>
 );
 
-// Performance monitoring (optional)
-if (process.env.NODE_ENV === 'production') {
-  // Report web vitals
-  import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-    getCLS(console.log);
-    getFID(console.log);
-    getFCP(console.log);
-    getLCP(console.log);
-    getTTFB(console.log);
-  }).catch(err => {
-    console.warn('Web Vitals not available:', err);
-  });
-}
+
 
 // Service Worker registration (if needed)
 if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {

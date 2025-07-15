@@ -1,8 +1,8 @@
-// Subscription plans data for White Fin Capital
+// Subscription plans data for White Fin Capital - ИСПРАВЛЕНО
 
-import { Subscription } from '@/types';
+import { SubscriptionPlan } from '@/types'; // ИСПРАВЛЕНО: используем SubscriptionPlan
 
-export const subscriptionPlans: Subscription[] = [
+export const subscriptionPlans: SubscriptionPlan[] = [
   {
     id: 'essential',
     name: 'Essential',
@@ -67,11 +67,11 @@ export const subscriptionPlans: Subscription[] = [
 ];
 
 // Annual pricing (with discount)
-export const annualSubscriptionPlans: Subscription[] = subscriptionPlans.map(plan => ({
+export const annualSubscriptionPlans: SubscriptionPlan[] = subscriptionPlans.map(plan => ({
   ...plan,
   period: 'annual' as const,
   price: Math.round(plan.price * 12 * 0.75), // 25% discount
-  originalPrice: plan.originalPrice ? Math.round(plan.originalPrice * 12) : undefined,
+  ...(plan.originalPrice && { originalPrice: Math.round(plan.originalPrice * 12) }),
 }));
 
 // Plan comparison features

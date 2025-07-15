@@ -152,7 +152,7 @@ const SubscriptionSection: React.FC = () => {
                           </span>
                           {billingPeriod === 'annual' && (
                             <span className="text-status-positive text-sm font-medium">
-                              Save {calculateSavings(subscriptionPlans[index].price, plan.price).percentage}%
+                              Save {calculateSavings(subscriptionPlans[index]?.price || 0, plan.price).percentage}%
                             </span>
                           )}
                         </div>

@@ -265,7 +265,7 @@ export function useNotifications() {
     clearNotifications,
     // Convenience methods for different notification types
     notifySuccess: (title: string, message?: string, duration?: number) =>
-      addNotification({ type: 'success', title, message, duration }),
+      addNotification({ type: 'success', title, ...(message && { message }), ...(duration && { duration }) }),
     notifyError: (title: string, message?: string, duration?: number) =>
       addNotification({ type: 'error', title, message, duration }),
     notifyWarning: (title: string, message?: string, duration?: number) =>

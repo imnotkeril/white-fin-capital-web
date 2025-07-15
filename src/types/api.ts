@@ -1,4 +1,4 @@
-// API Types for White Fin Capital
+// API Types for White Fin Capital - ИСПРАВЛЕНО
 
 // Base API Response
 export interface ApiResponse<T = any> {
@@ -7,6 +7,14 @@ export interface ApiResponse<T = any> {
   error?: string;
   message?: string;
   timestamp?: string;
+}
+
+// ИСПРАВЛЕНО: добавлен ApiRequest тип
+export interface ApiRequest {
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  url: string;
+  data?: any;
+  headers?: Record<string, string>;
 }
 
 // Pagination
@@ -228,9 +236,11 @@ export interface ValidationError {
   code: string;
 }
 
+// ИСПРАВЛЕНО: добавлен statusCode в ApiError
 export interface ApiError {
   code: string;
   message: string;
+  statusCode?: number; // ИСПРАВЛЕНО: сделано опциональным
   details?: ValidationError[];
   timestamp: string;
 }

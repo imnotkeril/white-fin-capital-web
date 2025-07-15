@@ -11,7 +11,7 @@ import Footer from '@/components/common/Footer';
 import HeroSection from '@/components/sections/HeroSection';
 import PerformanceSection from '@/components/sections/PerformanceSection';
 import ServicesSection from '@/components/sections/ServicesSection';
-import TeamSection from '@/components/sections/TeamSection';
+
 import SubscriptionSection from '@/components/sections/SubscriptionSection';
 import ContactSection from '@/components/sections/ContactSection';
 

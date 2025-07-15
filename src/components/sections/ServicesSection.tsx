@@ -15,6 +15,7 @@ import { services, researchProcess, keyDifferentiators } from '@/data/services';
 import { cn, scrollToElement } from '@/utils/helpers';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
+import { ServiceFeature } from '@/types';
 
 const ServicesSection: React.FC = () => {
   const [activeService, setActiveService] = useState(0);
@@ -85,7 +86,7 @@ const ServicesSection: React.FC = () => {
               <Card ocean padding="lg" className="transition-all duration-200 hover:-translate-y-1">
                 <div className="aspect-video bg-gradient-to-br from-primary-500/20 to-pastel-pearl/20 rounded-lg flex items-center justify-center">
                   {(() => {
-                    const IconComponent = iconMap[services[activeService].icon as keyof typeof iconMap] || TrendingUp;
+                    const IconComponent = iconMap[services[activeService]?.icon as keyof typeof iconMap] || TrendingUp;
                     return <IconComponent className="w-24 h-24 text-primary-500" />;
                   })()}
                 </div>
@@ -123,16 +124,16 @@ const ServicesSection: React.FC = () => {
             {/* Service Details */}
             <div>
               <h3 className="text-3xl font-bold text-text-primary mb-4">
-                {services[activeService].title}
+                {services[activeService]?.title}
               </h3>
 
               <p className="text-lg text-text-secondary mb-8 leading-relaxed">
-                {services[activeService].description}
+                {services[activeService]?.description}
               </p>
 
               {/* Features List - ИСПРАВЛЕНО: используем правильную структуру данных */}
               <div className="space-y-4 mb-8">
-                {services[activeService].features.map((feature: ServiceFeature, index: number) => (
+                {services[activeService]?.features.map((feature: ServiceFeature, index: number) => (
                   <div key={index} className="flex gap-3">
                     <CheckCircle className="w-6 h-6 text-status-positive flex-shrink-0 mt-0.5" />
                     <div>

@@ -79,6 +79,7 @@ class ApiService {
           message: responseData?.message || this.getErrorMessage(response.status),
           statusCode: response.status,
           details: responseData?.details,
+          timestamp: new Date().toISOString(),
         };
 
         throw error;
@@ -117,7 +118,7 @@ class ApiService {
 
   // GET request
   async get<T = any>(url: string, headers?: Record<string, string>): Promise<ApiResponse<T>> {
-    return this.request<T>({ method: 'GET', url, headers });
+    return this.request<T>({ method: 'GET', url, ...(headers && { headers }) });
   }
 
   // POST request
@@ -184,7 +185,7 @@ class ApiService {
 
     // Try to get from cookie
     const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
-    return match ? decodeURIComponent(match[1]) : null;
+    return match?.[1] ? decodeURIComponent(match[1]) : null;
   }
 
   // Get error message based on status code
