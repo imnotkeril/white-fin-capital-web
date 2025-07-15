@@ -16,6 +16,7 @@ interface ExtendedCardProps extends CardProps {
   ripple?: boolean;
   glow?: boolean;
   float?: boolean;
+  laser?: boolean;
 }
 
 const Card: React.FC<ExtendedCardProps> = ({
@@ -36,16 +37,18 @@ const Card: React.FC<ExtendedCardProps> = ({
   ripple = false,
   glow = false,
   float = false,
+  laser = false,
   ...props
 }) => {
-  const baseClasses = `
-    rounded-2xl overflow-hidden transition-all duration-300 ease-in-out
-    ${hover || interactive ? 'hover-lift cursor-pointer' : ''}
-    ${interactive ? 'interactive-card' : ''}
-    ${ripple ? 'ripple-effect' : ''}
-    ${glow ? 'hover-glow' : ''}
-    ${float ? 'float-animation' : ''}
-  `;
+  const baseClasses = cn(
+    'rounded-2xl overflow-hidden transition-all duration-300 ease-in-out',
+    hover || interactive ? 'hover-lift cursor-pointer' : '',
+    interactive ? 'interactive-card' : '',
+    ripple ? 'ripple-effect' : '',
+    glow ? 'hover-glow' : '',
+    float ? 'float-animation' : '',
+    laser ? 'laser-border' : ''
+  );
 
   const paddingClasses = {
     sm: 'p-4',
@@ -87,6 +90,14 @@ const Card: React.FC<ExtendedCardProps> = ({
 
   return (
     <div className={classes} {...props}>
+      {/* Лазерные линии для премиум карточек */}
+      {laser && (
+        <>
+          <div className="bottom-line"></div>
+          <div className="left-line"></div>
+        </>
+      )}
+
       {image && (
         <div className="relative">
           <img
@@ -130,21 +141,7 @@ const Card: React.FC<ExtendedCardProps> = ({
         </div>
       )}
 
-      {/* Дополнительные декоративные элементы для океанской темы */}
-      {ocean && (
-        <>
-          {/* Тонкие волновые линии */}
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary-500/20 to-transparent" />
-          <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary-500/20 to-transparent" />
-        </>
-      )}
 
-      {/* Shimmer эффект для интерактивных карточек */}
-      {interactive && (
-        <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-          <div className="shimmer absolute inset-0" />
-        </div>
-      )}
     </div>
   );
 };
@@ -160,6 +157,10 @@ export const OceanCard: React.FC<ExtendedCardProps> = (props) => (
 
 export const FloatingCard: React.FC<ExtendedCardProps> = (props) => (
   <Card ocean interactive float ripple {...props} />
+);
+
+export const LaserCard: React.FC<ExtendedCardProps> = (props) => (
+  <Card laser interactive glow {...props} />
 );
 
 export const MetricCard: React.FC<ExtendedCardProps & {
@@ -191,14 +192,14 @@ export const MetricCard: React.FC<ExtendedCardProps & {
     )}
 
     {label && (
-      <div className="metric-label">
+      <div className="metric-label text-text-secondary text-sm mb-2">
         {label}
       </div>
     )}
 
     {value && (
       <div className={cn(
-        "metric-value",
+        "metric-value text-2xl font-bold mb-2",
         trend === 'positive' && "performance-positive",
         trend === 'negative' && "performance-negative",
         trend === 'neutral' && "performance-neutral"
@@ -281,7 +282,7 @@ export const TeamCard: React.FC<ExtendedCardProps & {
               rel="noopener noreferrer"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84" />
+                <path d="M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.01-.532A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84" />
               </svg>
             </a>
           )}
@@ -291,8 +292,9 @@ export const TeamCard: React.FC<ExtendedCardProps & {
               href={`mailto:${social.email}`}
               className="text-text-secondary hover:text-primary-500 transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
               </svg>
             </a>
           )}
