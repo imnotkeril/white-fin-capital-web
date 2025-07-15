@@ -202,7 +202,7 @@ const HeroSection: React.FC = () => {
                 type="email"
                 name="email"
                 value={values.email}
-                onChange={handleChange}
+                onChange={(e) => handleChange('email')(e.target.value)}
                 placeholder="Enter your email"
                 className={`form-input flex-1 ${
                   errors.email ? 'border-status-negative focus:border-status-negative focus:ring-status-negative/20' : ''

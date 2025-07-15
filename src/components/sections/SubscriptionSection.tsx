@@ -178,7 +178,7 @@ const SubscriptionSection: React.FC = () => {
 
                   {/* Features List - ИСПРАВЛЕНО: используем системные цвета */}
                   <div className="space-y-3">
-                    {plan.features.map((feature, featureIndex) => (
+                    {plan.features.map((feature: string, featureIndex: number) => (
                       <div key={featureIndex} className="flex items-start gap-3">
                         <Check className="w-5 h-5 text-status-positive flex-shrink-0 mt-0.5" />
                         <span className="text-text-secondary text-sm">

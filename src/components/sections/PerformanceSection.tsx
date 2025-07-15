@@ -12,7 +12,7 @@ import { cn } from '@/utils/helpers';
 import Button from '@/components/common/Button';
 import Card, { MetricCard } from '@/components/common/Card';
 import PerformanceChart from '@/components/charts/PerformanceChart';
-import { KPICounter, KPIGrid } from '@/components/charts/KPICounter';
+import KPICounter, { KPIGrid } from '@/components/charts/KPICounter';
 
 interface PeriodData {
   currentReturn: number;

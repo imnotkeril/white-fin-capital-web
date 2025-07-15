@@ -190,7 +190,7 @@ const Footer: React.FC = () => {
                     {section.links.map((link, linkIndex) => (
                       <li key={linkIndex}>
                         <button
-                          onClick={() => handleNavClick(link.href, link.section)}
+                          onClick={() => handleNavClick(link.href, 'section' in link ? link.section : undefined)}
                           className="text-text-secondary hover:text-text-primary transition-colors text-sm block w-full text-left group"
                         >
                           <span className="border-b border-transparent group-hover:border-primary-500/50 transition-colors">

@@ -132,7 +132,7 @@ const ServicesSection: React.FC = () => {
 
               {/* Features List - ИСПРАВЛЕНО: используем правильную структуру данных */}
               <div className="space-y-4 mb-8">
-                {services[activeService].features.map((feature, index) => (
+                {services[activeService].features.map((feature: ServiceFeature, index: number) => (
                   <div key={index} className="flex gap-3">
                     <CheckCircle className="w-6 h-6 text-status-positive flex-shrink-0 mt-0.5" />
                     <div>
