@@ -257,7 +257,7 @@ const ServicesSection: React.FC = () => {
         </div>
 
         {/* CTA Section - ИСПРАВЛЕНО: используем Card ocean */}
-        <Card ocean padding="xl" className="text-center">
+        <Card ocean padding="xl" className="text-center px-8 py-12 md:px-12 md:py-8">
           <h3 className="text-3xl font-bold text-text-primary mb-4">
             Ready to Elevate Your Investment Strategy?
           </h3>
