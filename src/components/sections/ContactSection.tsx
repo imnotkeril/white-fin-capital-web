@@ -144,40 +144,6 @@ const ContactSection: React.FC = () => {
               </div>
             </Card>
 
-            {/* Office Locations */}
-            <Card ocean padding="lg">
-              <h3 className="text-xl font-bold text-text-primary mb-6 flex items-center gap-3">
-                <Building className="w-6 h-6 text-primary-500" />
-                Office Locations
-              </h3>
-
-              <div className="space-y-6">
-                {/* New York Office */}
-                <div>
-                  <h4 className="font-semibold text-text-primary mb-2">
-                    Headquarters - New York
-                  </h4>
-                  <p className="text-text-secondary text-sm leading-relaxed">
-                    {COMPANY.address.street}<br />
-                    {COMPANY.address.city}, {COMPANY.address.state} {COMPANY.address.zip}<br />
-                    {COMPANY.address.country}
-                  </p>
-                </div>
-
-                {/* European Office */}
-                <div>
-                  <h4 className="font-semibold text-text-primary mb-2">
-                    European Office - London
-                  </h4>
-                  <p className="text-text-secondary text-sm leading-relaxed">
-                    45 Canary Wharf<br />
-                    London E14 5AB<br />
-                    United Kingdom
-                  </p>
-                </div>
-              </div>
-            </Card>
-
             {/* Social Media */}
             <Card ocean padding="lg">
               <h3 className="text-xl font-bold text-text-primary mb-6 flex items-center gap-3">
@@ -207,43 +173,6 @@ const ContactSection: React.FC = () => {
                     </div>
                   </a>
                 ))}
-              </div>
-            </Card>
-
-            {/* Quick Contact CTA */}
-            <Card className="p-8 glass border-primary-500/20">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Send className="w-8 h-8 text-white" />
-                </div>
-
-                <h3 className="text-xl font-bold text-text-primary mb-4">
-                  Need Immediate Assistance?
-                </h3>
-                <p className="text-text-secondary mb-6">
-                  Our team is available to help with urgent inquiries and consultations.
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button
-                    variant="primary"
-                    size="md"
-                    fullWidth
-                    onClick={() => window.open(`tel:${COMPANY.phone}`, '_self')}
-                    icon={<Phone className="w-4 h-4" />}
-                  >
-                    Call Now
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="md"
-                    fullWidth
-                    onClick={() => window.open(`mailto:${COMPANY.email}`, '_blank')}
-                    icon={<Mail className="w-4 h-4" />}
-                  >
-                    Email Us
-                  </Button>
-                </div>
               </div>
             </Card>
           </div>

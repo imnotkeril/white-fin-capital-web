@@ -1,3 +1,4 @@
+// src/App.tsx
 import React, { useEffect } from 'react';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { AppProvider } from '@/context/AppContext';
@@ -35,12 +36,13 @@ const App: React.FC = () => {
   return (
     <ThemeProvider defaultTheme="light" storageKey="white-fin-theme">
       <AppProvider>
-        <div className="min-h-screen bg-background text-text-primary ocean-theme">
+        {/* Добавлены flex flex-col и min-h-screen для правильной компоновки */}
+        <div className="min-h-screen bg-background text-text-primary ocean-theme flex flex-col">
           {/* Header */}
           <Header />
 
-          {/* Main Content */}
-          <main className="relative">
+          {/* Main Content - flex-grow, чтобы занимать все доступное пространство */}
+          <main className="relative flex-grow">
             {/* Hero Section */}
             <HeroSection />
 
@@ -66,8 +68,7 @@ const App: React.FC = () => {
           {/* Toast Notifications Container */}
           <div id="toast-container" className="fixed top-4 right-4 z-50 space-y-2" />
 
-          {/* Ocean Decorative Elements */}
-          <div className="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-primary-500/20 via-pastel-mint/30 to-primary-500/20 pointer-events-none" />
+          {/* УДАЛЕНО: Нижняя декоративная линия - теперь она будет частью футера */}
         </div>
       </AppProvider>
     </ThemeProvider>
