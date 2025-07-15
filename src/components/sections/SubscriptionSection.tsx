@@ -55,7 +55,7 @@ const SubscriptionSection: React.FC = () => {
             Choose Your Plan
           </h2>
           <p className="text-xl text-text-secondary max-w-3xl mx-auto leading-relaxed mb-8">
-            Transparent pricing with no hidden fees. Start with a 14-day free trial, 
+            Transparent pricing with no hidden fees. Start with a 14-day free trial,
             cancel anytime.
           </p>
 

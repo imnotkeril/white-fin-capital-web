@@ -6,7 +6,7 @@
 import { cn } from './helpers';
 
 // Типы для океанских эффектов
-export type OceanEffect = 'glass' | 'ripple' | 'float' | 'shimmer' | 'wave';
+export type OceanEffect = 'glass' | 'ripple' | 'float' | 'shimmer' | 'wave' | 'laser';
 export type StatusColor = 'positive' | 'negative' | 'neutral';
 export type OceanColor = 'coral' | 'mint' | 'pearl' | 'navy' | 'light-blue';
 
@@ -38,13 +38,16 @@ export const OCEAN_EFFECTS = {
   glass: 'glass backdrop-blur-20 border border-wave-foam',
   glassStrong: 'glass-strong backdrop-blur-30',
   ripple: 'ripple-effect',
+  rippleBtn: 'ripple-btn',
   float: 'float-animation',
   shimmer: 'shimmer',
   interactiveCard: 'interactive-card',
   hoverLift: 'hover-lift',
+  hoverGlow: 'hover-glow',
   oceanGradient: 'ocean-gradient',
   navGlass: 'nav-glass',
   cardOcean: 'card-ocean',
+  laserBorder: 'laser-border',
 } as const;
 
 // Статусные цвета и классы
@@ -79,9 +82,11 @@ export const createOceanCard = (options: {
   glass?: boolean;
   float?: boolean;
   ripple?: boolean;
+  laser?: boolean;
+  glow?: boolean;
   className?: string;
 } = {}) => {
-  const { interactive, glass, float, ripple, className = '' } = options;
+  const { interactive, glass, float, ripple, laser, glow, className = '' } = options;
 
   return cn(
     'rounded-2xl transition-all duration-300',
@@ -89,6 +94,8 @@ export const createOceanCard = (options: {
     interactive && OCEAN_EFFECTS.interactiveCard,
     float && OCEAN_EFFECTS.float,
     ripple && OCEAN_EFFECTS.ripple,
+    laser && OCEAN_EFFECTS.laserBorder,
+    glow && OCEAN_EFFECTS.hoverGlow,
     className
   );
 };
@@ -96,7 +103,7 @@ export const createOceanCard = (options: {
 /**
  * Генерирует классы для кнопок в океанском стиле
  */
-export const createOceanButton = (variant: 'primary' | 'secondary' | 'glass' = 'primary', options: {
+export const createOceanButton = (variant: 'primary' | 'secondary' | 'glass' | 'outline' | 'ghost' = 'primary', options: {
   size?: 'sm' | 'md' | 'lg';
   ripple?: boolean;
   className?: string;
@@ -107,7 +114,7 @@ export const createOceanButton = (variant: 'primary' | 'secondary' | 'glass' = '
     'ocean-btn',
     `btn-${variant}`,
     `btn-${size}`,
-    ripple && OCEAN_EFFECTS.ripple,
+    ripple && OCEAN_EFFECTS.rippleBtn,
     className
   );
 
@@ -163,8 +170,9 @@ export const OCEAN_ANIMATIONS = {
   smooth: 'transition-all duration-500 ease-out',
   wave: 'transition-all duration-700 cubic-bezier(0.25, 0.46, 0.45, 0.94)',
 
-  // Hover эффекты
-  liftHover: 'hover:-translate-y-1 hover:shadow-lg',
+  // Hover эффекты в соответствии с гайдлайном
+  buttonHover: 'hover:translate-y-[-2px]',
+  cardHover: 'hover:translate-y-[-4px]',
   scaleHover: 'hover:scale-102',
   glowHover: 'hover:shadow-[0_0_20px_var(--wave-foam)]',
 
@@ -172,6 +180,8 @@ export const OCEAN_ANIMATIONS = {
   pulse: 'animate-pulse',
   bounce: 'animate-bounce',
   spin: 'animate-spin',
+  float: 'float-animation',
+  shimmer: 'shimmer',
 } as const;
 
 /**
@@ -190,78 +200,154 @@ export const createGlassEffect = (options: {
   blur?: number;
   opacity?: number;
   borderOpacity?: number;
+  strong?: boolean;
 } = {}) => {
-  const { blur = 20, opacity = 0.7, borderOpacity = 0.2 } = options;
+  const { blur = 20, opacity = 0.7, borderOpacity = 0.2, strong = false } = options;
 
   return {
     background: `rgba(255, 255, 255, ${opacity})`,
     backdropFilter: `blur(${blur}px)`,
     border: `1px solid rgba(144, 191, 249, ${borderOpacity})`,
+    ...(strong && {
+      backdropFilter: `blur(${blur + 10}px)`,
+      background: `rgba(255, 255, 255, ${opacity + 0.2})`,
+    })
   };
 };
 
 /**
- * Проверяет, поддерживает ли браузер backdrop-filter
+ * Создает лазерную рамку для премиум карточек
  */
-export const supportsBackdropFilter = (): boolean => {
-  if (typeof window === 'undefined') return false;
+export const createLaserBorder = (options: {
+  color?: string;
+  intensity?: number;
+} = {}) => {
+  const { color = 'rgba(144, 191, 249, 0.8)', intensity = 0.3 } = options;
 
-  const testElement = document.createElement('div');
-  testElement.style.backdropFilter = 'blur(1px)';
-
-  return testElement.style.backdropFilter !== '';
+  return {
+    position: 'relative' as const,
+    overflow: 'hidden' as const,
+    '&::before, &::after, &.bottom-line, &.left-line': {
+      content: '""',
+      position: 'absolute' as const,
+      background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
+      transition: 'all 0.6s ease',
+    },
+    '&:hover': {
+      boxShadow: `0 0 30px rgba(144, 191, 249, ${intensity})`,
+      transform: 'translateY(-2px)',
+    }
+  };
 };
 
 /**
- * Генерирует случайную волновую анимацию для декоративных элементов
+ * Создает ripple эффект для интерактивных элементов
  */
-export const generateWaveAnimation = (elements: number = 5) => {
-  return Array.from({ length: elements }, (_, i) => ({
-    left: `${Math.random() * 100}%`,
-    top: `${Math.random() * 100}%`,
-    animationDelay: `${i * 0.5}s`,
-    animationDuration: `${3 + Math.random() * 2}s`,
-  }));
+export const createRippleEffect = (options: {
+  color?: string;
+  size?: number;
+  duration?: number;
+} = {}) => {
+  const { color = 'var(--wave-foam)', size = 200, duration = 0.6 } = options;
+
+  return {
+    position: 'relative' as const,
+    overflow: 'hidden' as const,
+    '&::after': {
+      content: '""',
+      position: 'absolute' as const,
+      top: '50%',
+      left: '50%',
+      width: 0,
+      height: 0,
+      background: color,
+      borderRadius: '50%',
+      transform: 'translate(-50%, -50%)',
+      transition: `all ${duration}s ease`,
+      pointerEvents: 'none' as const,
+    },
+    '&:hover::after': {
+      width: `${size}px`,
+      height: `${size}px`,
+      animation: `ocean-ripple ${duration}s ease-out`,
+    }
+  };
 };
 
 /**
- * Константы для responsive дизайна с океанской темой
+ * Создает плавающую анимацию для элементов
  */
-export const OCEAN_BREAKPOINTS = {
-  mobile: '320px',
-  tablet: '768px',
-  desktop: '1024px',
-  large: '1280px',
+export const createFloatAnimation = (options: {
+  distance?: number;
+  duration?: number;
+  delay?: number;
+} = {}) => {
+  const { distance = 3, duration = 4, delay = 0 } = options;
+
+  return {
+    animation: `gentle-float ${duration}s ease-in-out infinite`,
+    animationDelay: `${delay}s`,
+    '@keyframes gentle-float': {
+      '0%, 100%': {
+        transform: 'translateY(0) rotate(0deg)',
+      },
+      '50%': {
+        transform: `translateY(-${distance}px) rotate(0.2deg)`,
+      }
+    }
+  };
+};
+
+/**
+ * Предустановленные комбинации эффектов
+ */
+export const OCEAN_PRESETS = {
+  // Для обычных карточек
+  standardCard: {
+    glass: true,
+    interactive: true,
+    ripple: true,
+  },
+
+  // Для премиум карточек подписки
+  premiumCard: {
+    laser: true,
+    interactive: true,
+    glow: true,
+  },
+
+  // Для статистических карточек
+  metricCard: {
+    glass: true,
+    interactive: true,
+    float: true,
+  },
+
+  // Для команды
+  teamCard: {
+    ocean: true,
+    interactive: true,
+    hover: true,
+  },
+
+  // Для кнопок по умолчанию
+  defaultButton: {
+    ripple: true,
+  },
+
+  // Для главных CTA кнопок
+  primaryButton: {
+    ripple: true,
+    variant: 'primary' as const,
+  },
 } as const;
 
 /**
- * Утилиты для доступности в океанской теме
+ * Утилита для применения предустановок
  */
-export const ACCESSIBILITY_HELPERS = {
-  focusRing: 'focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2',
-  highContrast: 'contrast-more:border-2 contrast-more:border-text-primary',
-  reduceMotion: 'motion-reduce:animate-none motion-reduce:transition-none',
-  screenReader: 'sr-only',
-} as const;
-
-/**
- * Экспорт всех утилит как единый объект
- */
-export const OceanTheme = {
-  colors: OCEAN_COLORS,
-  effects: OCEAN_EFFECTS,
-  status: STATUS_STYLES,
-  animations: OCEAN_ANIMATIONS,
-  breakpoints: OCEAN_BREAKPOINTS,
-  accessibility: ACCESSIBILITY_HELPERS,
-
-  // Функции
-  createCard: createOceanCard,
-  createButton: createOceanButton,
-  createStatus: createStatusIndicator,
-  createIconGradient: createOceanIconGradient,
-  createGradient: createCustomGradient,
-  createGlass: createGlassEffect,
-  generateWaves: generateWaveAnimation,
-  supportsBlur: supportsBackdropFilter,
-} as const;
+export const applyOceanPreset = (preset: keyof typeof OCEAN_PRESETS, overrides: Record<string, any> = {}) => {
+  return {
+    ...OCEAN_PRESETS[preset],
+    ...overrides,
+  };
+};
