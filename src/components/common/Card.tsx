@@ -96,7 +96,7 @@ const Card: React.FC<ExtendedCardProps> = ({
       {image && (
         <div className="relative">
           <img
-            src={image}
+            src={image!}
             alt={imageAlt || ''}
             className="w-full h-48 object-cover"
           />
