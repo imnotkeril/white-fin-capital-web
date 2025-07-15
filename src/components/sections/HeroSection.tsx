@@ -130,12 +130,12 @@ const HeroSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Quick Stats - ИСПРАВЛЕНО: добавлены неоновые hover эффекты */}
+        {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
           <div className={cn(
             "glass p-6 rounded-xl text-center transition-all duration-300 group cursor-pointer",
             "hover:-translate-y-2 hover:shadow-2xl",
-            // Неоновое свечение для первой карточки (TrendingUp)
+
             "hover:shadow-primary-500/25 hover:ring-1 hover:ring-primary-500/50",
             "dark:hover:shadow-primary-400/30 dark:hover:ring-primary-400/50"
           )}>
@@ -154,7 +154,7 @@ const HeroSection: React.FC = () => {
           <div className={cn(
             "glass p-6 rounded-xl text-center transition-all duration-300 group cursor-pointer",
             "hover:-translate-y-2 hover:shadow-2xl",
-            // Неоновое свечение для второй карточки (BarChart3) - мятный цвет
+
             "hover:shadow-pastel-mint/25 hover:ring-1 hover:ring-pastel-mint/50",
             "dark:hover:shadow-pastel-mint/30 dark:hover:ring-pastel-mint/50"
           )}>
@@ -173,7 +173,7 @@ const HeroSection: React.FC = () => {
           <div className={cn(
             "glass p-6 rounded-xl text-center transition-all duration-300 group cursor-pointer",
             "hover:-translate-y-2 hover:shadow-2xl",
-            // Неоновое свечение для третьей карточки (Shield) - коралловый цвет
+
             "hover:shadow-pastel-coral/25 hover:ring-1 hover:ring-pastel-coral/50",
             "dark:hover:shadow-pastel-coral/30 dark:hover:ring-pastel-coral/50"
           )}>
