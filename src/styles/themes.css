@@ -46,6 +46,24 @@
   }
 }
 
+@keyframes professional-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes professional-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 @keyframes ocean-ripple {
   0% {
     transform: scale(1);
@@ -99,7 +117,7 @@
   background: linear-gradient(135deg,
     var(--color-background) 0%,
     var(--color-pastel-pearl) 50%,
-    var(--color-slate-100) 100%);
+    var(--color-pastel-pearl) 100%);
   background-size: 200% 200%;
   animation: ocean-wave 8s ease-in-out infinite;
 }
@@ -108,7 +126,7 @@
   background: linear-gradient(135deg,
     var(--color-dark-blue) 0%,
     #0f2337 50%,
-    var(--color-navy-800) 100%);
+    #1a2b42 100%);
   background-size: 200% 200%;
   animation: ocean-wave 8s ease-in-out infinite;
 }
@@ -121,9 +139,28 @@
   cursor: pointer;
 }
 
+.interactive-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent,
+    var(--wave-foam),
+    transparent);
+  transition: left 0.6s;
+  z-index: 1;
+}
+
 .interactive-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-xl);
+}
+
+.interactive-card:hover::before {
+  left: 100%;
 }
 
 .ripple-effect {
@@ -161,14 +198,6 @@
   box-shadow: var(--shadow-xl);
 }
 
-.hover-scale {
-  transition: all var(--transition-fast);
-}
-
-.hover-scale:hover {
-  transform: scale(1.02);
-}
-
 .hover-glow {
   transition: all var(--transition-normal);
 }
@@ -192,7 +221,7 @@
   box-shadow: 0 0 25px rgba(144, 191, 249, 0.5);
 }
 
-/* === АНИМАЦИИ ПЛАВАНИЯ === */
+/* === АНИМАЦИОННЫЕ КЛАССЫ === */
 .float-animation {
   animation: gentle-float 4s ease-in-out infinite;
 }
@@ -201,7 +230,71 @@
   animation: subtle-pulse 3s ease-in-out infinite;
 }
 
-/* === NAVIGATION === */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent);
+  animation: professional-shimmer 2s infinite;
+}
+
+/* === ГРАДИЕНТЫ === */
+.ocean-gradient-reverse {
+  background: linear-gradient(135deg,
+    var(--color-pastel-pearl) 0%,
+    var(--color-pastel-pearl) 50%,
+    var(--color-white) 100%);
+}
+
+.wave-gradient {
+  background: linear-gradient(45deg,
+    var(--color-light-blue),
+    var(--color-pastel-mint));
+}
+
+/* === СТАТУСНЫЕ ЦВЕТА === */
+.status-positive {
+  color: var(--color-status-positive);
+  background: rgba(134, 239, 172, 0.1);
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--color-status-positive);
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-negative {
+  color: var(--color-status-negative);
+  background: rgba(252, 165, 165, 0.1);
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--color-status-negative);
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-neutral {
+  color: var(--color-status-neutral);
+  background: rgba(191, 159, 251, 0.1);
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--color-status-neutral);
+  font-weight: 600;
+  display: inline-block;
+}
+
+/* === NAVIGATION STYLES === */
 .nav-glass {
   background: var(--color-nav-bg);
   backdrop-filter: blur(20px);
@@ -250,7 +343,7 @@
 
 /* === TEXT GRADIENT EFFECTS === */
 .text-gradient {
-  background: linear-gradient(135deg, var(--color-primary-500), var(--color-pastel-mint));
+  background: linear-gradient(135deg, var(--color-light-blue), var(--color-pastel-mint));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -281,6 +374,10 @@
   animation: subtle-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+.loading-shimmer {
+  animation: professional-shimmer 1.5s ease-in-out infinite;
+}
+
 /* === ACCESSIBILITY IMPROVEMENTS === */
 @media (prefers-reduced-motion: reduce) {
   .float-animation,
@@ -290,13 +387,19 @@
   }
 
   .hover-lift:hover,
-  .hover-scale:hover,
-  .interactive-card:hover {
+  .neon-glow:hover,
+  .interactive-card:hover,
+  .card-ocean:hover {
     transform: none;
   }
 
   .ripple-effect::after {
     display: none;
+  }
+
+  .ocean-gradient,
+  .dark .ocean-gradient {
+    animation: none;
   }
 }
 
@@ -366,7 +469,7 @@
 }
 
 .light .text-gradient-ocean {
-  background: linear-gradient(135deg, var(--color-dark-blue), var(--color-primary-500));
+  background: linear-gradient(135deg, var(--color-dark-blue), var(--color-light-blue));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

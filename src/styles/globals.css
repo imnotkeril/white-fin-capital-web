@@ -47,7 +47,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary-500);
+  background: var(--color-light-blue);
 }
 
 /* === SELECTION STYLES === */
@@ -113,7 +113,7 @@ p {
 }
 
 a {
-  color: var(--color-primary-500);
+  color: var(--color-light-blue);
   text-decoration: none;
   transition: color var(--transition-fast);
 }
@@ -185,14 +185,10 @@ a:hover {
 }
 
 .btn-primary:hover {
-  background: var(--color-navy-800);
-  border-color: var(--color-navy-800);
-  transform: translateY(-2px);
-  box-shadow: 0 0 20px rgba(144, 191, 249, 0.4);
-}
-
-.dark .btn-primary:hover {
-  box-shadow: 0 0 25px rgba(144, 191, 249, 0.5);
+  background: #0f2337; /* Более темный оттенок основного темно-синего */
+  border-color: #0f2337;
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
 }
 
 .btn-secondary {
@@ -204,8 +200,7 @@ a:hover {
 .btn-secondary:hover {
   background: var(--color-dark-blue);
   color: var(--color-white);
-  transform: translateY(-2px);
-  box-shadow: 0 0 15px rgba(144, 191, 249, 0.3);
+  transform: translateY(-4px);
 }
 
 .dark .btn-secondary {
@@ -216,7 +211,6 @@ a:hover {
 .dark .btn-secondary:hover {
   background: var(--color-light-blue);
   color: var(--color-dark-blue);
-  box-shadow: 0 0 20px rgba(144, 191, 249, 0.4);
 }
 
 .btn-glass {
@@ -228,9 +222,8 @@ a:hover {
 
 .btn-glass:hover {
   background: rgba(255, 255, 255, 0.9);
-  transform: translateY(-2px);
-  box-shadow: 0 0 15px rgba(144, 191, 249, 0.3);
-  border-color: rgba(144, 191, 249, 0.4);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
 }
 
 .dark .btn-glass {
@@ -241,7 +234,6 @@ a:hover {
 
 .dark .btn-glass:hover {
   background: rgba(5, 25, 44, 0.9);
-  box-shadow: 0 0 20px rgba(144, 191, 249, 0.4);
 }
 
 /* === КАРТОЧКИ === */
@@ -260,12 +252,6 @@ a:hover {
 .card-hover:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-xl);
-  border-color: rgba(144, 191, 249, 0.4);
-}
-
-.dark .card-hover:hover {
-  box-shadow: 0 0 20px rgba(144, 191, 249, 0.3);
-  border-color: rgba(144, 191, 249, 0.5);
 }
 
 /* === HERO BACKGROUNDS === */
@@ -371,13 +357,7 @@ a:hover {
 
 .metric-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 0 20px rgba(144, 191, 249, 0.3);
-  border-color: rgba(144, 191, 249, 0.4);
-}
-
-.dark .metric-card:hover {
-  box-shadow: 0 0 25px rgba(144, 191, 249, 0.4);
-  border-color: rgba(144, 191, 249, 0.5);
+  box-shadow: var(--shadow-md);
 }
 
 .metric-label {
@@ -432,120 +412,73 @@ a:hover {
 }
 
 /* === SPACING UTILITIES === */
-.spacing-section {
-  padding: var(--spacing-4xl) 0;
+.mt-section {
+  margin-top: var(--spacing-4xl);
 }
 
-.spacing-container {
-  padding: 0 var(--spacing-lg);
+.mb-section {
+  margin-bottom: var(--spacing-4xl);
 }
 
-.spacing-content {
-  margin-bottom: var(--spacing-lg);
+.py-section {
+  padding-top: var(--spacing-4xl);
+  padding-bottom: var(--spacing-4xl);
 }
 
-.spacing-tight {
-  margin-bottom: var(--spacing-md);
-}
-
-.spacing-loose {
-  margin-bottom: var(--spacing-2xl);
-}
-
-/* === SHADOW UTILITIES === */
-.shadow-ocean {
-  box-shadow: var(--shadow-md);
-}
-
-.shadow-ocean-hover {
-  transition: box-shadow var(--transition-normal);
-}
-
-.shadow-ocean-hover:hover {
-  box-shadow: var(--shadow-xl);
-}
-
-/* === BORDER UTILITIES === */
-.border-ocean {
-  border: 1px solid var(--wave-foam);
-}
-
-.border-ocean-hover {
-  transition: border-color var(--transition-normal);
-}
-
-.border-ocean-hover:hover {
-  border-color: rgba(144, 191, 249, 0.4);
-}
-
-/* === ПРОФЕССИОНАЛЬНЫЕ УТИЛИТЫ === */
-.professional-radius {
-  border-radius: var(--radius-2xl);
-}
-
-.professional-transition {
-  transition: all var(--transition-normal);
-}
-
-.professional-spacing {
-  padding: var(--spacing-xl);
-}
-
-.professional-border {
-  border: 1px solid var(--color-border);
-}
-
-/* === ACCESSIBILITY === */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.focus-visible {
-  outline: 2px solid var(--color-primary-500);
-  outline-offset: 2px;
-}
-
-/* === RESPONSIVE DESIGN === */
 @media (max-width: 768px) {
-  .container {
-    padding: 0 var(--spacing-sm);
+  .mt-section {
+    margin-top: var(--spacing-3xl);
   }
 
-  .ocean-btn {
-    padding: 10px 20px;
-    font-size: var(--font-size-sm);
+  .mb-section {
+    margin-bottom: var(--spacing-3xl);
   }
 
-  .metric-card {
-    padding: var(--spacing-md);
-  }
-
-  .section-padding {
-    padding: var(--spacing-2xl) 0;
+  .py-section {
+    padding-top: var(--spacing-3xl);
+    padding-bottom: var(--spacing-3xl);
   }
 }
 
-/* === ПЕЧАТЬ === */
+/* === ANIMATIONS === */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* === PRINT STYLES === */
 @media print {
-  .ocean-btn,
-  .nav-bg,
-  .form-input {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .hero-background,
+  .ocean-gradient,
+  .glass,
+  .card-glass,
+  .metric-card {
+    background: white !important;
+    border: 1px solid #e2e8f0 !important;
+    backdrop-filter: none !important;
+  }
+
+  .nav-bg {
+    background: white !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    backdrop-filter: none !important;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-glass {
     background: white !important;
     color: black !important;
     border: 1px solid black !important;
-  }
-
-  .glass,
-  .glass-strong {
-    background: white !important;
-    backdrop-filter: none !important;
   }
 }

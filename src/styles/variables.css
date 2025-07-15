@@ -1,7 +1,7 @@
 /* CSS Variables for White Fin Capital - Ocean Theme */
 
 :root {
-  /* === ОСНОВНЫЕ ЦВЕТА ИЗ ТЗ === */
+  /* === ОСНОВНЫЕ ЦВЕТА ИЗ ТЗ (ТОЛЬКО 3 ЦВЕТА) === */
   --color-white: #ffffff;
   --color-dark-blue: #05192c;
   --color-light-blue: #90bff9;
@@ -14,13 +14,6 @@
   --color-pastel-mint: #a7f3d0;       /* морская мята */
   --color-pastel-pearl: #f1f5f9;      /* жемчуг */
 
-  /* === СЛУЖЕБНЫЕ ЦВЕТА === */
-  --color-navy-800: #1e293b;
-  --color-navy-700: #334155;
-  --color-slate-100: #f1f5f9;
-  --color-slate-200: #e2e8f0;
-  --color-slate-300: #cbd5e1;
-
   /* === ПРОЗРАЧНОСТИ ДЛЯ ЭФФЕКТОВ === */
   --ocean-depth-1: rgba(5, 25, 44, 0.05);
   --ocean-depth-2: rgba(5, 25, 44, 0.1);
@@ -28,18 +21,6 @@
   --wave-foam: rgba(144, 191, 249, 0.2);
   --glass-light: rgba(255, 255, 255, 0.7);
   --glass-dark: rgba(5, 25, 44, 0.8);
-
-  /* === PRIMARY COLORS (обновлены под ТЗ) === */
-  --color-primary-50: #f0f9ff;
-  --color-primary-100: #e0f2fe;
-  --color-primary-200: #bae6fd;
-  --color-primary-300: #7dd3fc;
-  --color-primary-400: #38bdf8;
-  --color-primary-500: #90bff9;        /* основной светло-голубой */
-  --color-primary-600: #0284c7;
-  --color-primary-700: #0369a1;
-  --color-primary-800: #075985;
-  --color-primary-900: #05192c;        /* основной темно-синий */
 
   /* === BACKGROUND COLORS === */
   --color-background: #ffffff;
@@ -138,16 +119,16 @@
   --ocean-gradient: linear-gradient(135deg,
     var(--color-white) 0%,
     rgba(144, 191, 249, 0.05) 50%,
-    var(--color-slate-100) 100%);
+    var(--color-pastel-pearl) 100%);
 
   --ocean-gradient-dark: linear-gradient(135deg,
     var(--color-dark-blue) 0%,
     #0f2337 50%,
-    var(--color-navy-800) 100%);
+    #1a2b42 100%);
 
   /* === CHART COLORS === */
-  --chart-primary: var(--color-primary-500);
-  --chart-secondary: var(--color-primary-300);
+  --chart-primary: var(--color-light-blue);
+  --chart-secondary: var(--color-dark-blue);
   --chart-success: var(--color-status-positive);
   --chart-error: var(--color-status-negative);
   --chart-warning: var(--color-pastel-coral);
