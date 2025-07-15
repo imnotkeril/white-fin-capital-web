@@ -126,21 +126,28 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
     });
   };
 
-  // Combine data for chart (если предоставлен бенчмарк)
-  const chartData = data.map((point, index) => {
-    const combinedPoint = {
+  type CombinedChartDataPoint = {
+    date: string;
+    portfolio: number;
+    value: number;
+    label?: string;
+    'S&P 500'?: number;
+  };
+
+  const chartData: CombinedChartDataPoint[] = data.map((point, index) => {
+    const combinedPoint: CombinedChartDataPoint = {
       ...point,
       date: point.date,
       portfolio: point.value,
     };
 
-    // Добавляем бенчмарк если есть данные
     if (showBenchmark && benchmarkData && benchmarkData[index]) {
       combinedPoint['S&P 500'] = benchmarkData[index].value;
     }
 
     return combinedPoint;
   });
+
 
   const Chart = chartType === 'area' ? AreaChart : LineChart;
 
