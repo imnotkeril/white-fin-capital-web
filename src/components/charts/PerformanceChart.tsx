@@ -14,7 +14,14 @@ import {
 import { ChartDataPoint } from '@/types';
 import { formatPercentage, formatDate } from '@/utils/formatting';
 import { cn } from '@/utils/helpers';
+import { useTheme } from '@/context/ThemeContext';
 import Button from '@/components/common/Button';
+
+// DESIGN SYSTEM COLORS - одинаковые для обеих тем
+const CHART_COLORS = {
+  portfolio: '#90bff9', // primary-500 из tailwind.config.js
+  benchmark: '#a7f3d0', // pastel-mint из дизайн-системы
+} as const;
 
 interface PerformanceChartProps {
   data: ChartDataPoint[];
@@ -42,6 +49,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
   showBenchmark = false,
 }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<'ytd' | '1y' | '2y' | 'all'>('ytd');
+  const { actualTheme } = useTheme();
 
   const periods = [
     { key: 'ytd', label: 'YTD' },
@@ -50,19 +58,28 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
     { key: 'all', label: 'All' },
   ] as const;
 
-  // Custom tooltip component с цветами из палитры
+  // ИСПРАВЛЕНО: адаптивные цвета для UI элементов, цвета данных - из дизайн-системы
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
         <div
           className="p-4 rounded-lg border shadow-lg"
           style={{
-            background: 'rgba(255, 255, 255, 0.95)',
+            background: actualTheme === 'dark'
+              ? 'rgba(30, 41, 59, 0.95)'
+              : 'rgba(255, 255, 255, 0.95)',
             backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(144, 191, 249, 0.2)',
+            border: actualTheme === 'dark'
+              ? '1px solid rgba(144, 191, 249, 0.2)'
+              : '1px solid rgba(59, 130, 246, 0.3)',
           }}
         >
-          <p className="font-medium mb-2" style={{ color: '#05192c' }}>
+          <p
+            className="font-medium mb-2"
+            style={{
+              color: actualTheme === 'dark' ? '#f8fafc' : '#1e293b'
+            }}
+          >
             {formatDate(new Date(label))}
           </p>
           {payload.map((entry: any, index: number) => (
@@ -71,10 +88,20 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: entry.color }}
               />
-              <span className="text-sm" style={{ color: '#334155' }}>
+              <span
+                className="text-sm"
+                style={{
+                  color: actualTheme === 'dark' ? '#94a3b8' : '#64748b'
+                }}
+              >
                 {entry.name}:
               </span>
-              <span className="font-medium" style={{ color: '#05192c' }}>
+              <span
+                className="font-medium"
+                style={{
+                  color: actualTheme === 'dark' ? '#f8fafc' : '#1e293b'
+                }}
+              >
                 {formatPercentage(entry.value)}
               </span>
             </div>
@@ -117,17 +144,47 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
 
   const Chart = chartType === 'area' ? AreaChart : LineChart;
 
+  // ИСПРАВЛЕНО: адаптивные цвета для темы
+  const gridColor = actualTheme === 'dark'
+    ? 'rgba(255, 255, 255, 0.1)'
+    : 'rgba(0, 0, 0, 0.1)';
+
+  const axisColor = actualTheme === 'dark'
+    ? 'rgba(255, 255, 255, 0.7)'
+    : 'rgba(0, 0, 0, 0.7)';
+
+  const titleColor = actualTheme === 'dark' ? '#ffffff' : '#1e293b';
+
+  const legendColor = actualTheme === 'dark'
+    ? 'rgba(255, 255, 255, 0.8)'
+    : 'rgba(0, 0, 0, 0.8)';
+
+  // Цвета из дизайн-системы (одинаковые для обеих тем)
+  const portfolioColor = CHART_COLORS.portfolio;
+  const benchmarkColor = CHART_COLORS.benchmark;
+  const activeDotFill = actualTheme === 'dark' ? '#fff' : '#1e293b';
+
   return (
     <div className={cn('w-full', className)}>
       {/* Header с опциональным селектором периодов */}
       {(title || showPeriodSelector) && (
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           {title && (
-            <h3 className="text-2xl font-semibold text-white">{title}</h3>
+            <h3
+              className="text-2xl font-semibold"
+              style={{ color: titleColor }}
+            >
+              {title}
+            </h3>
           )}
 
           {showPeriodSelector && (
-            <div className="flex rounded-lg p-1" style={{ background: '#0f2337' }}>
+            <div
+              className="flex rounded-lg p-1"
+              style={{
+                background: actualTheme === 'dark' ? '#0f2337' : '#f1f5f9'
+              }}
+            >
               {periods.map((period) => (
                 <Button
                   key={period.key}
@@ -137,8 +194,12 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   className={cn(
                     'text-xs font-medium px-4 py-1',
                     selectedPeriod === period.key
-                      ? 'bg-[#90bff9] text-[#05192c]'
-                      : 'text-white/70 hover:text-white'
+                      ? actualTheme === 'dark'
+                        ? 'bg-[#90bff9] text-[#05192c]'
+                        : 'bg-[#3b82f6] text-white'
+                      : actualTheme === 'dark'
+                        ? 'text-white/70 hover:text-white'
+                        : 'text-slate-600 hover:text-slate-900'
                   )}
                 >
                   {period.label}
@@ -149,7 +210,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
         </div>
       )}
 
-      {/* Chart Container */}
+      {/* Chart Container - БЕЗ рамки как в оригинале */}
       <div className="w-full" style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
           <Chart
@@ -164,7 +225,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
             {showGrid && (
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="rgba(255, 255, 255, 0.1)"
+                stroke={gridColor}
                 opacity={0.3}
               />
             )}
@@ -172,7 +233,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
             <XAxis
               dataKey="date"
               tickFormatter={formatXAxisTick}
-              stroke="rgba(255, 255, 255, 0.7)"
+              stroke={axisColor}
               fontSize={12}
               tickLine={false}
               axisLine={false}
@@ -180,7 +241,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
 
             <YAxis
               tickFormatter={formatYAxisTick}
-              stroke="rgba(255, 255, 255, 0.7)"
+              stroke={axisColor}
               fontSize={12}
               tickLine={false}
               axisLine={false}
@@ -193,7 +254,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
               <Legend
                 iconType="line"
                 wrapperStyle={{
-                  color: 'rgba(255, 255, 255, 0.8)',
+                  color: legendColor,
                   fontSize: '14px',
                 }}
               />
@@ -205,7 +266,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                 <Area
                   type="monotone"
                   dataKey="portfolio"
-                  stroke="#90bff9"
+                  stroke={portfolioColor}
                   strokeWidth={3}
                   fill="url(#portfolioGradient)"
                   name="White Fin Capital"
@@ -216,7 +277,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   <Area
                     type="monotone"
                     dataKey="S&P 500"
-                    stroke="#a7f3d0"
+                    stroke={benchmarkColor}
                     strokeWidth={2}
                     strokeDasharray="5 5"
                     fill="url(#benchmarkGradient)"
@@ -224,15 +285,31 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   />
                 )}
 
-                {/* Градиенты */}
+                {/* ИСПРАВЛЕНО: адаптивные градиенты */}
                 <defs>
                   <linearGradient id="portfolioGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#90bff9" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#90bff9" stopOpacity={0.05}/>
+                    <stop
+                      offset="5%"
+                      stopColor={portfolioColor}
+                      stopOpacity={actualTheme === 'dark' ? 0.3 : 0.2}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor={portfolioColor}
+                      stopOpacity={actualTheme === 'dark' ? 0.05 : 0.02}
+                    />
                   </linearGradient>
                   <linearGradient id="benchmarkGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#a7f3d0" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#a7f3d0" stopOpacity={0.02}/>
+                    <stop
+                      offset="5%"
+                      stopColor={benchmarkColor}
+                      stopOpacity={actualTheme === 'dark' ? 0.2 : 0.15}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor={benchmarkColor}
+                      stopOpacity={actualTheme === 'dark' ? 0.02 : 0.01}
+                    />
                   </linearGradient>
                 </defs>
               </>
@@ -242,10 +319,15 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                 <Line
                   type="monotone"
                   dataKey="portfolio"
-                  stroke="#90bff9"
+                  stroke={portfolioColor}
                   strokeWidth={3}
                   dot={false}
-                  activeDot={{ r: 6, stroke: '#90bff9', strokeWidth: 2, fill: '#fff' }}
+                  activeDot={{
+                    r: 6,
+                    stroke: portfolioColor,
+                    strokeWidth: 2,
+                    fill: activeDotFill
+                  }}
                   name="White Fin Capital"
                 />
 
@@ -254,11 +336,16 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   <Line
                     type="monotone"
                     dataKey="S&P 500"
-                    stroke="#a7f3d0"
+                    stroke={benchmarkColor}
                     strokeWidth={2}
                     strokeDasharray="5 5"
                     dot={false}
-                    activeDot={{ r: 4, stroke: '#a7f3d0', strokeWidth: 2, fill: '#fff' }}
+                    activeDot={{
+                      r: 4,
+                      stroke: benchmarkColor,
+                      strokeWidth: 2,
+                      fill: activeDotFill
+                    }}
                     name="S&P 500"
                   />
                 )}

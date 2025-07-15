@@ -46,6 +46,11 @@ const SubscriptionSection: React.FC = () => {
     return { amount: savings, percentage };
   };
 
+  // ИСПРАВЛЕНО: расплющиваем данные для таблицы сравнения
+  const flattenedFeatures = planComparisonFeatures.flatMap(category =>
+    category.features
+  );
+
   return (
     <section id="pricing" className="section bg-background-secondary">
       <div className="container">
@@ -89,7 +94,7 @@ const SubscriptionSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Pricing Cards - ИСПРАВЛЕНО: убран scale, исправлены цвета */}
+        {/* Pricing Cards - ИСПРАВЛЕНО: убрана голубая рамка у Professional, улучшена кнопка Enterprise */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
           {plans.map((plan, index) => {
             const IconComponent = planIcons[plan.id as keyof typeof planIcons] || Shield;
@@ -103,7 +108,8 @@ const SubscriptionSection: React.FC = () => {
                 padding="lg"
                 className={cn(
                   'relative overflow-hidden transition-all duration-200 hover:-translate-y-1',
-                  isPopular ? 'ring-2 ring-primary-500 shadow-xl' : ''
+                  // ИСПРАВЛЕНО: убрана ring-2 ring-primary-500 для популярного плана
+                  isPopular ? 'shadow-xl' : ''
                 )}
               >
                 {/* Popular Badge */}
@@ -159,13 +165,12 @@ const SubscriptionSection: React.FC = () => {
                       )}
                     </div>
 
-                    {/* CTA Button - ИСПРАВЛЕНО: убран градиент, используем системные цвета */}
+                    {/* CTA Button - ИСПРАВЛЕНО: только Popular использует primary, остальные outline */}
                     <Button
                       variant={isPopular ? 'primary' : 'outline'}
                       size="lg"
                       fullWidth
                       onClick={() => handleSubscribe(plan.id)}
-                      className={isEnterprise ? 'bg-primary-500 text-white border-primary-500' : ''}
                     >
                       {isEnterprise ? 'Contact Sales' : 'Start Free Trial'}
                     </Button>
@@ -211,7 +216,7 @@ const SubscriptionSection: React.FC = () => {
           </Button>
         </div>
 
-        {/* Feature Comparison Table */}
+        {/* Feature Comparison Table - ИСПРАВЛЕНО: используем расплющенные данные */}
         {showComparison && (
           <Card ocean padding="lg" className="mb-16 overflow-x-auto">
             <table className="w-full text-sm">
@@ -224,7 +229,7 @@ const SubscriptionSection: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {planComparisonFeatures.map((feature, index) => (
+                {flattenedFeatures.map((feature, index) => (
                   <tr key={index} className="border-b border-border hover:bg-background/50 transition-colors duration-200">
                     <td className="py-4 px-4 font-medium text-text-primary">{feature.name}</td>
                     <td className="py-4 px-4 text-center">
@@ -300,16 +305,35 @@ const SubscriptionSection: React.FC = () => {
                     <ChevronDown className="w-5 h-5 text-text-secondary" />
                   )}
                 </button>
-
                 {expandedFAQ === index && (
                   <div className="px-6 pb-6">
-                    <p className="text-text-secondary leading-relaxed pl-8">
+                    <p className="text-text-secondary leading-relaxed">
                       {faq.answer}
                     </p>
                   </div>
                 )}
               </Card>
             ))}
+          </div>
+        </div>
+
+        {/* Call to Action */}
+        <div className="text-center">
+          <div className="bg-gradient-to-r from-primary-500/10 to-ocean-500/10 rounded-2xl p-8 border border-primary-500/20">
+            <h3 className="text-2xl font-bold text-text-primary mb-4">
+              Ready to Get Started?
+            </h3>
+            <p className="text-text-secondary mb-6 max-w-2xl mx-auto">
+              Join thousands of successful investors who trust White Fin Capital for their financial decisions.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button variant="primary" size="lg">
+                Start Free Trial
+              </Button>
+              <Button variant="outline" size="lg">
+                Schedule Demo
+              </Button>
+            </div>
           </div>
         </div>
       </div>

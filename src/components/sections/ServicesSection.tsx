@@ -194,9 +194,7 @@ const ServicesSection: React.FC = () => {
                   padding="lg"
                   className={cn(
                     "text-center cursor-pointer transition-all duration-200 group",
-                    isActive ? "ring-2 ring-primary-500 hover:-translate-y-1" : "hover:-translate-y-1"
                   )}
-                  onClick={() => setActiveProcess(index)}
                 >
                   <div className="w-16 h-16 bg-background-secondary border border-border rounded-2xl flex items-center justify-center mx-auto mb-4 transition-all duration-200 group-hover:border-primary-500">
                     <IconComponent className="w-8 h-8 text-primary-500" />

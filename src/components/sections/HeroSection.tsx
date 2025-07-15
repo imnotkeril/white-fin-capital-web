@@ -130,36 +130,60 @@ const HeroSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Quick Stats - ИСПРАВЛЕНО: добавлены неоновые hover эффекты как в ContactSection */}
+        {/* Quick Stats - ИСПРАВЛЕНО: добавлены неоновые hover эффекты */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
           <div className={cn(
-            "glass p-6 rounded-xl text-center transition-all duration-200 group cursor-pointer",
-            "hover:-translate-y-1 hover:bg-white/10 dark:hover:bg-white/5"
+            "glass p-6 rounded-xl text-center transition-all duration-300 group cursor-pointer",
+            "hover:-translate-y-2 hover:shadow-2xl",
+            // Неоновое свечение для первой карточки (TrendingUp)
+            "hover:shadow-primary-500/25 hover:ring-1 hover:ring-primary-500/50",
+            "dark:hover:shadow-primary-400/30 dark:hover:ring-primary-400/50"
           )}>
-            <TrendingUp className="w-12 h-12 text-primary-500 mx-auto mb-4" />
-            <h3 className="text-text-primary font-semibold text-lg mb-2">Expert Analysis</h3>
+            <TrendingUp className={cn(
+              "w-12 h-12 text-primary-500 mx-auto mb-4 transition-all duration-300",
+              "group-hover:text-primary-400 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(144,191,249,0.6)]"
+            )} />
+            <h3 className="text-text-primary font-semibold text-lg mb-2 group-hover:text-primary-400 transition-colors duration-300">
+              Expert Analysis
+            </h3>
             <p className="text-text-secondary text-sm">
               Deep market research and technical analysis from seasoned professionals
             </p>
           </div>
 
           <div className={cn(
-            "glass p-6 rounded-xl text-center transition-all duration-200 group cursor-pointer",
-            "hover:-translate-y-1 hover:bg-white/10 dark:hover:bg-white/5"
+            "glass p-6 rounded-xl text-center transition-all duration-300 group cursor-pointer",
+            "hover:-translate-y-2 hover:shadow-2xl",
+            // Неоновое свечение для второй карточки (BarChart3) - мятный цвет
+            "hover:shadow-pastel-mint/25 hover:ring-1 hover:ring-pastel-mint/50",
+            "dark:hover:shadow-pastel-mint/30 dark:hover:ring-pastel-mint/50"
           )}>
-            <BarChart3 className="w-12 h-12 text-pastel-mint mx-auto mb-4" />
-            <h3 className="text-text-primary font-semibold text-lg mb-2">Real-Time Data</h3>
+            <BarChart3 className={cn(
+              "w-12 h-12 text-pastel-mint mx-auto mb-4 transition-all duration-300",
+              "group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(125,211,252,0.6)]"
+            )} />
+            <h3 className="text-text-primary font-semibold text-lg mb-2 group-hover:text-pastel-mint transition-colors duration-300">
+              Real-Time Data
+            </h3>
             <p className="text-text-secondary text-sm">
               Live market insights and performance tracking with detailed metrics
             </p>
           </div>
 
           <div className={cn(
-            "glass p-6 rounded-xl text-center transition-all duration-200 group cursor-pointer",
-            "hover:-translate-y-1 hover:bg-white/10 dark:hover:bg-white/5"
+            "glass p-6 rounded-xl text-center transition-all duration-300 group cursor-pointer",
+            "hover:-translate-y-2 hover:shadow-2xl",
+            // Неоновое свечение для третьей карточки (Shield) - коралловый цвет
+            "hover:shadow-pastel-coral/25 hover:ring-1 hover:ring-pastel-coral/50",
+            "dark:hover:shadow-pastel-coral/30 dark:hover:ring-pastel-coral/50"
           )}>
-            <Shield className="w-12 h-12 text-pastel-coral mx-auto mb-4" />
-            <h3 className="text-text-primary font-semibold text-lg mb-2">Risk Management</h3>
+            <Shield className={cn(
+              "w-12 h-12 text-pastel-coral mx-auto mb-4 transition-all duration-300",
+              "group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(251,146,60,0.6)]"
+            )} />
+            <h3 className="text-text-primary font-semibold text-lg mb-2 group-hover:text-pastel-coral transition-colors duration-300">
+              Risk Management
+            </h3>
             <p className="text-text-secondary text-sm">
               Comprehensive risk assessment and portfolio protection strategies
             </p>
