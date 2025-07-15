@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  output: 'export', // ✅ ВАЖНО: позволяет использовать next export для генерации статики
   experimental: {
     optimizeCss: true,
   },

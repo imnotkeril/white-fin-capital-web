@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import { AppProvider } from '@/context/AppContext';
 import { cn } from '@/utils/helpers';
 
+
 // Components
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
@@ -34,7 +35,7 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <ThemeProvider defaultTheme="light" storageKey="white-fin-theme">
+    <ThemeProvider>
       <AppProvider>
         {/* Добавлены flex flex-col и min-h-screen для правильной компоновки */}
         <div className="min-h-screen bg-background text-text-primary ocean-theme flex flex-col">
