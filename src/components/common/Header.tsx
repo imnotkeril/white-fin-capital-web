@@ -78,7 +78,7 @@ const Header: React.FC = () => {
               {/* Logo Image */}
               <div className="w-10 h-10 rounded-lg overflow-hidden">
                 <img
-                  src={actualTheme === 'dark' ? "/logo-dark.png" : "/logo.png"}
+                  src={actualTheme === 'dark' ? "./logo-dark.png" : "./logo.png"}
                   alt={`${COMPANY.name} Logo`}
                   className="w-full h-full object-contain transition-opacity duration-300"
                 />
