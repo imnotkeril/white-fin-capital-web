@@ -127,7 +127,7 @@ class ApiService {
     data?: any,
     headers?: Record<string, string>
   ): Promise<ApiResponse<T>> {
-    return this.request<T>({ method: 'POST', url, data, headers });
+    return this.request<T>({ method: 'POST', url, data, ...(headers && { headers }) });
   }
 
   // PUT request
@@ -136,7 +136,7 @@ class ApiService {
     data?: any,
     headers?: Record<string, string>
   ): Promise<ApiResponse<T>> {
-    return this.request<T>({ method: 'PUT', url, data, headers });
+    return this.request<T>({ method: 'PUT', url, data, ...(headers && { headers }) });
   }
 
   // PATCH request
@@ -145,12 +145,12 @@ class ApiService {
     data?: any,
     headers?: Record<string, string>
   ): Promise<ApiResponse<T>> {
-    return this.request<T>({ method: 'PATCH', url, data, headers });
+    return this.request<T>({ method: 'PATCH', url, data, ...(headers && { headers }) });
   }
 
   // DELETE request
   async delete<T = any>(url: string, headers?: Record<string, string>): Promise<ApiResponse<T>> {
-    return this.request<T>({ method: 'DELETE', url, headers });
+    return this.request<T>({ method: 'DELETE', url, ...(headers && { headers }) });
   }
 
   // Upload file

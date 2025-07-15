@@ -69,7 +69,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
 // Annual pricing (with discount)
 export const annualSubscriptionPlans: SubscriptionPlan[] = subscriptionPlans.map(plan => ({
   ...plan,
-  period: 'annual' as const,
+  period: 'yearly' as const,
   price: Math.round(plan.price * 12 * 0.75), // 25% discount
   ...(plan.originalPrice && { originalPrice: Math.round(plan.originalPrice * 12) }),
 }));

@@ -2,7 +2,7 @@
 // Complete rewrite - all functions properly implemented
 
 import { FORM_SETTINGS } from './constants';
-
+import { ValidationSchema } from '@/types'
 // Basic email validation
 export function validateEmail(email: string): boolean {
   if (!email || typeof email !== 'string') return false;
@@ -230,7 +230,7 @@ export function validateCreditCard(cardNumber: string): boolean {
   let isEven = false;
 
   for (let i = number.length - 1; i >= 0; i--) {
-    let digit = parseInt(number[i]);
+    let digit = parseInt(number.charAt(i), 10);
 
     if (isEven) {
       digit *= 2;

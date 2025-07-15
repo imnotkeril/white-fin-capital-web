@@ -267,11 +267,11 @@ export function useNotifications() {
     notifySuccess: (title: string, message?: string, duration?: number) =>
       addNotification({ type: 'success', title, ...(message && { message }), ...(duration && { duration }) }),
     notifyError: (title: string, message?: string, duration?: number) =>
-      addNotification({ type: 'error', title, message, duration }),
+      addNotification({ type: 'error', title, ...(message !== undefined && { message }), ...(duration !== undefined && { duration }) }),
     notifyWarning: (title: string, message?: string, duration?: number) =>
-      addNotification({ type: 'warning', title, message, duration }),
+      addNotification({ type: 'warning', title, ...(message !== undefined && { message }), ...(duration !== undefined && { duration }) }),
     notifyInfo: (title: string, message?: string, duration?: number) =>
-      addNotification({ type: 'info', title, message, duration }),
+      addNotification({ type: 'info', title, ...(message !== undefined && { message }), ...(duration !== undefined && { duration }) }),
   };
 }
 
