@@ -84,12 +84,12 @@ module.exports = {
       animation: {
         'gentle-float': 'gentle-float 4s ease-in-out infinite',
         'subtle-pulse': 'subtle-pulse 3s ease-in-out infinite',
-        'professional-shimmer': 'professional-shimmer 2s infinite',
         'ocean-ripple': 'ocean-ripple 0.6s ease-out',
         'pulse-glow': 'pulse-glow 3s ease-in-out infinite',
         'fade-in': 'fadeIn 0.5s ease-in-out',
         'slide-up': 'slideUp 0.5s ease-out',
         'scale-in': 'scaleIn 0.3s ease-out',
+        'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
       },
 
       keyframes: {
@@ -101,10 +101,6 @@ module.exports = {
           '0%, 100%': { opacity: '1', transform: 'scale(1)' },
           '50%': { opacity: '0.95', transform: 'scale(1.01)' },
         },
-        'professional-shimmer': {
-          '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(100%)' },
-        },
         'ocean-ripple': {
           '0%': { transform: 'scale(1)', opacity: '0.3' },
           '100%': { transform: 'scale(1.05)', opacity: '0' },
@@ -112,6 +108,10 @@ module.exports = {
         'pulse-glow': {
           '0%, 100%': { boxShadow: '0 0 10px rgba(144, 191, 249, 0.3)' },
           '50%': { boxShadow: '0 0 20px rgba(144, 191, 249, 0.6)' },
+        },
+        'glow-pulse': {
+          '0%, 100%': { boxShadow: '0 0 15px rgba(144, 191, 249, 0.4)' },
+          '50%': { boxShadow: '0 0 25px rgba(144, 191, 249, 0.7)' },
         },
         fadeIn: {
           '0%': { opacity: '0' },
@@ -148,6 +148,8 @@ module.exports = {
         'ocean-lg': '0 10px 15px -3px rgba(5, 25, 44, 0.1), 0 4px 6px -4px rgba(5, 25, 44, 0.05)',
         'ocean-xl': '0 20px 25px -5px rgba(5, 25, 44, 0.15), 0 8px 10px -6px rgba(5, 25, 44, 0.1)',
         'wave-glow': '0 0 20px rgba(144, 191, 249, 0.4)',
+        'neon-glow': '0 0 15px rgba(144, 191, 249, 0.5)',
+        'neon-glow-strong': '0 0 25px rgba(144, 191, 249, 0.7)',
       },
     },
   },
@@ -193,80 +195,25 @@ module.exports = {
           transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
           cursor: 'pointer',
         },
-        '.interactive-card::before': {
-          content: '""',
-          position: 'absolute',
-          top: '0',
-          left: '-100%',
-          width: '100%',
-          height: '100%',
-          background: 'linear-gradient(90deg, transparent, rgba(144, 191, 249, 0.1), transparent)',
-          transition: 'left 0.6s',
-        },
-        '.interactive-card:hover::before': {
-          left: '100%',
-        },
         '.interactive-card:hover': {
           transform: 'translateY(-4px)',
-          boxShadow: '0 20px 60px rgba(5, 25, 44, 0.1)',
+          boxShadow: '0 20px 40px rgba(5, 25, 44, 0.15)',
         },
-        '.ripple-effect': {
-          position: 'relative',
-          overflow: 'hidden',
-        },
-        '.ripple-effect::after': {
-          content: '""',
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          width: '0',
-          height: '0',
-          background: 'rgba(144, 191, 249, 0.2)',
-          borderRadius: '50%',
-          transform: 'translate(-50%, -50%)',
+        '.neon-glow': {
           transition: 'all 0.3s ease',
         },
-        '.ripple-effect:hover::after': {
-          width: '200px',
-          height: '200px',
-          animation: 'ocean-ripple 0.6s ease-out',
-        },
-        '.laser-border': {
-          position: 'relative',
-          background: '#1e293b',
-          borderRadius: '16px',
-          overflow: 'hidden',
-          transition: 'all 0.3s ease',
-        },
-        '.laser-border::before': {
-          content: '""',
-          position: 'absolute',
-          top: '0',
-          left: '-100%',
-          width: '100%',
-          height: '2px',
-          background: 'linear-gradient(90deg, transparent, #90bff9, transparent)',
-          transition: 'left 0.6s ease',
-        },
-        '.laser-border::after': {
-          content: '""',
-          position: 'absolute',
-          top: '-100%',
-          right: '0',
-          width: '2px',
-          height: '100%',
-          background: 'linear-gradient(180deg, transparent, #90bff9, transparent)',
-          transition: 'top 0.6s ease 0.2s',
-        },
-        '.laser-border:hover::before': {
-          left: '0',
-        },
-        '.laser-border:hover::after': {
-          top: '0',
-        },
-        '.laser-border:hover': {
-          boxShadow: '0 0 30px rgba(144, 191, 249, 0.3)',
+        '.neon-glow:hover': {
+          boxShadow: '0 0 15px rgba(144, 191, 249, 0.5)',
+          borderColor: 'rgba(144, 191, 249, 0.8)',
           transform: 'translateY(-2px)',
+        },
+        '.neon-glow-strong': {
+          transition: 'all 0.3s ease',
+        },
+        '.neon-glow-strong:hover': {
+          boxShadow: '0 0 25px rgba(144, 191, 249, 0.7)',
+          borderColor: 'rgba(144, 191, 249, 0.9)',
+          transform: 'translateY(-4px)',
         },
       });
     },

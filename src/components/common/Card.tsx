@@ -15,8 +15,9 @@ interface ExtendedCardProps extends CardProps {
   interactive?: boolean;
   ripple?: boolean;
   glow?: boolean;
+  neonGlow?: boolean;
+  glowStrong?: boolean;
   float?: boolean;
-  laser?: boolean;
 }
 
 const Card: React.FC<ExtendedCardProps> = ({
@@ -36,8 +37,9 @@ const Card: React.FC<ExtendedCardProps> = ({
   interactive = false,
   ripple = false,
   glow = false,
+  neonGlow = false,
+  glowStrong = false,
   float = false,
-  laser = false,
   ...props
 }) => {
   const baseClasses = cn(
@@ -46,8 +48,9 @@ const Card: React.FC<ExtendedCardProps> = ({
     interactive ? 'interactive-card' : '',
     ripple ? 'ripple-effect' : '',
     glow ? 'hover-glow' : '',
-    float ? 'float-animation' : '',
-    laser ? 'laser-border' : ''
+    neonGlow ? 'neon-glow' : '',
+    glowStrong ? 'neon-glow-strong' : '',
+    float ? 'float-animation' : ''
   );
 
   const paddingClasses = {
@@ -90,14 +93,6 @@ const Card: React.FC<ExtendedCardProps> = ({
 
   return (
     <div className={classes} {...props}>
-      {/* Лазерные линии для премиум карточек */}
-      {laser && (
-        <>
-          <div className="bottom-line"></div>
-          <div className="left-line"></div>
-        </>
-      )}
-
       {image && (
         <div className="relative">
           <img
@@ -140,8 +135,6 @@ const Card: React.FC<ExtendedCardProps> = ({
           {footer}
         </div>
       )}
-
-
     </div>
   );
 };
@@ -159,8 +152,8 @@ export const FloatingCard: React.FC<ExtendedCardProps> = (props) => (
   <Card ocean interactive float ripple {...props} />
 );
 
-export const LaserCard: React.FC<ExtendedCardProps> = (props) => (
-  <Card laser interactive glow {...props} />
+export const PremiumCard: React.FC<ExtendedCardProps> = (props) => (
+  <Card ocean interactive neonGlow glowStrong {...props} />
 );
 
 export const MetricCard: React.FC<ExtendedCardProps & {
@@ -181,6 +174,7 @@ export const MetricCard: React.FC<ExtendedCardProps & {
     glass
     interactive
     hover
+    neonGlow
     padding="lg"
     className={cn("text-center", className)}
     {...props}
@@ -235,6 +229,7 @@ export const TeamCard: React.FC<ExtendedCardProps & {
     ocean
     interactive
     hover
+    neonGlow
     className={cn("text-center", className)}
     image={avatar}
     imageAlt={name}

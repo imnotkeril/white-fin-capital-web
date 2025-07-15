@@ -6,7 +6,7 @@
 import { cn } from './helpers';
 
 // Типы для океанских эффектов
-export type OceanEffect = 'glass' | 'ripple' | 'float' | 'shimmer' | 'wave' | 'laser';
+export type OceanEffect = 'glass' | 'ripple' | 'float' | 'neon' | 'wave' | 'glow';
 export type StatusColor = 'positive' | 'negative' | 'neutral';
 export type OceanColor = 'coral' | 'mint' | 'pearl' | 'navy' | 'light-blue';
 
@@ -40,14 +40,15 @@ export const OCEAN_EFFECTS = {
   ripple: 'ripple-effect',
   rippleBtn: 'ripple-btn',
   float: 'float-animation',
-  shimmer: 'shimmer',
+  neonGlow: 'neon-glow',
+  neonGlowStrong: 'neon-glow-strong',
   interactiveCard: 'interactive-card',
   hoverLift: 'hover-lift',
   hoverGlow: 'hover-glow',
   oceanGradient: 'ocean-gradient',
   navGlass: 'nav-glass',
   cardOcean: 'card-ocean',
-  laserBorder: 'laser-border',
+  glowPulse: 'animate-glow-pulse',
 } as const;
 
 // Статусные цвета и классы
@@ -82,11 +83,11 @@ export const createOceanCard = (options: {
   glass?: boolean;
   float?: boolean;
   ripple?: boolean;
-  laser?: boolean;
-  glow?: boolean;
+  neonGlow?: boolean;
+  glowStrong?: boolean;
   className?: string;
 } = {}) => {
-  const { interactive, glass, float, ripple, laser, glow, className = '' } = options;
+  const { interactive, glass, float, ripple, neonGlow, glowStrong, className = '' } = options;
 
   return cn(
     'rounded-2xl transition-all duration-300',
@@ -94,8 +95,8 @@ export const createOceanCard = (options: {
     interactive && OCEAN_EFFECTS.interactiveCard,
     float && OCEAN_EFFECTS.float,
     ripple && OCEAN_EFFECTS.ripple,
-    laser && OCEAN_EFFECTS.laserBorder,
-    glow && OCEAN_EFFECTS.hoverGlow,
+    neonGlow && OCEAN_EFFECTS.neonGlow,
+    glowStrong && OCEAN_EFFECTS.neonGlowStrong,
     className
   );
 };
@@ -106,15 +107,19 @@ export const createOceanCard = (options: {
 export const createOceanButton = (variant: 'primary' | 'secondary' | 'glass' | 'outline' | 'ghost' = 'primary', options: {
   size?: 'sm' | 'md' | 'lg';
   ripple?: boolean;
+  neonGlow?: boolean;
+  glowStrong?: boolean;
   className?: string;
 } = {}) => {
-  const { size = 'md', ripple, className = '' } = options;
+  const { size = 'md', ripple, neonGlow, glowStrong, className = '' } = options;
 
   const baseClasses = cn(
     'ocean-btn',
     `btn-${variant}`,
     `btn-${size}`,
     ripple && OCEAN_EFFECTS.rippleBtn,
+    neonGlow && OCEAN_EFFECTS.neonGlow,
+    glowStrong && OCEAN_EFFECTS.neonGlowStrong,
     className
   );
 
@@ -162,7 +167,7 @@ export const createOceanIconGradient = (colors: [OceanColor, OceanColor]) => {
 };
 
 /**
- * Утилиты для анимаций
+ * Утилиты для анимаций - убрал shimmer, добавил neon glow
  */
 export const OCEAN_ANIMATIONS = {
   // Мягкие океанские переходы
@@ -174,14 +179,17 @@ export const OCEAN_ANIMATIONS = {
   buttonHover: 'hover:translate-y-[-2px]',
   cardHover: 'hover:translate-y-[-4px]',
   scaleHover: 'hover:scale-102',
-  glowHover: 'hover:shadow-[0_0_20px_var(--wave-foam)]',
+
+  // Неоновое свечение вместо shimmer
+  neonGlow: 'neon-glow',
+  neonGlowStrong: 'neon-glow-strong',
+  glowPulse: 'animate-glow-pulse',
 
   // Анимации загрузки
   pulse: 'animate-pulse',
   bounce: 'animate-bounce',
   spin: 'animate-spin',
   float: 'float-animation',
-  shimmer: 'shimmer',
 } as const;
 
 /**
@@ -216,26 +224,21 @@ export const createGlassEffect = (options: {
 };
 
 /**
- * Создает лазерную рамку для премиум карточек
+ * Создает неоновое свечение для premium карточек
  */
-export const createLaserBorder = (options: {
+export const createNeonGlow = (options: {
   color?: string;
   intensity?: number;
+  strong?: boolean;
 } = {}) => {
-  const { color = 'rgba(144, 191, 249, 0.8)', intensity = 0.3 } = options;
+  const { color = 'rgba(144, 191, 249, 0.5)', intensity = 15, strong = false } = options;
 
   return {
-    position: 'relative' as const,
-    overflow: 'hidden' as const,
-    '&::before, &::after, &.bottom-line, &.left-line': {
-      content: '""',
-      position: 'absolute' as const,
-      background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
-      transition: 'all 0.6s ease',
-    },
+    transition: 'all 0.3s ease',
     '&:hover': {
-      boxShadow: `0 0 30px rgba(144, 191, 249, ${intensity})`,
-      transform: 'translateY(-2px)',
+      boxShadow: `0 0 ${strong ? intensity + 10 : intensity}px ${color}`,
+      borderColor: strong ? 'rgba(144, 191, 249, 0.9)' : 'rgba(144, 191, 249, 0.8)',
+      transform: strong ? 'translateY(-4px)' : 'translateY(-2px)',
     }
   };
 };
@@ -287,67 +290,50 @@ export const createFloatAnimation = (options: {
   return {
     animation: `gentle-float ${duration}s ease-in-out infinite`,
     animationDelay: `${delay}s`,
-    '@keyframes gentle-float': {
-      '0%, 100%': {
-        transform: 'translateY(0) rotate(0deg)',
-      },
-      '50%': {
-        transform: `translateY(-${distance}px) rotate(0.2deg)`,
-      }
+    '--float-distance': `${distance}px`,
+  };
+};
+
+/**
+ * Создает hover эффект для кнопок
+ */
+export const createButtonHover = (options: {
+  lift?: number;
+  glow?: boolean;
+  strong?: boolean;
+} = {}) => {
+  const { lift = 2, glow = true, strong = false } = options;
+
+  return {
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      transform: `translateY(-${lift}px)`,
+      ...(glow && {
+        boxShadow: strong
+          ? '0 0 25px rgba(144, 191, 249, 0.7)'
+          : '0 0 15px rgba(144, 191, 249, 0.5)',
+      }),
     }
   };
 };
 
 /**
- * Предустановленные комбинации эффектов
+ * Создает hover эффект для карточек
  */
-export const OCEAN_PRESETS = {
-  // Для обычных карточек
-  standardCard: {
-    glass: true,
-    interactive: true,
-    ripple: true,
-  },
+export const createCardHover = (options: {
+  lift?: number;
+  glow?: boolean;
+  scale?: boolean;
+} = {}) => {
+  const { lift = 4, glow = false, scale = false } = options;
 
-  // Для премиум карточек подписки
-  premiumCard: {
-    laser: true,
-    interactive: true,
-    glow: true,
-  },
-
-  // Для статистических карточек
-  metricCard: {
-    glass: true,
-    interactive: true,
-    float: true,
-  },
-
-  // Для команды
-  teamCard: {
-    ocean: true,
-    interactive: true,
-    hover: true,
-  },
-
-  // Для кнопок по умолчанию
-  defaultButton: {
-    ripple: true,
-  },
-
-  // Для главных CTA кнопок
-  primaryButton: {
-    ripple: true,
-    variant: 'primary' as const,
-  },
-} as const;
-
-/**
- * Утилита для применения предустановок
- */
-export const applyOceanPreset = (preset: keyof typeof OCEAN_PRESETS, overrides: Record<string, any> = {}) => {
   return {
-    ...OCEAN_PRESETS[preset],
-    ...overrides,
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      transform: `translateY(-${lift}px)${scale ? ' scale(1.02)' : ''}`,
+      boxShadow: glow
+        ? '0 20px 40px rgba(5, 25, 44, 0.15), 0 0 20px rgba(144, 191, 249, 0.4)'
+        : '0 20px 40px rgba(5, 25, 44, 0.15)',
+    }
   };
 };

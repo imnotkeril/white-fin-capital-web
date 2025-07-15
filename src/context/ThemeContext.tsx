@@ -1,160 +1,59 @@
+'use client';
+
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-export type Theme = 'light' | 'dark' | 'auto';
+type Theme = 'light' | 'dark' | 'system';
 
 interface ThemeContextType {
   theme: Theme;
-  actualTheme: 'light' | 'dark'; // Реальная тема (без auto)
-  toggleTheme: () => void;
+  actualTheme: 'light' | 'dark';
   setTheme: (theme: Theme) => void;
-  isLoaded: boolean;
+  toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-interface ThemeProviderProps {
-  children: ReactNode;
-  defaultTheme?: Theme;
-  storageKey?: string;
-}
-
-export function ThemeProvider({
-  children,
-  defaultTheme = 'light',
-  storageKey = 'white-fin-theme'
-}: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(defaultTheme);
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [theme, setTheme] = useState<Theme>('system');
   const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('light');
-  const [isLoaded, setIsLoaded] = useState(false);
 
-  // Initialize theme from localStorage or system preference
   useEffect(() => {
-    const savedTheme = localStorage.getItem(storageKey) as Theme;
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    const savedTheme = (localStorage.getItem('theme') as Theme) || 'system';
+    setTheme(savedTheme);
+  }, []);
 
-    if (savedTheme && ['light', 'dark', 'auto'].includes(savedTheme)) {
-      setTheme(savedTheme);
-
-      if (savedTheme === 'auto') {
-        setActualTheme(systemTheme);
-      } else {
-        setActualTheme(savedTheme);
-      }
-    } else {
-      setTheme(defaultTheme);
-      setActualTheme(defaultTheme === 'auto' ? systemTheme : defaultTheme);
-    }
-
-    setIsLoaded(true);
-  }, [defaultTheme, storageKey]);
-
-  // Apply theme to document
   useEffect(() => {
-    if (!isLoaded) return;
+    const root = window.document.documentElement;
+    const isDarkMode = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
-    const root = document.documentElement;
+    setActualTheme(isDarkMode ? 'dark' : 'light');
 
-    // Remove all theme classes
-    root.classList.remove('light', 'dark', 'theme-light', 'theme-dark');
+    root.classList.remove('light', 'dark');
+    root.classList.add(isDarkMode ? 'dark' : 'light');
 
-    // Apply new theme
-    root.classList.add(actualTheme, `theme-${actualTheme}`);
-
-    // Set data attribute for CSS selectors
-    root.setAttribute('data-theme', actualTheme);
-
-    // Apply ocean-specific body classes
-    document.body.classList.remove('bg-background', 'text-text-primary');
-    document.body.classList.add('bg-background', 'text-text-primary');
-
-    // Save to localStorage
-    localStorage.setItem(storageKey, theme);
-  }, [theme, actualTheme, isLoaded, storageKey]);
-
-  // Listen for system theme changes when in auto mode
-  useEffect(() => {
-    if (theme !== 'auto') return;
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      setActualTheme(e.matches ? 'dark' : 'light');
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    localStorage.setItem('theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {
-    if (theme === 'light') {
-      setTheme('dark');
-      setActualTheme('dark');
-    } else if (theme === 'dark') {
-      setTheme('light');
-      setActualTheme('light');
-    } else {
-      // If auto, toggle to opposite of current actual theme
-      const newTheme = actualTheme === 'light' ? 'dark' : 'light';
-      setTheme(newTheme);
-      setActualTheme(newTheme);
-    }
+    setTheme(actualTheme === 'light' ? 'dark' : 'light');
   };
-
-  const setThemeValue = (newTheme: Theme) => {
-    setTheme(newTheme);
-
-    if (newTheme === 'auto') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      setActualTheme(systemTheme);
-    } else {
-      setActualTheme(newTheme);
-    }
-  };
-
-  const value: ThemeContextType = {
-    theme,
-    actualTheme,
-    toggleTheme,
-    setTheme: setThemeValue,
-    isLoaded,
-  };
-
-  // Prevent flash of unstyled content
-  if (!isLoaded) {
-    return (
-      <div className="fixed inset-0 bg-white dark:bg-primary-900 flex items-center justify-center">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-pastel-mint rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold">🌊</span>
-          </div>
-          <div className="flex space-x-1">
-            <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse"></div>
-            <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse" style={{ animationDelay: '0.1s' }}></div>
-            <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <ThemeContext.Provider value={value}>
+    <ThemeContext.Provider value={{ theme, actualTheme, setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
 }
 
-export function useTheme(): ThemeContextType {
+export function useTheme() {
   const context = useContext(ThemeContext);
-
   if (context === undefined) {
     throw new Error('useTheme must be used within a ThemeProvider');
   }
-
   return context;
 }
 
-// Custom hook for theme-specific values
+// Utility functions for theme-aware values
 export function useThemeValue<T>(lightValue: T, darkValue: T): T {
   const { actualTheme } = useTheme();
   return actualTheme === 'dark' ? darkValue : lightValue;
@@ -210,15 +109,51 @@ export function useStatusColors() {
   };
 }
 
-// Hook for ocean animations
+// Hook for ocean animations - убрал shimmer, добавил neon glow
 export function useOceanAnimations() {
   const { actualTheme } = useTheme();
 
   return {
     float: 'float-animation',
     pulse: 'pulse-animation',
-    shimmer: 'shimmer',
     ripple: 'ripple-effect',
+    neonGlow: 'neon-glow',
+    neonGlowStrong: 'neon-glow-strong',
+    glowPulse: 'animate-glow-pulse',
     wave: actualTheme === 'dark' ? 'wave-dark' : 'wave-light',
   };
+}
+
+// Hook for interactive card effects
+export function useInteractiveCardClasses(): string {
+  const { actualTheme } = useTheme();
+
+  return actualTheme === 'dark'
+    ? 'interactive-card bg-white/5 backdrop-blur-20 border border-white/10'
+    : 'interactive-card bg-white/70 backdrop-blur-20 border border-primary-500/20';
+}
+
+// Hook for button glow effects
+export function useButtonGlowClasses(variant: 'primary' | 'secondary' | 'premium' = 'primary'): string {
+  const { actualTheme } = useTheme();
+
+  switch (variant) {
+    case 'primary':
+      return actualTheme === 'dark'
+        ? 'neon-glow hover:shadow-neon-glow'
+        : 'neon-glow hover:shadow-neon-glow';
+
+    case 'premium':
+      return actualTheme === 'dark'
+        ? 'neon-glow-strong hover:shadow-neon-glow-strong'
+        : 'neon-glow-strong hover:shadow-neon-glow-strong';
+
+    default:
+      return 'neon-glow';
+  }
+}
+
+// Hook for card hover effects
+export function useCardHoverClasses(): string {
+  return 'hover:translate-y-[-4px] hover:shadow-ocean-xl transition-all duration-300';
 }
