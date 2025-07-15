@@ -52,8 +52,6 @@ const App: React.FC = () => {
             {/* Services Section */}
             <ServicesSection />
 
-            {/* Team Section */}
-            <TeamSection />
 
             {/* Subscription Section */}
             <SubscriptionSection />

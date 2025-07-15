@@ -1,87 +1,137 @@
-/* Component Styles for White Fin Capital - Ocean Theme */
+/* Components CSS for White Fin Capital - Ocean Theme */
 
-/* === КНОПКИ === */
-.btn {
-  @apply inline-flex items-center justify-center;
-  @apply font-medium rounded-lg transition-all duration-300;
-  @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
-  @apply disabled:opacity-50 disabled:cursor-not-allowed;
-  @apply active:scale-95 relative overflow-hidden;
-}
+/* === БАЗОВЫЕ КОМПОНЕНТЫ === */
 
-.btn-primary {
-  @apply bg-primary-900 text-white border-2 border-primary-900;
-  @apply hover:bg-navy-800 hover:border-navy-800 hover:shadow-lg;
-  @apply focus:ring-primary-500 focus:ring-opacity-50;
-  @apply hover:-translate-y-0.5;
-}
-
-.btn-secondary {
-  @apply bg-transparent text-primary-900 border-2 border-primary-900;
-  @apply hover:bg-primary-900 hover:text-white;
-  @apply focus:ring-primary-500 focus:ring-opacity-50;
-  @apply hover:-translate-y-0.5;
-}
-
-.btn-glass {
-  @apply glass text-primary-900 border-2 border-transparent;
-  @apply hover:bg-white/90 hover:shadow-md;
-  @apply focus:ring-primary-500 focus:ring-opacity-50;
-  @apply hover:-translate-y-0.5;
-}
-
-.btn-sm {
-  @apply px-3 py-1.5 text-sm gap-1.5 min-h-[32px];
-}
-
-.btn-md {
-  @apply px-4 py-2 text-base gap-2 min-h-[40px];
-}
-
-.btn-lg {
-  @apply px-6 py-3 text-lg gap-2.5 min-h-[48px];
-}
-
-/* === КАРТОЧКИ === */
+/* Cards */
 .card {
-  @apply rounded-2xl overflow-hidden transition-all duration-300;
-  @apply bg-background border border-border;
+  @apply bg-background border border-border rounded-2xl p-6;
+  @apply transition-all duration-300;
+}
+
+.card:hover {
+  @apply shadow-ocean-lg transform -translate-y-1;
 }
 
 .card-glass {
-  @apply glass border-transparent;
+  @apply glass rounded-2xl p-6;
+  @apply transition-all duration-300;
 }
 
-.card-ocean {
-  @apply card-ocean;
+.card-glass:hover {
+  @apply transform -translate-y-1;
+  box-shadow: 0 20px 40px var(--ocean-depth-2);
 }
 
-.card-hover {
-  @apply hover-lift cursor-pointer;
+/* Metric Cards - специально для океанской темы */
+.metric-card {
+  @apply glass rounded-2xl p-6;
+  @apply transition-all duration-300 cursor-pointer;
 }
 
-.card-interactive {
-  @apply interactive-card;
+.metric-card:hover {
+  @apply transform -translate-y-1;
+  box-shadow: 0 20px 40px var(--ocean-depth-2);
+  border-color: rgba(144, 191, 249, 0.4);
+}
+
+.dark .metric-card {
+  background: var(--glass-dark);
+  border-color: rgba(144, 191, 249, 0.3);
+}
+
+.dark .metric-card:hover {
+  background: rgba(5, 25, 44, 0.9);
+  border-color: rgba(144, 191, 249, 0.5);
+}
+
+.metric-value {
+  @apply text-2xl font-bold mb-2;
+  @apply text-text-primary;
+}
+
+.metric-label {
+  @apply text-sm text-text-secondary;
+  @apply uppercase tracking-wide font-medium;
+}
+
+/* === КНОПКИ === */
+
+/* Базовые стили кнопок уже в Button.tsx, здесь только утилиты */
+.btn-ripple {
+  @apply relative overflow-hidden;
+}
+
+.btn-ripple::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
+}
+
+.btn-ripple:hover::before {
+  width: 200px;
+  height: 200px;
+}
+
+/* === НАВИГАЦИЯ === */
+.nav-item {
+  @apply px-4 py-2 rounded-lg;
+  @apply text-text-secondary hover:text-text-primary;
+  @apply transition-colors duration-200;
+  @apply relative;
+}
+
+.nav-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--color-primary-500);
+  transform: translateX(-50%);
+  transition: width 0.3s ease;
+}
+
+.nav-item:hover::after {
+  width: 80%;
+}
+
+.nav-item.active {
+  @apply text-primary-500;
+}
+
+.nav-item.active::after {
+  width: 80%;
 }
 
 /* === ФОРМЫ === */
 .form-group {
-  @apply space-y-2;
+  @apply mb-6;
 }
 
 .form-label {
-  @apply block text-sm font-medium text-text-primary;
+  @apply block text-sm font-medium text-text-primary mb-2;
 }
 
-.form-input {
-  @apply w-full px-4 py-3 border-2 border-border rounded-lg;
-  @apply bg-background text-text-primary placeholder-text-tertiary;
-  @apply focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20;
+.form-input, .form-textarea, .form-select {
+  @apply w-full px-4 py-3 rounded-lg;
+  @apply border-2 border-border;
+  @apply bg-background text-text-primary;
+  @apply placeholder-text-tertiary;
   @apply transition-all duration-200;
+  @apply focus:outline-none focus:border-primary-500;
+  box-shadow: 0 0 0 0 var(--wave-foam);
 }
 
-.form-input:focus {
-  @apply outline-none;
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  box-shadow: 0 0 0 3px var(--wave-foam);
 }
 
 .form-error {
@@ -92,113 +142,14 @@
   @apply text-status-positive text-sm mt-1;
 }
 
-/* === НАВИГАЦИЯ === */
-.nav {
-  @apply nav-bg;
-}
-
-.nav-link {
-  @apply text-text-secondary hover:text-text-primary;
-  @apply transition-colors duration-200 font-medium;
-  @apply relative group;
-}
-
-.nav-link::after {
-  @apply absolute left-0 bottom-0 w-0 h-0.5 bg-primary-500;
-  @apply transition-all duration-300 group-hover:w-full;
-  content: '';
-}
-
-.nav-active {
-  @apply text-text-primary;
-}
-
-.nav-active::after {
-  @apply w-full;
-}
-
-/* === МОДАЛЬНЫЕ ОКНА === */
-.modal-backdrop {
-  @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-40;
-  @apply flex items-center justify-center p-4;
-}
-
-.modal {
-  @apply glass rounded-2xl max-w-lg w-full max-h-[90vh] overflow-auto;
-  @apply transform transition-all duration-300;
-}
-
-.modal-header {
-  @apply px-6 py-4 border-b border-border/20;
-}
-
-.modal-body {
-  @apply px-6 py-4;
-}
-
-.modal-footer {
-  @apply px-6 py-4 border-t border-border/20;
-  @apply flex justify-end space-x-4;
-}
-
-/* === УВЕДОМЛЕНИЯ === */
-.toast {
-  @apply glass rounded-lg p-4 shadow-lg;
-  @apply transform transition-all duration-300;
-  @apply max-w-sm w-full;
-}
-
-.toast-success {
-  @apply border-l-4 border-status-positive;
-}
-
-.toast-error {
-  @apply border-l-4 border-status-negative;
-}
-
-.toast-warning {
-  @apply border-l-4 border-pastel-coral;
-}
-
-.toast-info {
-  @apply border-l-4 border-primary-500;
-}
-
-/* === ИНДИКАТОРЫ ЗАГРУЗКИ === */
-.loading-spinner {
-  @apply animate-spin h-6 w-6 border-2 border-primary-500;
-  @apply border-t-transparent rounded-full;
-}
-
-.loading-dots {
-  @apply flex space-x-1;
-}
-
-.loading-dot {
-  @apply w-2 h-2 bg-primary-500 rounded-full;
-  @apply animate-pulse;
-}
-
-.loading-dot:nth-child(1) {
-  animation-delay: 0ms;
-}
-
-.loading-dot:nth-child(2) {
-  animation-delay: 150ms;
-}
-
-.loading-dot:nth-child(3) {
-  animation-delay: 300ms;
-}
-
-/* === ПРОГРЕСС БАРЫ === */
+/* === PROGRESS BARS === */
 .progress {
-  @apply w-full bg-background-secondary rounded-full h-2;
+  @apply w-full h-2 bg-background-secondary rounded-full overflow-hidden;
 }
 
 .progress-bar {
-  @apply h-full bg-gradient-to-r from-primary-500 to-pastel-mint;
-  @apply rounded-full transition-all duration-300;
+  @apply h-full transition-all duration-300 rounded-full;
+  background: linear-gradient(90deg, var(--color-primary-500), var(--color-pastel-mint));
 }
 
 /* === ТАБЫ === */
@@ -232,7 +183,8 @@
 
 .accordion-header {
   @apply px-6 py-4 cursor-pointer;
-  @apply hover:bg-white/5 transition-colors duration-200;
+  @apply hover:bg-white/5 dark:hover:bg-white/5;
+  @apply transition-colors duration-200;
   @apply flex items-center justify-between;
 }
 
@@ -247,7 +199,7 @@
 
 .dropdown-menu {
   @apply absolute top-full left-0 mt-2 w-48;
-  @apply glass rounded-lg shadow-lg z-50;
+  @apply glass rounded-lg shadow-ocean-lg z-50;
   @apply py-2;
 }
 
@@ -305,132 +257,213 @@
 
 /* === ГРАФИКИ И ДИАГРАММЫ === */
 .chart-container {
-  @apply w-full h-64 glass rounded-lg p-4;
+  @apply w-full h-64 bg-background rounded-lg;
+  @apply border border-border;
 }
 
 .chart-legend {
-  @apply flex flex-wrap gap-4 mt-4;
+  @apply flex items-center gap-4 mt-4;
 }
 
 .chart-legend-item {
-  @apply flex items-center gap-2 text-sm;
+  @apply flex items-center gap-2 text-sm text-text-secondary;
 }
 
 .chart-legend-color {
-  @apply w-3 h-3 rounded-sm;
+  @apply w-3 h-3 rounded-full;
 }
 
-/* === TEAM КАРТОЧКИ === */
-.team-card {
-  @apply card-ocean text-center p-6;
+/* === МОДАЛЬНЫЕ ОКНА === */
+.modal-overlay {
+  @apply fixed inset-0 bg-black/50 backdrop-blur-sm;
+  @apply flex items-center justify-center p-4;
+  @apply z-modal;
 }
 
-.team-avatar {
-  @apply w-24 h-24 rounded-full mx-auto mb-4;
-  @apply border-4 border-primary-500/20;
+.modal-content {
+  @apply glass rounded-2xl p-6 w-full max-w-md;
+  @apply transform transition-all duration-300;
 }
 
-.team-name {
-  @apply text-xl font-semibold text-text-primary mb-2;
+.modal-header {
+  @apply flex items-center justify-between mb-4;
 }
 
-.team-role {
-  @apply text-primary-500 font-medium mb-3;
+.modal-title {
+  @apply text-xl font-semibold text-text-primary;
 }
 
-.team-bio {
-  @apply text-text-secondary text-sm mb-4;
-}
-
-.team-social {
-  @apply flex justify-center space-x-3;
-}
-
-.team-social-link {
-  @apply text-text-secondary hover:text-primary-500;
+.modal-close {
+  @apply text-text-secondary hover:text-text-primary;
   @apply transition-colors duration-200;
 }
 
-/* === PRICING КАРТОЧКИ === */
-.pricing-card {
-  @apply card-ocean p-8 text-center;
-  @apply hover-lift;
+/* === АЛЕРТЫ И УВЕДОМЛЕНИЯ === */
+.alert {
+  @apply p-4 rounded-lg border-l-4;
 }
 
-.pricing-popular {
-  @apply ring-2 ring-primary-500 relative;
+.alert-success {
+  @apply bg-status-positive/10 border-status-positive text-status-positive;
 }
 
-.pricing-popular::before {
-  @apply absolute -top-3 left-1/2 transform -translate-x-1/2;
-  @apply bg-primary-500 text-white px-4 py-1 rounded-full text-sm;
-  content: 'Popular';
+.alert-error {
+  @apply bg-status-negative/10 border-status-negative text-status-negative;
 }
 
-.pricing-title {
-  @apply text-2xl font-bold text-text-primary mb-2;
+.alert-warning {
+  @apply bg-yellow-50 border-yellow-400 text-yellow-800;
+  @apply dark:bg-yellow-900/20 dark:border-yellow-500 dark:text-yellow-300;
 }
 
-.pricing-price {
-  @apply text-4xl font-bold text-primary-500 mb-6;
+.alert-info {
+  @apply bg-primary-50 border-primary-500 text-primary-900;
+  @apply dark:bg-primary-900/20 dark:border-primary-400 dark:text-primary-300;
 }
 
-.pricing-features {
-  @apply space-y-3 mb-8;
+/* === ЛОАДЕРЫ === */
+.loading-spinner {
+  @apply inline-block w-6 h-6 border-2 border-current;
+  @apply border-r-transparent rounded-full animate-spin;
 }
 
-.pricing-feature {
-  @apply flex items-center text-text-secondary;
+.loading-skeleton {
+  @apply bg-background-secondary rounded animate-pulse;
 }
 
-.pricing-feature-check {
-  @apply text-status-positive mr-3;
+.loading-ocean {
+  background: linear-gradient(90deg,
+    var(--color-background-secondary) 25%,
+    var(--color-background-tertiary) 50%,
+    var(--color-background-secondary) 75%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
 }
 
-/* === АНИМАЦИИ === */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
+@keyframes loading-shimmer {
+  0% {
+    background-position: -200% 0;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
+  100% {
+    background-position: 200% 0;
   }
 }
 
-.animate-fadeInUp {
-  animation: fadeInUp 0.6s ease-out;
+/* === БЕЙДЖИ И ТЕГИ === */
+.badge {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.4s ease-out;
+.badge-primary {
+  @apply bg-primary-100 text-primary-900;
+  @apply dark:bg-primary-900/30 dark:text-primary-300;
 }
 
-/* === RESPONSIVE === */
+.badge-success {
+  @apply bg-status-positive/20 text-status-positive;
+}
+
+.badge-error {
+  @apply bg-status-negative/20 text-status-negative;
+}
+
+.badge-neutral {
+  @apply bg-status-neutral/20 text-status-neutral;
+}
+
+/* === СПЕЦИАЛЬНЫЕ ЭФФЕКТЫ ДЛЯ ОКЕАНСКОЙ ТЕМЫ === */
+
+/* Floating elements */
+.floating {
+  animation: gentle-float 4s ease-in-out infinite;
+}
+
+.floating-delayed {
+  animation: gentle-float 4s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+/* Ripple effect для кликабельных элементов */
+.ripple {
+  @apply relative overflow-hidden;
+}
+
+.ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: var(--wave-foam);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.3s ease;
+}
+
+.ripple:hover::after {
+  width: 200px;
+  height: 200px;
+  animation: ocean-ripple 0.6s ease-out;
+}
+
+/* Glass effect для карточек */
+.glass {
+  background: var(--glass-light);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--wave-foam);
+}
+
+.dark .glass {
+  background: var(--glass-dark);
+  border-color: rgba(144, 191, 249, 0.3);
+}
+
+/* Ocean gradients */
+.ocean-gradient {
+  background: var(--ocean-gradient);
+}
+
+.wave-gradient {
+  background: linear-gradient(45deg, var(--color-light-blue), var(--color-pastel-mint));
+}
+
+/* === RESPONSIVE DESIGN === */
 @media (max-width: 768px) {
-  .stat-card {
+  .metric-card {
     @apply p-4;
   }
 
-  .pricing-card {
-    @apply p-6;
+  .card-glass {
+    @apply p-4;
   }
 
-  .team-card {
-    @apply p-4;
+  .modal-content {
+    @apply mx-4;
   }
 
   .chart-container {
     @apply h-48;
+  }
+}
+
+/* === ПЕЧАТЬ === */
+@media print {
+  .glass,
+  .metric-card,
+  .card-glass {
+    background: white !important;
+    border: 1px solid #e2e8f0 !important;
+    backdrop-filter: none !important;
+  }
+
+  .floating,
+  .floating-delayed,
+  .ripple {
+    animation: none !important;
+  }
+
+  .modal-overlay {
+    display: none !important;
   }
 }

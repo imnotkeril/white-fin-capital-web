@@ -55,12 +55,12 @@
   --color-border: #e2e8f0;
   --color-border-secondary: #cbd5e1;
 
-  /* === STATUS COLORS (новые) === */
+  /* === STATUS COLORS === */
   --color-status-positive: var(--color-pastel-green);
   --color-status-negative: var(--color-pastel-red);
   --color-status-neutral: var(--color-pastel-purple);
 
-  /* === ACCENT COLORS (обновлены) === */
+  /* === ACCENT COLORS === */
   --color-accent-coral: var(--color-pastel-coral);
   --color-accent-mint: var(--color-pastel-mint);
   --color-accent-pearl: var(--color-pastel-pearl);
@@ -134,6 +134,17 @@
   --header-height: 4rem;
   --footer-height: auto;
 
+  /* === ОКЕАНСКИЕ ГРАДИЕНТЫ === */
+  --ocean-gradient: linear-gradient(135deg,
+    var(--color-white) 0%,
+    rgba(144, 191, 249, 0.05) 50%,
+    var(--color-slate-100) 100%);
+
+  --ocean-gradient-dark: linear-gradient(135deg,
+    var(--color-dark-blue) 0%,
+    #0f2337 50%,
+    var(--color-navy-800) 100%);
+
   /* === CHART COLORS === */
   --chart-primary: var(--color-primary-500);
   --chart-secondary: var(--color-primary-300);
@@ -144,7 +155,7 @@
   --chart-text: var(--color-text-secondary);
 }
 
-/* === DARK THEME VARIABLES === */
+/* === ТЕМНАЯ ТЕМА === */
 .dark {
   --color-background: #05192c;
   --color-background-secondary: #0f2337;
@@ -161,6 +172,9 @@
   --color-nav-bg: var(--glass-dark);
   --color-nav-border: rgba(144, 191, 249, 0.3);
 
+  /* Океанский градиент для темной темы */
+  --ocean-gradient: var(--ocean-gradient-dark);
+
   /* Тени в темной теме */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
@@ -169,6 +183,75 @@
 
   --chart-grid: var(--color-border);
   --chart-text: var(--color-text-secondary);
+}
+
+/* === УТИЛИТАРНЫЕ КЛАССЫ ДЛЯ СТАТУСОВ === */
+.text-status-positive {
+  color: var(--color-status-positive);
+}
+
+.text-status-negative {
+  color: var(--color-status-negative);
+}
+
+.text-status-neutral {
+  color: var(--color-status-neutral);
+}
+
+.bg-status-positive {
+  background-color: rgba(134, 239, 172, 0.1);
+  border-color: var(--color-status-positive);
+}
+
+.bg-status-negative {
+  background-color: rgba(252, 165, 165, 0.1);
+  border-color: var(--color-status-negative);
+}
+
+.bg-status-neutral {
+  background-color: rgba(191, 159, 251, 0.1);
+  border-color: var(--color-status-neutral);
+}
+
+.status-positive {
+  color: var(--color-status-positive);
+  background-color: rgba(134, 239, 172, 0.1);
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--color-status-positive);
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-negative {
+  color: var(--color-status-negative);
+  background-color: rgba(252, 165, 165, 0.1);
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--color-status-negative);
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-neutral {
+  color: var(--color-status-neutral);
+  background-color: rgba(191, 159, 251, 0.1);
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--color-status-neutral);
+  font-weight: 600;
+  display: inline-block;
+}
+
+/* === СЕКЦИИ === */
+.section {
+  padding: var(--spacing-4xl) 0;
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: var(--spacing-3xl) 0;
+  }
 }
 
 /* === MEDIA QUERIES FOR RESPONSIVE VARIABLES === */

@@ -64,167 +64,133 @@ const PerformanceSection: React.FC = () => {
       trend: 'up' as const,
     },
     {
-      label: 'Average Loss',
-      value: -4.1,
+      label: 'Max Drawdown',
+      value: -5.2,
       format: 'percentage' as const,
       trend: 'down' as const,
     },
-    {
-      label: 'Sharpe Ratio',
-      value: 1.84,
-      format: 'number' as const,
-      trend: 'up' as const,
-    },
-    {
-      label: 'Sortino Ratio',
-      value: 2.41,
-      format: 'number' as const,
-      trend: 'up' as const,
-    },
   ];
 
-  // Статистика по периодам
-  const periodDataMap: Record<string, PeriodData> = {
+  // Данные для каждого периода (для статистики под графиком)
+  const periodData: Record<typeof selectedPeriod, PeriodData> = {
     '1m': {
       currentReturn: 3.2,
-      bestDay: 2.1,
-      worstDay: -1.8,
-      volatility: 15.2,
+      bestDay: 4.1,
+      worstDay: -2.3,
+      volatility: 12.5,
       maxDrawdown: -3.1,
-      alpha: 1.2,
+      alpha: 0.8,
       beta: 0.92,
-      totalTrades: 8,
+      totalTrades: 28,
     },
     '3m': {
       currentReturn: 8.7,
-      bestDay: 3.4,
-      worstDay: -2.8,
-      volatility: 14.8,
-      maxDrawdown: -5.2,
-      alpha: 2.1,
-      beta: 0.88,
-      totalTrades: 23,
+      bestDay: 4.1,
+      worstDay: -3.2,
+      volatility: 15.2,
+      maxDrawdown: -4.5,
+      alpha: 1.2,
+      beta: 0.95,
+      totalTrades: 84,
     },
     '6m': {
-      currentReturn: 15.3,
-      bestDay: 4.2,
-      worstDay: -3.1,
-      volatility: 13.9,
-      maxDrawdown: -6.8,
-      alpha: 3.8,
-      beta: 0.85,
-      totalTrades: 47,
+      currentReturn: 15.4,
+      bestDay: 4.1,
+      worstDay: -3.8,
+      volatility: 16.8,
+      maxDrawdown: -5.2,
+      alpha: 1.4,
+      beta: 0.98,
+      totalTrades: 168,
     },
     '1y': {
       currentReturn: 24.7,
-      bestDay: 4.8,
+      bestDay: 4.1,
       worstDay: -4.2,
-      volatility: 14.2,
-      maxDrawdown: -8.3,
-      alpha: 5.2,
-      beta: 0.87,
-      totalTrades: 97,
+      volatility: 18.3,
+      maxDrawdown: -5.2,
+      alpha: 1.6,
+      beta: 1.02,
+      totalTrades: 336,
     },
     '2y': {
-      currentReturn: 42.1,
-      bestDay: 5.1,
-      worstDay: -4.5,
-      volatility: 15.1,
-      maxDrawdown: -12.4,
-      alpha: 7.8,
-      beta: 0.89,
-      totalTrades: 203,
+      currentReturn: 48.9,
+      bestDay: 4.1,
+      worstDay: -4.2,
+      volatility: 19.1,
+      maxDrawdown: -8.7,
+      alpha: 1.8,
+      beta: 1.05,
+      totalTrades: 672,
     },
     'all': {
-      currentReturn: 67.8,
-      bestDay: 5.3,
-      worstDay: -5.2,
-      volatility: 14.7,
-      maxDrawdown: -15.2,
-      alpha: 12.4,
-      beta: 0.86,
-      totalTrades: 312,
+      currentReturn: 156.3,
+      bestDay: 4.1,
+      worstDay: -4.2,
+      volatility: 20.4,
+      maxDrawdown: -8.7,
+      alpha: 2.1,
+      beta: 1.08,
+      totalTrades: 1247,
     },
   };
 
-  const currentPeriodData = periodDataMap[selectedPeriod];
+  const currentPeriodData = periodData[selectedPeriod];
+  const benchmarkData = mockBenchmarkChartData;
 
-  // Бенчмарк данные (S&P 500) - используем готовые данные
-  const benchmarkData = useMemo(() => {
-    return mockBenchmarkChartData;
-  }, []);
-
-  // Отфильтрованные трейды для отображения
-  const recentTrades = useMemo(() => {
-    return mockClosedTrades.slice(0, 12);
-  }, []);
-
-  const handleDownloadReport = () => {
-    console.log('Downloading performance report...');
-  };
-
-  const getPerformanceTrend = (value: number): 'positive' | 'negative' | 'neutral' => {
-    if (value > 0) return 'positive';
-    if (value < 0) return 'negative';
-    return 'neutral';
-  };
-
+  // Функции для статусных цветов (ИСПРАВЛЕНО)
   const getStatusColor = (value: number) => {
-    if (value > 0) return 'text-[#86efac]'; // pastel-green
-    if (value < 0) return 'text-[#fca5a5]'; // pastel-red
-    return 'text-[#bf9ffb]'; // pastel-purple
+    if (value > 0) return 'text-status-positive';
+    if (value < 0) return 'text-status-negative';
+    return 'text-status-neutral';
   };
 
   const getStatusBgColor = (value: number) => {
-    if (value > 0) return 'bg-[#86efac]/10'; // pastel-green background
-    if (value < 0) return 'bg-[#fca5a5]/10'; // pastel-red background
-    return 'bg-[#bf9ffb]/10'; // pastel-purple background
+    if (value > 0) return 'rgba(134, 239, 172, 0.1)';
+    if (value < 0) return 'rgba(252, 165, 165, 0.1)';
+    return 'rgba(191, 159, 251, 0.1)';
+  };
+
+  const getStatusBorderColor = (value: number) => {
+    if (value > 0) return '#86efac';
+    if (value < 0) return '#fca5a5';
+    return '#bf9ffb';
   };
 
   return (
-    <section id="performance" className="section-padding" style={{ background: '#05192c' }}>
+    <section id="performance" className="section bg-background">
       <div className="container">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-3 rounded-full px-6 py-3 mb-6"
-               style={{
-                 background: 'rgba(255, 255, 255, 0.7)',
-                 backdropFilter: 'blur(20px)',
-                 border: '1px solid rgba(144, 191, 249, 0.2)'
-               }}>
-            <BarChart3 className="w-5 h-5" style={{ color: '#90bff9' }} />
-            <span className="text-white font-medium">Performance Dashboard</span>
-          </div>
-
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
             Track Record & Performance
           </h2>
-          <p className="text-xl text-white/80 max-w-3xl mx-auto leading-relaxed">
-            Transparent results with complete trade history. Every recommendation is tracked and
-            documented for full accountability and continuous improvement.
+          <p className="text-xl text-text-secondary max-w-3xl mx-auto leading-relaxed">
+            Transparent performance metrics with detailed analytics and comprehensive trade history
           </p>
         </div>
 
-        {/* Top Statistics - All Time (БЕЗ полосок) */}
-        <div className="mb-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {topKPIData.map((kpi) => (
+        {/* КПИ сверху (БЕЗ полосок и анимаций) - АДАПТИВНО ДЛЯ СВЕТЛОЙ ТЕМЫ */}
+        <div className="mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {topKPIData.map((kpi, index) => (
               <div
-                key={kpi.label}
-                className="text-center p-6 rounded-2xl"
+                key={index}
+                className={cn(
+                  "p-6 rounded-2xl text-center transition-all duration-300 hover:transform hover:-translate-y-1",
+                  "bg-background border border-border",
+                  "dark:bg-background-secondary dark:border-border-secondary"
+                )}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(144, 191, 249, 0.2)',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)'
                 }}
               >
-                <div className="text-white/70 text-sm mb-2 uppercase tracking-wide">
+                <div className="text-text-secondary text-sm mb-2 font-medium">
                   {kpi.label}
                 </div>
                 <div className={cn(
-                  "text-3xl font-bold mb-2",
-                  kpi.trend === 'up' ? 'text-[#86efac]' :
-                  kpi.trend === 'down' ? 'text-[#fca5a5]' : 'text-[#bf9ffb]'
+                  "text-2xl font-bold mb-1",
+                  getStatusColor(kpi.value)
                 )}>
                   {kpi.format === 'percentage' ?
                     `${kpi.value > 0 ? '+' : ''}${kpi.value}%` :
@@ -238,14 +204,13 @@ const PerformanceSection: React.FC = () => {
 
         {/* Performance Tab Navigation */}
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Tab Navigation */}
+          {/* Tab Navigation - АДАПТИВНО ДЛЯ СВЕТЛОЙ ТЕМЫ */}
           <div className="lg:w-64 flex-shrink-0">
-            <div className="rounded-xl p-2 space-y-2"
-                 style={{
-                   background: 'rgba(255, 255, 255, 0.05)',
-                   backdropFilter: 'blur(20px)',
-                   border: '1px solid rgba(144, 191, 249, 0.2)',
-                 }}>
+            <div className={cn(
+              "rounded-xl p-2 space-y-2",
+              "bg-background-secondary border border-border",
+              "dark:bg-background-tertiary dark:border-border-secondary"
+            )}>
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
@@ -255,8 +220,8 @@ const PerformanceSection: React.FC = () => {
                     className={cn(
                       'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200',
                       selectedTab === tab.id
-                        ? 'bg-[#90bff9] text-[#05192c] shadow-sm'
-                        : 'text-white/70 hover:text-white hover:bg-white/5'
+                        ? 'bg-primary-500 text-primary-900 shadow-sm font-semibold'
+                        : 'text-text-secondary hover:text-text-primary hover:bg-background-tertiary dark:hover:bg-background-secondary'
                     )}
                   >
                     <Icon className="w-5 h-5" />
@@ -271,21 +236,23 @@ const PerformanceSection: React.FC = () => {
           <div className="flex-1">
             {selectedTab === 'overview' && (
               <div className="space-y-8">
-                {/* Performance Chart with Period Selector */}
-                <div className="rounded-2xl p-6"
-                     style={{
-                       background: 'rgba(255, 255, 255, 0.05)',
-                       backdropFilter: 'blur(20px)',
-                       border: '1px solid rgba(144, 191, 249, 0.2)',
-                     }}>
+                {/* Performance Chart with Period Selector - АДАПТИВНО ДЛЯ СВЕТЛОЙ ТЕМЫ */}
+                <div className={cn(
+                  "rounded-2xl p-6",
+                  "bg-background border border-border",
+                  "dark:bg-background-secondary dark:border-border-secondary"
+                )}>
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                    <h3 className="text-2xl font-semibold text-white">
+                    <h3 className="text-2xl font-semibold text-text-primary">
                       Portfolio Performance vs S&P 500
                     </h3>
 
-                    {/* ЕДИНСТВЕННЫЙ селектор периодов */}
-                    <div className="flex rounded-lg p-1"
-                         style={{ background: '#0f2337' }}>
+                    {/* ЕДИНСТВЕННЫЙ селектор периодов - АДАПТИВНО ДЛЯ СВЕТЛОЙ ТЕМЫ */}
+                    <div className={cn(
+                      "flex rounded-lg p-1",
+                      "bg-background-secondary",
+                      "dark:bg-background-tertiary"
+                    )}>
                       {periods.map((period) => (
                         <button
                           key={period.id}
@@ -293,8 +260,8 @@ const PerformanceSection: React.FC = () => {
                           className={cn(
                             'text-xs font-medium px-4 py-2 rounded-md transition-all duration-200',
                             selectedPeriod === period.id
-                              ? 'bg-[#90bff9] text-[#05192c] shadow-sm'
-                              : 'text-white/70 hover:text-white hover:bg-white/5'
+                              ? 'bg-primary-500 text-primary-900 shadow-sm'
+                              : 'text-text-secondary hover:text-text-primary hover:bg-background-tertiary dark:hover:bg-background-secondary'
                           )}
                         >
                           {period.label}
@@ -307,104 +274,104 @@ const PerformanceSection: React.FC = () => {
                   <PerformanceChart
                     data={mockPerformanceChartData}
                     height={400}
-                    showPeriodSelector={false} // УБИРАЕМ встроенный селектор
+                    showPeriodSelector={false}
                     showBenchmark={true}
-                    benchmarkData={benchmarkData} // ДОБАВЛЯЕМ бенчмарк
+                    benchmarkData={benchmarkData}
                     chartType="area"
                   />
 
-                  {/* ЕДИНСТВЕННАЯ статистика под графиком - зависит от selectedPeriod */}
+                  {/* ЕДИНСТВЕННАЯ статистика под графиком - зависит от selectedPeriod - АДАПТИВНО ДЛЯ СВЕТЛОЙ ТЕМЫ */}
                   <div className="mt-8">
-                    <h4 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-                      <PieChart className="w-5 h-5" style={{ color: '#90bff9' }} />
+                    <h4 className="text-lg font-semibold text-text-primary mb-6 flex items-center gap-2">
+                      <PieChart className="w-5 h-5 text-primary-500" />
                       Statistics for {periods.find(p => p.id === selectedPeriod)?.label}
                     </h4>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                      <div className="text-center p-4 rounded-xl"
+                      <div className="text-center p-4 rounded-xl border transition-all duration-300 hover:transform hover:-translate-y-1"
                            style={{
                              background: getStatusBgColor(currentPeriodData.currentReturn),
-                             border: `1px solid ${currentPeriodData.currentReturn > 0 ? '#86efac' : currentPeriodData.currentReturn < 0 ? '#fca5a5' : '#bf9ffb'}`,
+                             borderColor: getStatusBorderColor(currentPeriodData.currentReturn),
                            }}>
-                        <div className="text-white/70 text-sm mb-1">Current Return</div>
+                        <div className="text-text-secondary text-sm mb-1">Current Return</div>
                         <div className={cn("text-xl font-bold", getStatusColor(currentPeriodData.currentReturn))}>
                           {currentPeriodData.currentReturn > 0 ? '+' : ''}{currentPeriodData.currentReturn}%
                         </div>
                       </div>
 
-                      <div className="text-center p-4 rounded-xl"
+                      <div className="text-center p-4 rounded-xl border transition-all duration-300 hover:transform hover:-translate-y-1"
                            style={{
-                             background: 'rgba(134, 239, 172, 0.1)',
-                             border: '1px solid #86efac',
+                             background: getStatusBgColor(currentPeriodData.bestDay),
+                             borderColor: getStatusBorderColor(currentPeriodData.bestDay),
                            }}>
-                        <div className="text-white/70 text-sm mb-1">Best Day</div>
-                        <div className="text-xl font-bold text-[#86efac]">
+                        <div className="text-text-secondary text-sm mb-1">Best Day</div>
+                        <div className={cn("text-xl font-bold", getStatusColor(currentPeriodData.bestDay))}>
                           +{currentPeriodData.bestDay}%
                         </div>
                       </div>
 
-                      <div className="text-center p-4 rounded-xl"
+                      <div className="text-center p-4 rounded-xl border transition-all duration-300 hover:transform hover:-translate-y-1"
                            style={{
-                             background: 'rgba(252, 165, 165, 0.1)',
-                             border: '1px solid #fca5a5',
+                             background: getStatusBgColor(currentPeriodData.worstDay),
+                             borderColor: getStatusBorderColor(currentPeriodData.worstDay),
                            }}>
-                        <div className="text-white/70 text-sm mb-1">Worst Day</div>
-                        <div className="text-xl font-bold text-[#fca5a5]">
+                        <div className="text-text-secondary text-sm mb-1">Worst Day</div>
+                        <div className={cn("text-xl font-bold", getStatusColor(currentPeriodData.worstDay))}>
                           {currentPeriodData.worstDay}%
                         </div>
                       </div>
 
-                      <div className="text-center p-4 rounded-xl"
+                      <div className="text-center p-4 rounded-xl border transition-all duration-300 hover:transform hover:-translate-y-1"
                            style={{
-                             background: 'rgba(191, 159, 251, 0.1)',
-                             border: '1px solid #bf9ffb',
+                             background: getStatusBgColor(0), // нейтральный
+                             borderColor: getStatusBorderColor(0),
                            }}>
-                        <div className="text-white/70 text-sm mb-1">Volatility</div>
-                        <div className="text-xl font-bold text-[#bf9ffb]">
+                        <div className="text-text-secondary text-sm mb-1">Volatility</div>
+                        <div className={cn("text-xl font-bold", getStatusColor(0))}>
                           {currentPeriodData.volatility}%
                         </div>
                       </div>
 
-                      <div className="text-center p-4 rounded-xl"
+                      <div className="text-center p-4 rounded-xl border transition-all duration-300 hover:transform hover:-translate-y-1"
                            style={{
-                             background: 'rgba(252, 165, 165, 0.1)',
-                             border: '1px solid #fca5a5',
+                             background: getStatusBgColor(currentPeriodData.maxDrawdown),
+                             borderColor: getStatusBorderColor(currentPeriodData.maxDrawdown),
                            }}>
-                        <div className="text-white/70 text-sm mb-1">Max Drawdown</div>
-                        <div className="text-xl font-bold text-[#fca5a5]">
+                        <div className="text-text-secondary text-sm mb-1">Max Drawdown</div>
+                        <div className={cn("text-xl font-bold", getStatusColor(currentPeriodData.maxDrawdown))}>
                           {currentPeriodData.maxDrawdown}%
                         </div>
                       </div>
 
-                      <div className="text-center p-4 rounded-xl"
+                      <div className="text-center p-4 rounded-xl border transition-all duration-300 hover:transform hover:-translate-y-1"
                            style={{
-                             background: 'rgba(134, 239, 172, 0.1)',
-                             border: '1px solid #86efac',
+                             background: getStatusBgColor(currentPeriodData.alpha),
+                             borderColor: getStatusBorderColor(currentPeriodData.alpha),
                            }}>
-                        <div className="text-white/70 text-sm mb-1">Alpha</div>
-                        <div className="text-xl font-bold text-[#86efac]">
-                          +{currentPeriodData.alpha}%
+                        <div className="text-text-secondary text-sm mb-1">Alpha</div>
+                        <div className={cn("text-xl font-bold", getStatusColor(currentPeriodData.alpha))}>
+                          {currentPeriodData.alpha}
                         </div>
                       </div>
 
-                      <div className="text-center p-4 rounded-xl"
+                      <div className="text-center p-4 rounded-xl border transition-all duration-300 hover:transform hover:-translate-y-1"
                            style={{
-                             background: 'rgba(191, 159, 251, 0.1)',
-                             border: '1px solid #bf9ffb',
+                             background: getStatusBgColor(currentPeriodData.beta - 1), // beta близко к 1 = нейтрально
+                             borderColor: getStatusBorderColor(currentPeriodData.beta - 1),
                            }}>
-                        <div className="text-white/70 text-sm mb-1">Beta</div>
-                        <div className="text-xl font-bold text-[#bf9ffb]">
+                        <div className="text-text-secondary text-sm mb-1">Beta</div>
+                        <div className={cn("text-xl font-bold", getStatusColor(currentPeriodData.beta - 1))}>
                           {currentPeriodData.beta}
                         </div>
                       </div>
 
-                      <div className="text-center p-4 rounded-xl"
+                      <div className="text-center p-4 rounded-xl border transition-all duration-300 hover:transform hover:-translate-y-1"
                            style={{
-                             background: 'rgba(191, 159, 251, 0.1)',
-                             border: '1px solid #bf9ffb',
+                             background: getStatusBgColor(0), // нейтральный
+                             borderColor: getStatusBorderColor(0),
                            }}>
-                        <div className="text-white/70 text-sm mb-1">Total Trades</div>
-                        <div className="text-xl font-bold text-[#bf9ffb]">
+                        <div className="text-text-secondary text-sm mb-1">Total Trades</div>
+                        <div className={cn("text-xl font-bold", getStatusColor(0))}>
                           {currentPeriodData.totalTrades}
                         </div>
                       </div>
@@ -416,118 +383,103 @@ const PerformanceSection: React.FC = () => {
 
             {selectedTab === 'trades' && (
               <div className="space-y-8">
-                {/* Trade Summary */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  <div className="text-center p-4 rounded-xl"
-                       style={{
-                         background: 'rgba(191, 159, 251, 0.1)',
-                         border: '1px solid #bf9ffb',
-                       }}>
-                    <div className="text-white/70 text-sm mb-1">Total Trades</div>
-                    <div className="text-xl font-bold text-[#bf9ffb]">
-                      {mockTradeStats.wins + mockTradeStats.losses}
-                    </div>
-                  </div>
-
-                  <div className="text-center p-4 rounded-xl"
-                       style={{
-                         background: 'rgba(134, 239, 172, 0.1)',
-                         border: '1px solid #86efac',
-                       }}>
-                    <div className="text-white/70 text-sm mb-1">Winning Trades</div>
-                    <div className="text-xl font-bold text-[#86efac]">
-                      {mockTradeStats.wins}
-                    </div>
-                  </div>
-
-                  <div className="text-center p-4 rounded-xl"
-                       style={{
-                         background: 'rgba(252, 165, 165, 0.1)',
-                         border: '1px solid #fca5a5',
-                       }}>
-                    <div className="text-white/70 text-sm mb-1">Losing Trades</div>
-                    <div className="text-xl font-bold text-[#fca5a5]">
-                      {mockTradeStats.losses}
-                    </div>
-                  </div>
-
-                  <div className="text-center p-4 rounded-xl"
-                       style={{
-                         background: 'rgba(134, 239, 172, 0.1)',
-                         border: '1px solid #86efac',
-                       }}>
-                    <div className="text-white/70 text-sm mb-1">Win Rate</div>
-                    <div className="text-xl font-bold text-[#86efac]">
-                      {mockTradeStats.winRate}%
-                    </div>
-                  </div>
-                </div>
-
-                {/* Recent Trades Table с цветами */}
-                <div className="rounded-2xl p-6"
-                     style={{
-                       background: 'rgba(255, 255, 255, 0.05)',
-                       backdropFilter: 'blur(20px)',
-                       border: '1px solid rgba(144, 191, 249, 0.2)',
-                     }}>
+                {/* Trade Journal - АДАПТИВНО ДЛЯ СВЕТЛОЙ ТЕМЫ */}
+                <div className={cn(
+                  "rounded-2xl p-6",
+                  "bg-background border border-border",
+                  "dark:bg-background-secondary dark:border-border-secondary"
+                )}>
                   <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-semibold text-white">
-                      Recent Trades
+                    <h3 className="text-2xl font-semibold text-text-primary">
+                      Recent Closed Trades
                     </h3>
-                    <Button
-                      onClick={handleDownloadReport}
-                      className="flex items-center gap-2"
-                      style={{ background: '#90bff9', color: '#05192c' }}
-                    >
-                      <Download className="w-4 h-4" />
-                      Download PDF
+                    <Button variant="secondary" icon={<Download className="w-4 h-4" />}>
+                      Export CSV
                     </Button>
                   </div>
 
+                  {/* Trade Stats - ИСПРАВЛЕНО: теперь используем массив */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    {mockTradeStats.map((stat, index) => (
+                      <div key={index} className={cn(
+                        "text-center p-4 rounded-lg transition-all duration-300 hover:transform hover:-translate-y-1",
+                        "bg-background-secondary border border-border",
+                        "dark:bg-background-tertiary dark:border-border-secondary"
+                      )}>
+                        <div className="text-text-secondary text-sm mb-1">{stat.label}</div>
+                        <div className={cn(
+                          "text-lg font-bold",
+                          stat.trend === 'up' ? 'text-status-positive' :
+                          stat.trend === 'down' ? 'text-status-negative' : 'text-status-neutral'
+                        )}>
+                          {stat.format === 'percentage' ? `${stat.value}%` : stat.value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Trades Table - ИСПРАВЛЕНО: используем правильные поля */}
                   <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-white/10">
-                          <th className="text-left py-3 text-white/70 font-medium">Symbol</th>
-                          <th className="text-left py-3 text-white/70 font-medium">Type</th>
-                          <th className="text-left py-3 text-white/70 font-medium">Entry Date</th>
-                          <th className="text-left py-3 text-white/70 font-medium">Entry Price</th>
-                          <th className="text-left py-3 text-white/70 font-medium">Exit Date</th>
-                          <th className="text-left py-3 text-white/70 font-medium">Exit Price</th>
-                          <th className="text-right py-3 text-white/70 font-medium">P&L</th>
+                        <tr className={cn(
+                          "border-b",
+                          "border-border text-text-secondary",
+                          "dark:border-border-secondary"
+                        )}>
+                          <th className="text-left py-3 px-4 font-medium">Date</th>
+                          <th className="text-left py-3 px-4 font-medium">Symbol</th>
+                          <th className="text-left py-3 px-4 font-medium">Type</th>
+                          <th className="text-right py-3 px-4 font-medium">Entry</th>
+                          <th className="text-right py-3 px-4 font-medium">Exit</th>
+                          <th className="text-right py-3 px-4 font-medium">P&L</th>
+                          <th className="text-right py-3 px-4 font-medium">Return</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {recentTrades.map((trade) => (
-                          <tr key={trade.id} className="border-b border-white/5">
-                            <td className="py-3 text-white font-medium">{trade.ticker}</td>
-                            <td className="py-3 text-white/70 uppercase">{trade.type}</td>
-                            <td className="py-3 text-white/70">{formatDate(trade.entryDate)}</td>
-                            <td className="py-3 text-white/70">${trade.entryPrice.toLocaleString()}</td>
-                            <td className="py-3 text-white/70">{formatDate(trade.exitDate!)}</td>
-                            <td className="py-3 text-white/70">${trade.exitPrice!.toLocaleString()}</td>
+                        {mockClosedTrades.map((trade) => (
+                          <tr key={trade.id} className={cn(
+                            "border-b border-border hover:bg-background-secondary transition-colors",
+                            "dark:border-border-secondary dark:hover:bg-background-tertiary"
+                          )}>
+                            <td className="py-3 px-4 text-text-secondary">
+                              {trade.closedAt}
+                            </td>
+                            <td className="py-3 px-4 font-medium text-text-primary">
+                              {trade.symbol}
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className={cn(
+                                "px-2 py-1 rounded text-xs font-medium",
+                                trade.type === 'LONG'
+                                  ? 'bg-status-positive/20 text-status-positive'
+                                  : 'bg-status-negative/20 text-status-negative'
+                              )}>
+                                {trade.type}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right text-text-primary">
+                              ${trade.entryPrice.toFixed(2)}
+                            </td>
+                            <td className="py-3 px-4 text-right text-text-primary">
+                              ${trade.exitPrice.toFixed(2)}
+                            </td>
                             <td className={cn(
-                              "py-3 text-right font-bold",
-                              trade.profitLossPercent! > 0 ? 'text-[#86efac]' : 'text-[#fca5a5]'
+                              "py-3 px-4 text-right font-medium",
+                              trade.pnl >= 0 ? 'text-status-positive' : 'text-status-negative'
                             )}>
-                              {trade.profitLossPercent! > 0 ? '+' : ''}{trade.profitLossPercent!.toFixed(2)}%
+                              {trade.pnl >= 0 ? '+' : ''}${trade.pnl.toLocaleString()}
+                            </td>
+                            <td className={cn(
+                              "py-3 px-4 text-right font-medium",
+                              trade.return >= 0 ? 'text-status-positive' : 'text-status-negative'
+                            )}>
+                              {trade.return >= 0 ? '+' : ''}{trade.return}%
                             </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
-                  </div>
-
-                  <div className="mt-6 text-center">
-                    <p className="text-white/50 text-sm mb-4">
-                      Showing 8 most recent trades
-                    </p>
-                    <Button
-                      variant="secondary"
-                      className="text-white border-white/20 hover:bg-white/10"
-                    >
-                      View Complete Trade Journal
-                    </Button>
                   </div>
                 </div>
               </div>

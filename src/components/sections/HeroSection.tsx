@@ -129,15 +129,7 @@ const HeroSection: React.FC = () => {
               Explore Analysis
             </Button>
 
-            <Button
-              variant="glass"
-              size="lg"
-              onClick={() => scrollToElement('#team')}
-              icon={<Shield className="w-5 h-5" />}
-              ripple
-            >
-              Meet Our Team
-            </Button>
+
           </div>
         </div>
 
