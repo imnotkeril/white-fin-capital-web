@@ -6,7 +6,7 @@ import { cn } from '@/utils/helpers';
 import Button from '@/components/common/Button';
 import Card, { MetricCard } from '@/components/common/Card';
 import PerformanceChart from '@/components/charts/PerformanceChart';
-import { KPIData } from '@/types/realData';
+import { KPIData } from '@/types';
 
 interface PeriodData {
   currentReturn: number;
@@ -67,7 +67,7 @@ const PerformanceSection: React.FC = () => {
     try {
       console.log('Loading real trading data...');
 
-      // Load main KPI data
+      // Load main KPI data - ИСПРАВЛЕНО: теперь возвращает правильные метрики
       const kpis = await RealStatistics.getKPIData();
       setKpiData(kpis);
 
@@ -146,7 +146,7 @@ const PerformanceSection: React.FC = () => {
     }
   };
 
-  // Функции для статусных цветов
+  // Функции для статусных цветов - ИСПРАВЛЕНО
   const getStatusColor = (value: number) => {
     if (value > 0) return 'text-status-positive';
     if (value < 0) return 'text-status-negative';
@@ -157,6 +157,21 @@ const PerformanceSection: React.FC = () => {
     if (value > 0) return 'bg-status-positive/10 border-status-positive/30';
     if (value < 0) return 'bg-status-negative/10 border-status-negative/30';
     return 'bg-background-secondary border-border';
+  };
+
+  // ИСПРАВЛЕНИЕ: Форматирование чисел с округлением
+  const formatValue = (value: number | string, format?: 'percentage' | 'number' | 'currency') => {
+    if (typeof value === 'string') return value;
+
+    switch (format) {
+      case 'percentage':
+        return `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
+      case 'currency':
+        return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      case 'number':
+      default:
+        return value.toString();
+    }
   };
 
   // Loading state
@@ -221,7 +236,7 @@ const PerformanceSection: React.FC = () => {
             Track Record & Performance
           </h2>
           <p className="text-xl text-text-secondary max-w-3xl mx-auto leading-relaxed">
-            Real trading performance with {kpiData.find(k => k.label === 'Total Trades')?.value || 0} completed trades
+            Real trading performance with {tradeStats.find(k => k.label === 'Total Trades')?.value || 0} completed trades
           </p>
 
           {/* Data Status */}
@@ -240,10 +255,10 @@ const PerformanceSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Top KPI Cards */}
+        {/* Top KPI Cards - ИСПРАВЛЕНО: правильные метрики + округление */}
         <div className="mb-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {kpiData.slice(0, 4).map((kpi, index) => (
+            {kpiData.map((kpi, index) => (
               <Card
                 key={index}
                 ocean
@@ -257,10 +272,7 @@ const PerformanceSection: React.FC = () => {
                   "text-2xl font-bold mb-1",
                   getStatusColor(typeof kpi.value === 'number' ? kpi.value : 0)
                 )}>
-                  {kpi.format === 'percentage' ?
-                    `${typeof kpi.value === 'number' && kpi.value > 0 ? '+' : ''}${kpi.value}%` :
-                    kpi.value
-                  }
+                  {formatValue(kpi.value, kpi.format)}
                 </div>
               </Card>
             ))}
@@ -328,7 +340,7 @@ const PerformanceSection: React.FC = () => {
                   title="Portfolio Performance vs S&P 500"
                 />
 
-                {/* Period Statistics */}
+                {/* Period Statistics - ИСПРАВЛЕНО: правильное форматирование */}
                 {periodData && (
                   <Card ocean padding="lg">
                     <h4 className="text-lg font-semibold text-text-primary mb-6 flex items-center gap-2">
@@ -454,16 +466,13 @@ const PerformanceSection: React.FC = () => {
                           stat.trend === 'up' ? 'text-status-positive' :
                           stat.trend === 'down' ? 'text-status-negative' : 'text-text-primary'
                         )}>
-                          {stat.format === 'percentage' ?
-                            `${typeof stat.value === 'number' && stat.value > 0 ? '+' : ''}${stat.value}%` :
-                            stat.value
-                          }
+                          {formatValue(stat.value, stat.format)}
                         </div>
                       </Card>
                     ))}
                   </div>
 
-                  {/* Trades Table */}
+                  {/* Trades Table - ИСПРАВЛЕНО: P&L отображение */}
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
@@ -473,7 +482,7 @@ const PerformanceSection: React.FC = () => {
                           <th className="text-center text-text-secondary font-medium pb-3 pt-3 px-4">Type</th>
                           <th className="text-right text-text-secondary font-medium pb-3 pt-3 px-4">Entry</th>
                           <th className="text-right text-text-secondary font-medium pb-3 pt-3 px-4">Exit</th>
-                          <th className="text-right text-text-secondary font-medium pb-3 pt-3 px-4">P&L</th>
+                          <th className="text-right text-text-secondary font-medium pb-3 pt-3 px-4">P&L ($)</th>
                           <th className="text-right text-text-secondary font-medium pb-3 pt-3 px-4">Return</th>
                         </tr>
                       </thead>
@@ -493,16 +502,16 @@ const PerformanceSection: React.FC = () => {
                               </span>
                             </td>
                             <td className="py-3 px-4 text-text-secondary text-right">
-                              ${typeof trade.entryPrice === 'number' ? trade.entryPrice.toLocaleString() : trade.entryPrice}
+                              ${trade.entryPrice.toFixed(2)}
                             </td>
                             <td className="py-3 px-4 text-text-secondary text-right">
-                              ${typeof trade.exitPrice === 'number' ? trade.exitPrice.toLocaleString() : trade.exitPrice}
+                              ${trade.exitPrice.toFixed(2)}
                             </td>
                             <td className={cn(
                               "py-3 px-4 font-medium text-right",
                               trade.pnl >= 0 ? 'text-status-positive' : 'text-status-negative'
                             )}>
-                              {trade.pnl >= 0 ? '+' : ''}${Math.abs(trade.pnl).toFixed(2)}
+                              {trade.pnl >= 0 ? '+' : ''}${Math.abs(trade.pnl).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
                             <td className={cn(
                               "py-3 px-4 font-medium text-right",
