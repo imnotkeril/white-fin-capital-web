@@ -206,7 +206,7 @@ export class DataParser {
 
     // Calculate derived fields
     const holdingDays = Math.floor((exitDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
-    const absolutePnL = (exitPrice - avgPrice) * (portfolioExposure / 100) * 100; // Simplified calculation
+    const absolutePnL = (exitPrice - avgPrice) * (portfolioExposure / 100) * 100;
     const portfolioImpact = (pnlPercent * portfolioExposure) / 100;
 
     return {

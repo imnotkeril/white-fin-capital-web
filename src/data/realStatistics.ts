@@ -129,20 +129,8 @@ export class RealStatistics {
   static async getKPIData(): Promise<KPIData[]> {
     const { metrics, performanceData } = await this.loadData();
 
-    // Calculate Sortino Ratio (using downside deviation)
-    const dailyReturns = performanceData.map(p => p.dailyReturn);
-    const avgDailyReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
-
-    const targetReturn = 0;
-    const downsideReturns = dailyReturns.filter(r => r < targetReturn);
-    const downsideVariance = downsideReturns.length > 0
-      ? downsideReturns.reduce((sum, ret) => sum + Math.pow(ret - targetReturn, 2), 0) / downsideReturns.length
-      : 0;
-    const downsideDeviation = Math.sqrt(downsideVariance) * Math.sqrt(252);
-
-    const riskFreeRate = 5; // 5% annual
-    const annualizedReturn = avgDailyReturn * 252;
-    const sortinoRatio = downsideDeviation === 0 ? 0 : (annualizedReturn - riskFreeRate) / downsideDeviation;
+    // Calculate Sortino Ratio (using built-in method)
+    const sortinoRatio = PerformanceCalculator.calculateSortinoRatio(performanceData);
 
     return [
       {

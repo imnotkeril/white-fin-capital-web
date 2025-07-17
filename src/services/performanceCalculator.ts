@@ -26,7 +26,18 @@ export class PerformanceCalculator {
       throw new Error('No trades provided for calculation');
     }
 
+    // Validate portfolio exposures
     const totalExposure = trades.reduce((sum, trade) => sum + trade.portfolioExposure, 0);
+    if (totalExposure > 150) { // More than 150%
+      console.warn(`⚠️ High total exposure: ${totalExposure.toFixed(1)}%. Check for leverage or data errors.`);
+    }
+
+    // Log sample trades for debugging
+    console.log('Sample trades for debugging:');
+    trades.slice(0, 3).forEach(trade => {
+      console.log(`${trade.ticker}: PnL=${trade.pnlPercent}%, Exposure=${trade.portfolioExposure}%, Impact=${trade.portfolioImpact}%`);
+    });
+
     if (totalExposure > 1.5) { // If greater than 150%
       console.warn(`High total exposure: ${(totalExposure * 100).toFixed(1)}%. Possible leverage or error.`);
     }
@@ -138,16 +149,9 @@ export class PerformanceCalculator {
     sortedDates.forEach(dateKey => {
       const dayTrades = tradesByDate.get(dateKey)!;
 
-
-      const totalDayExposure = dayTrades.reduce((sum, trade) => sum + trade.portfolioExposure, 0);
-
-
-      const normalizationFactor = totalDayExposure > 1 ? totalDayExposure : 1;
-
-
+      // ИСПРАВЛЕНО: Убрана двойная нормализация - portfolioImpact уже учитывает exposure
       const dayPortfolioImpact = dayTrades.reduce((sum, trade) => {
-        const normalizedWeight = trade.portfolioExposure / normalizationFactor;
-        return sum + (trade.portfolioImpact * normalizedWeight);
+        return sum + trade.portfolioImpact;
       }, 0);
 
       const dailyReturn = dayPortfolioImpact;
@@ -174,20 +178,20 @@ export class PerformanceCalculator {
   }
 
   /**
-   * Calculate maximum drawdown from portfolio returns
+   * Calculate maximum drawdown from portfolio returns - ИСПРАВЛЕНО
    */
   private static calculateMaxDrawdown(returns: PortfolioPerformancePoint[]): number {
     if (returns.length === 0) return 0;
 
     let maxDrawdown = 0;
-    let runningMax = returns[0].portfolioValue;
+    let peak = 0; // Начинаем с 0 (базовая доходность)
 
     returns.forEach(point => {
-      // Update running maximum
-      runningMax = Math.max(runningMax, point.portfolioValue);
+      // Update peak cumulative return
+      peak = Math.max(peak, point.cumulativeReturn);
 
-      // Calculate current drawdown from running max
-      const currentDrawdown = ((runningMax - point.portfolioValue) / runningMax) * 100;
+      // Calculate current drawdown from peak
+      const currentDrawdown = peak - point.cumulativeReturn;
 
       // Update maximum drawdown
       maxDrawdown = Math.max(maxDrawdown, currentDrawdown);
@@ -197,7 +201,7 @@ export class PerformanceCalculator {
   }
 
   /**
-   * Calculate Sharpe ratio from portfolio returns
+   * Calculate Sharpe ratio from portfolio returns - ИСПРАВЛЕНО
    */
   private static calculateSharpeRatio(returns: PortfolioPerformancePoint[], riskFreeRate: number): number {
     if (returns.length < 2) return 0;
@@ -210,9 +214,54 @@ export class PerformanceCalculator {
 
     // Annualize returns and calculate Sharpe
     const annualizedReturn = avgDailyReturn * 252; // 252 trading days
-    const annualizedRiskFreeRate = riskFreeRate * 100; // Convert to percentage
+    const annualizedRiskFreeRate = riskFreeRate; // ИСПРАВЛЕНО: riskFreeRate уже в правильном формате
 
     return (annualizedReturn - annualizedRiskFreeRate) / volatility;
+  }
+
+  /**
+   * Calculate Sortino ratio - focuses on downside deviation
+   */
+  private static calculateSortinoRatio(returns: PortfolioPerformancePoint[], targetReturn: number = 0): number {
+    if (returns.length < 2) return 0;
+
+    const dailyReturns = returns.map(r => r.dailyReturn);
+    const avgDailyReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
+
+    // Calculate downside deviation
+    const downsideReturns = dailyReturns.filter(r => r < targetReturn);
+    if (downsideReturns.length === 0) return 0;
+
+    const downsideVariance = downsideReturns.reduce((sum, ret) =>
+      sum + Math.pow(ret - targetReturn, 2), 0) / downsideReturns.length;
+    const downsideDeviation = Math.sqrt(downsideVariance) * Math.sqrt(252);
+
+    if (downsideDeviation === 0) return 0;
+
+    const annualizedReturn = avgDailyReturn * 252;
+    return annualizedReturn / downsideDeviation;
+  }
+
+  /**
+   * Public method to calculate Sortino ratio
+   */
+  static getSortinoRatio(returns: PortfolioPerformancePoint[], targetReturn: number = 0): number {
+    if (returns.length < 2) return 0;
+
+    const dailyReturns = returns.map(r => r.dailyReturn);
+    const avgDailyReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
+
+    const downsideReturns = dailyReturns.filter(r => r < targetReturn);
+    if (downsideReturns.length === 0) return 0;
+
+    const downsideVariance = downsideReturns.reduce((sum, ret) =>
+      sum + Math.pow(ret - targetReturn, 2), 0) / downsideReturns.length;
+    const downsideDeviation = Math.sqrt(downsideVariance) * Math.sqrt(252);
+
+    if (downsideDeviation === 0) return 0;
+
+    const annualizedReturn = avgDailyReturn * 252;
+    return annualizedReturn / downsideDeviation;
   }
 
   /**
@@ -372,13 +421,17 @@ export class PerformanceCalculator {
     return aligned;
   }
 
-  private static calculateVolatility(returns: number[]): number {
-    if (returns.length < 2) return 0;
+  /**
+   * Calculate volatility - ИСПРАВЛЕНО
+   */
+  private static calculateVolatility(dailyReturns: number[]): number {
+    if (dailyReturns.length < 2) return 0;
 
-    const avg = returns.reduce((a, b) => a + b, 0) / returns.length;
-    const variance = returns.reduce((sum, ret) => sum + Math.pow(ret - avg, 2), 0) / (returns.length - 1);
+    const mean = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
+    const variance = dailyReturns.reduce((sum, ret) =>
+      sum + Math.pow(ret - mean, 2), 0) / (dailyReturns.length - 1); // ИСПРАВЛЕНО: используем n-1 для sample variance
 
-    return Math.sqrt(variance) * Math.sqrt(252); // Annualized
+    return Math.sqrt(variance) * Math.sqrt(252); // Аннуализация
   }
 
   private static calculateCorrelation(x: number[], y: number[]): number {
