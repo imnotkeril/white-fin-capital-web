@@ -157,15 +157,14 @@ const KPICounter: React.FC<KPICounterProps> = ({
         </div>
       )}
 
-      {/* УБИРАЕМ Progress Bar полностью - без полосок! */}
     </div>
   );
 };
 
-// Grid component для множественных KPI счетчиков
+// Grid component
 interface KPIGridProps {
   data: KPIData[];
-  columns?: 2 | 3 | 4;
+  columns?: 2 | 3 | 4 | 5;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
   animationDelay?: number;
@@ -184,10 +183,11 @@ export const KPIGrid: React.FC<KPIGridProps> = ({
     2: 'grid-cols-1 md:grid-cols-2',
     3: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
     4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4',
+    5: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-5',
   };
 
   return (
-    <div className={cn('grid gap-6', gridCols[columns], className)}>
+    <div className={cn('grid gap-4', gridCols[columns], className)}>
       {data.map((kpi, index) => (
         <div
           key={kpi.label}

@@ -42,7 +42,6 @@ const PerformanceSection: React.FC = () => {
   ] as const;
 
   const periods = [
-    { id: '1m', label: '1 Month' },
     { id: '3m', label: '3 Months' },
     { id: '6m', label: '6 Months' },
     { id: '1y', label: '1 Year' },
@@ -267,21 +266,21 @@ const PerformanceSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Top KPI Cards - ИСПРАВЛЕНО: правильные метрики + округление */}
+        {/* Top KPI Cards */}
         <div className="mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {kpiData.map((kpi, index) => (
               <Card
                 key={index}
                 ocean
-                padding="lg"
+                padding="md" // Изменено с "lg" на "md" для экономии места
                 className="text-center transition-all duration-200 hover:-translate-y-1"
               >
-                <div className="text-text-secondary text-sm mb-2 font-medium">
+                <div className="text-text-secondary text-xs mb-1 font-medium">
                   {kpi.label}
                 </div>
                 <div className={cn(
-                  "text-2xl font-bold mb-1",
+                  "text-xl font-bold mb-1", // Изменено с "text-2xl" на "text-xl"
                   getStatusColor(typeof kpi.value === 'number' ? kpi.value : 0)
                 )}>
                   {formatValue(kpi.value, kpi.format)}

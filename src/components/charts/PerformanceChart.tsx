@@ -34,8 +34,8 @@ interface PerformanceChartProps {
   benchmarkData?: ChartDataPoint[];
   title?: string;
   showBenchmark?: boolean;
-  selectedPeriod?: '1m' | '3m' | '6m' | '1y' | '2y' | 'all';
-  onPeriodChange?: (period: '1m' | '3m' | '6m' | '1y' | '2y' | 'all') => void;
+  selectedPeriod?: '3m' | '6m' | '1y' | '2y' | 'all';
+  onPeriodChange?: (period: '3m' | '6m' | '1y' | '2y' | 'all') => void;
 }
 
 type CombinedChartDataPoint = ChartDataPoint & { portfolio: number; 'S&P 500'?: number };
@@ -57,7 +57,6 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
   const { actualTheme } = useTheme();
 
   const periods = [
-    { key: '1m', label: '1M' },
     { key: '3m', label: '3M' },
     { key: '6m', label: '6M' },
     { key: '1y', label: '1Y' },
@@ -66,16 +65,13 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
   ] as const;
 
   // Filter data based on selected period and recalculate returns relative to period start
-  const filterDataByPeriod = (data: ChartDataPoint[], period: '1m' | '3m' | '6m' | '1y' | '2y' | 'all') => {
+  const filterDataByPeriod = (data: ChartDataPoint[], period: '3m' | '6m' | '1y' | '2y' | 'all') => {
     if (period === 'all') return data;
 
     const now = new Date();
     let startDate: Date;
 
     switch (period) {
-      case '1m':
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
       case '3m':
         startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
         break;

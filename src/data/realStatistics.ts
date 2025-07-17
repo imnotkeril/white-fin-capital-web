@@ -109,7 +109,7 @@ export class RealStatistics {
   }
 
   /**
-   * Get KPI data for dashboard - ИЗМЕНЕНО: Sharpe и Sortino вместо Average Gain/Loss
+   * Get KPI data for dashboard - ОБНОВЛЕНО: добавлен Profit Factor (5 карточек)
    */
   static async getKPIData(): Promise<KPIData[]> {
     const { metrics, performanceData } = await this.loadData();
@@ -153,7 +153,13 @@ export class RealStatistics {
         value: Math.round(sortinoRatio * 100) / 100, // 2 decimal places
         format: 'number' as const,
         trend: sortinoRatio > 1.5 ? 'up' as const : sortinoRatio > 1 ? 'neutral' as const : 'down' as const,
-      }
+      },
+      {
+        label: 'Profit Factor',
+        value: Math.round(metrics.profitFactor * 100) / 100, // 2 decimal places
+        format: 'number' as const,
+        trend: metrics.profitFactor > 1.5 ? 'up' as const : metrics.profitFactor > 1 ? 'neutral' as const : 'down' as const,
+      },
     ];
   }
 
@@ -277,9 +283,9 @@ export class RealStatistics {
   }
 
   /**
-   * Get period statistics with proper alpha/beta calculation
+   * Get period statistics with proper alpha/beta calculation - ОБНОВЛЕНО: убран '1m' период
    */
-  static async getPeriodStatistics(period: '1m' | '3m' | '6m' | '1y' | '2y' | 'all'): Promise<{
+  static async getPeriodStatistics(period: '3m' | '6m' | '1y' | '2y' | 'all'): Promise<{
     currentReturn: number;
     bestDay: number;
     worstDay: number;
@@ -296,9 +302,6 @@ export class RealStatistics {
     let periodStart: Date;
 
     switch (period) {
-      case '1m':
-        periodStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
       case '3m':
         periodStart = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
         break;
@@ -424,4 +427,3 @@ export class RealStatistics {
     return this.getTradeStats();
   }
 }
-
