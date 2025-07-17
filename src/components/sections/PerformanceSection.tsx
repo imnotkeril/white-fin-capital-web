@@ -22,6 +22,26 @@ interface PeriodData {
   totalTrades: number;
 }
 
+interface TradeRecord {
+  ticker: string;
+  position: 'Long' | 'Short';
+  entryDate: Date;
+  avgPrice: number;
+  exitDate: Date;
+  exitPrice: number;
+  pnlPercent: number;
+  portfolioExposure: number;
+  holdingDays: number;
+  portfolioImpact: number;
+}
+
+interface BenchmarkPoint {
+  date: Date;
+  value: number;
+  change: number;
+  cumulativeReturn: number;
+}
+
 const PerformanceSection: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<'overview' | 'trades'>('overview');
   const [selectedPeriod, setSelectedPeriod] = useState<'1m' | '3m' | '6m' | '1y' | '2y' | 'all'>('1y');
@@ -148,8 +168,6 @@ const PerformanceSection: React.FC = () => {
         }));
       setClosedTrades(tradesForTable);
 
-      // Расширенная статистика трейдов - замени существующий код в loadAllData
-
       // 7. Создаем РАСШИРЕННУЮ статистику трейдов
       const winningTrades = trades.filter(t => t.pnlPercent > 0);
       const losingTrades = trades.filter(t => t.pnlPercent <= 0);
@@ -241,6 +259,16 @@ const PerformanceSection: React.FC = () => {
       ];
       setTradeStats(stats);
 
+      setLastUpdated(new Date());
+      console.log('✅ All data loaded successfully');
+
+    } catch (err) {
+      console.error('Error loading data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load trading data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const loadPeriodData = async () => {
     try {
@@ -307,7 +335,6 @@ const PerformanceSection: React.FC = () => {
   };
 
   // 🗓️ НОВЫЕ ФУНКЦИИ ФИЛЬТРАЦИИ ПО ПЕРИОДУ
-
   const filterTradesByPeriod = (trades: TradeRecord[], period: typeof selectedPeriod): TradeRecord[] => {
     const now = new Date();
     let startDate: Date;
@@ -369,8 +396,6 @@ const PerformanceSection: React.FC = () => {
       return point.date >= startDate && point.date <= now;
     });
   };
-
-
 
   const handleRefreshData = async () => {
     try {

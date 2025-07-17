@@ -110,8 +110,7 @@ export class PerformanceCalculator {
     sortedDates.forEach(dateKey => {
       const dayTrades = tradesByDate.get(dateKey)!;
 
-      // ✅ ИСПРАВЛЕНИЕ: Правильный расчет дневной доходности
-      // portfolioImpact уже в долях (влияние на портфель)
+
       const dailyReturn = dayTrades.reduce((sum, trade) => {
         return sum + trade.portfolioImpact; // Уже в долях
       }, 0);
