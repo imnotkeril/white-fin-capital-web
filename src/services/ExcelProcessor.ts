@@ -302,9 +302,19 @@ export class ExcelProcessor {
 
     console.log(`🔄 Resyncing benchmark for ${filteredTrades.length} filtered trades`);
 
-    // Найти дату первого ОТФИЛЬТРОВАННОГО трейда
+
     const sortedFilteredTrades = [...filteredTrades].sort((a, b) => a.entryDate.getTime() - b.entryDate.getTime());
+
     const firstFilteredTradeDate = sortedFilteredTrades[0].entryDate;
+
+
+    const originalFirstTrade = new Date('2024-01-03');
+    const timeDiff = Math.abs(firstFilteredTradeDate.getTime() - originalFirstTrade.getTime());
+
+    if (timeDiff < 24 * 60 * 60 * 1000) {
+      console.log('🚫 Skipping resync - filtered period starts with same trade as full portfolio');
+      return benchmarkPoints;
+    }
 
     console.log(`📅 First filtered trade date: ${firstFilteredTradeDate.toISOString().split('T')[0]}`);
 
