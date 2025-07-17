@@ -7,9 +7,8 @@ import Card, { MetricCard } from '@/components/common/Card';
 import PerformanceChart from '@/components/charts/PerformanceChart';
 import { KPIData } from '@/types';
 
-// Импорты новых сервисов
-import { DataParser } from '@/services/dataParser';
-import { BenchmarkService } from '@/services/benchmarkService';
+// Импорты упрощенных сервисов
+import { ExcelProcessor } from '@/services/ExcelProcessor';
 import { PerformanceCalculator } from '@/services/performanceCalculator';
 
 interface PeriodData {
@@ -70,23 +69,17 @@ const PerformanceSection: React.FC = () => {
     try {
       console.log('Loading real trading data...');
 
-      // 1. Загружаем данные трейдов из Excel
-      const tradesResult = await DataParser.loadTradingData();
-      const trades = tradesResult.validRecords;
+      // 1. Загружаем ВСЕ данные из Excel (трейды + бенчмарк)
+      const { trades, benchmark: benchmarkPoints } = await ExcelProcessor.loadAllData();
 
       if (trades.length === 0) {
         throw new Error('No valid trades found in Excel file');
       }
 
-      // 2. Загружаем данные бенчмарка (S&P 500)
-      const startDate = new Date(Math.min(...trades.map(t => t.entryDate.getTime())));
-      const endDate = new Date();
-      const benchmarkPoints = await BenchmarkService.getSP500Data(startDate, endDate);
+      // 2. Рассчитываем метрики портфеля
+      const metrics = PerformanceCalculator.calculateAllMetrics(trades);
 
-      // 3. Рассчитываем метрики портфеля
-      const metrics = PerformanceCalculator.calculateAllMetrics(trades, benchmarkPoints);
-
-      // 4. Создаем KPI данные
+      // 3. Создаем KPI данные
       const kpis: KPIData[] = [
         {
           label: 'Total Return',
@@ -121,24 +114,24 @@ const PerformanceSection: React.FC = () => {
       ];
       setKpiData(kpis);
 
-      // 5. Создаем данные для графика портфеля
-      const portfolioTimeSeries = PerformanceCalculator.calculatePortfolioTimeSeries(trades);
+      // 4. Создаем данные для графика портфеля
+      const portfolioTimeSeries = PerformanceCalculator.calculateTimeSeries(trades);
       const perfData = portfolioTimeSeries.map(point => ({
-        date: point.dateString,
-        value: Math.round(point.cumulativeReturn * 10) / 10,
-        label: `Portfolio: ${Math.round(point.cumulativeReturn * 10) / 10}%`
+        date: point.date.toISOString().split('T')[0],
+        value: Math.round(point.cumulativeReturn * 100) / 100,
+        label: `Portfolio: ${Math.round(point.cumulativeReturn * 100) / 100}%`
       }));
       setPerformanceData(perfData);
 
-      // 6. Создаем данные для графика бенчмарка
+      // 5. Создаем данные для графика бенчмарка
       const benchData = benchmarkPoints.map(point => ({
-        date: point.dateString,
-        value: Math.round(point.cumulativeReturn * 10) / 10,
-        label: `S&P 500: ${Math.round(point.cumulativeReturn * 10) / 10}%`
+        date: point.date.toISOString().split('T')[0],
+        value: Math.round(point.cumulativeReturn * 100) / 100,
+        label: `S&P 500: ${Math.round(point.cumulativeReturn * 100) / 100}%`
       }));
       setBenchmarkData(benchData);
 
-      // 7. Создаем данные закрытых трейдов для таблицы
+      // 6. Создаем данные закрытых трейдов для таблицы
       const tradesForTable = trades
         .sort((a, b) => b.exitDate.getTime() - a.exitDate.getTime())
         .slice(0, 20)
@@ -155,9 +148,22 @@ const PerformanceSection: React.FC = () => {
         }));
       setClosedTrades(tradesForTable);
 
-      // 8. Создаем статистику трейдов
+      // Расширенная статистика трейдов - замени существующий код в loadAllData
+
+      // 7. Создаем РАСШИРЕННУЮ статистику трейдов
       const winningTrades = trades.filter(t => t.pnlPercent > 0);
       const losingTrades = trades.filter(t => t.pnlPercent <= 0);
+
+      // Рассчитываем детальные метрики
+      const averageGain = winningTrades.length > 0
+        ? winningTrades.reduce((sum, t) => sum + t.pnlPercent, 0) / winningTrades.length
+        : 0;
+
+      const averageLoss = losingTrades.length > 0
+        ? Math.abs(losingTrades.reduce((sum, t) => sum + t.pnlPercent, 0) / losingTrades.length)
+        : 0;
+
+      const consecutiveStats = PerformanceCalculator.calculateConsecutiveWinLoss(trades);
 
       const stats: KPIData[] = [
         {
@@ -179,46 +185,192 @@ const PerformanceSection: React.FC = () => {
           trend: 'down' as const,
         },
         {
+          label: 'Win Rate',
+          value: Math.round(metrics.winRate * 10) / 10,
+          format: 'percentage' as const,
+          trend: metrics.winRate > 50 ? 'up' as const : 'down' as const,
+        },
+        {
+          label: 'Average Gain',
+          value: Math.round(averageGain * 10) / 10,
+          format: 'percentage' as const,
+          trend: 'up' as const,
+        },
+        {
+          label: 'Average Loss',
+          value: Math.round(averageLoss * 10) / 10,
+          format: 'percentage' as const,
+          trend: 'down' as const,
+        },
+        {
+          label: 'Profit Factor',
+          value: Math.round(metrics.profitFactor * 100) / 100,
+          format: 'number' as const,
+          trend: metrics.profitFactor > 1.5 ? 'up' as const : 'neutral' as const,
+        },
+        {
+          label: 'Best Trade',
+          value: Math.round(metrics.bestTrade * 10) / 10,
+          format: 'percentage' as const,
+          trend: 'up' as const,
+        },
+        {
+          label: 'Worst Trade',
+          value: Math.round(Math.abs(metrics.worstTrade) * 10) / 10,
+          format: 'percentage' as const,
+          trend: 'down' as const,
+        },
+        {
           label: 'Avg Holding Days',
-          value: Math.round(trades.reduce((sum, t) => sum + t.holdingDays, 0) / trades.length),
+          value: Math.round(metrics.averageHoldingDays),
           format: 'number' as const,
           trend: 'neutral' as const,
+        },
+        {
+          label: 'Max Consecutive Wins',
+          value: consecutiveStats.maxWins,
+          format: 'number' as const,
+          trend: 'up' as const,
+        },
+        {
+          label: 'Max Consecutive Losses',
+          value: consecutiveStats.maxLosses,
+          format: 'number' as const,
+          trend: 'down' as const,
         },
       ];
       setTradeStats(stats);
 
-      setLastUpdated(new Date());
-      console.log(`✅ Loaded data successfully: ${trades.length} trades`);
-
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load trading data';
-      setError(errorMessage);
-      console.error('Error loading data:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const loadPeriodData = async () => {
     try {
-      // Для упрощения используем базовые данные
-      // В реальном проекте здесь можно фильтровать данные по периоду
-      const basicPeriodData: PeriodData = {
-        currentReturn: performanceData.length > 0 ? performanceData[performanceData.length - 1].value : 0,
-        bestDay: 5.2,
-        worstDay: -3.1,
-        volatility: 12.4,
-        maxDrawdown: -8.7,
-        alpha: 2.3,
-        beta: 0.95,
-        totalTrades: tradeStats.find(s => s.label === 'Total Trades')?.value as number || 0
+      console.log(`📊 Loading period data for: ${selectedPeriod}`);
+
+      // Получаем все данные
+      const { trades, benchmark } = await ExcelProcessor.loadAllData();
+
+      if (trades.length === 0) {
+        console.warn('No trades available for period calculation');
+        return;
+      }
+
+      // 🎯 ФИЛЬТРАЦИЯ ПО ПЕРИОДУ
+      const filteredTrades = filterTradesByPeriod(trades, selectedPeriod);
+      const filteredBenchmark = filterBenchmarkByPeriod(benchmark, selectedPeriod);
+
+      if (filteredTrades.length === 0) {
+        console.warn(`No trades found for period: ${selectedPeriod}`);
+        setPeriodData(null);
+        return;
+      }
+
+      // Рассчитываем метрики для отфильтрованных данных
+      const periodMetrics = PerformanceCalculator.calculateAllMetrics(filteredTrades);
+      const periodTimeSeries = PerformanceCalculator.calculateTimeSeries(filteredTrades);
+
+      // Рассчитываем дневные возвраты для best/worst day
+      const dailyReturns = periodTimeSeries.map(p => p.dailyReturn);
+      const bestDay = dailyReturns.length > 0 ? Math.max(...dailyReturns) : 0;
+      const worstDay = dailyReturns.length > 0 ? Math.min(...dailyReturns) : 0;
+
+      // Рассчитываем Alpha/Beta если есть benchmark данные
+      let alpha = 0;
+      let beta = 1;
+
+      if (filteredBenchmark.length > 0) {
+        const benchmarkMetrics = PerformanceCalculator.calculateBenchmarkMetrics(
+          periodTimeSeries,
+          filteredBenchmark
+        );
+        alpha = benchmarkMetrics.alpha;
+        beta = benchmarkMetrics.beta;
+      }
+
+      const periodData: PeriodData = {
+        currentReturn: periodMetrics.totalReturn,
+        bestDay: Math.round(bestDay * 100) / 100,
+        worstDay: Math.round(worstDay * 100) / 100,
+        volatility: Math.round(periodMetrics.volatility * 100) / 100,
+        maxDrawdown: periodMetrics.maxDrawdown,
+        alpha: Math.round(alpha * 100) / 100,
+        beta: Math.round(beta * 100) / 100,
+        totalTrades: filteredTrades.length
       };
-      setPeriodData(basicPeriodData);
+
+      setPeriodData(periodData);
+      console.log(`✅ Period data loaded for ${selectedPeriod}:`, periodData);
 
     } catch (err) {
       console.error('Error loading period data:', err);
+      setPeriodData(null);
     }
   };
+
+  // 🗓️ НОВЫЕ ФУНКЦИИ ФИЛЬТРАЦИИ ПО ПЕРИОДУ
+
+  const filterTradesByPeriod = (trades: TradeRecord[], period: typeof selectedPeriod): TradeRecord[] => {
+    const now = new Date();
+    let startDate: Date;
+
+    switch (period) {
+      case '1m':
+        startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+        break;
+      case '3m':
+        startDate = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+        break;
+      case '6m':
+        startDate = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+        break;
+      case '1y':
+        startDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+        break;
+      case '2y':
+        startDate = new Date(now.getFullYear() - 2, now.getMonth(), now.getDate());
+        break;
+      case 'all':
+      default:
+        return trades; // Возвращаем все трейды
+    }
+
+    console.log(`🔍 Filtering trades from ${startDate.toLocaleDateString()} to ${now.toLocaleDateString()}`);
+
+    return trades.filter(trade => {
+      return trade.exitDate >= startDate && trade.exitDate <= now;
+    });
+  };
+
+  const filterBenchmarkByPeriod = (benchmark: BenchmarkPoint[], period: typeof selectedPeriod): BenchmarkPoint[] => {
+    const now = new Date();
+    let startDate: Date;
+
+    switch (period) {
+      case '1m':
+        startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+        break;
+      case '3m':
+        startDate = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+        break;
+      case '6m':
+        startDate = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+        break;
+      case '1y':
+        startDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+        break;
+      case '2y':
+        startDate = new Date(now.getFullYear() - 2, now.getMonth(), now.getDate());
+        break;
+      case 'all':
+      default:
+        return benchmark; // Возвращаем все данные
+    }
+
+    return benchmark.filter(point => {
+      return point.date >= startDate && point.date <= now;
+    });
+  };
+
+
 
   const handleRefreshData = async () => {
     try {
@@ -259,7 +411,7 @@ const PerformanceSection: React.FC = () => {
     }
   };
 
-  // Функции для статусных цветов - ИСПРАВЛЕНО
+  // Функции для статусных цветов
   const getStatusColor = (value: number) => {
     if (value > 0) return 'text-status-positive';
     if (value < 0) return 'text-status-negative';
@@ -272,7 +424,7 @@ const PerformanceSection: React.FC = () => {
     return 'bg-background-secondary border-border';
   };
 
-  // ИСПРАВЛЕНИЕ: Форматирование чисел с округлением
+  // Форматирование чисел
   const formatValue = (value: number | string, format?: 'percentage' | 'number' | 'currency') => {
     if (typeof value === 'string') return value;
 
@@ -375,14 +527,14 @@ const PerformanceSection: React.FC = () => {
               <Card
                 key={index}
                 ocean
-                padding="md" // Изменено с "lg" на "md" для экономии места
+                padding="md"
                 className="text-center transition-all duration-200 hover:-translate-y-1"
               >
                 <div className="text-text-secondary text-xs mb-1 font-medium">
                   {kpi.label}
                 </div>
                 <div className={cn(
-                  "text-xl font-bold mb-1", // Изменено с "text-2xl" на "text-xl"
+                  "text-xl font-bold mb-1",
                   getStatusColor(typeof kpi.value === 'number' ? kpi.value : 0)
                 )}>
                   {formatValue(kpi.value, kpi.format)}
@@ -455,7 +607,7 @@ const PerformanceSection: React.FC = () => {
                   onPeriodChange={setSelectedPeriod}
                 />
 
-                {/* Period Statistics - ИСПРАВЛЕНО: правильное форматирование */}
+                {/* Period Statistics */}
                 {periodData && (
                   <Card ocean padding="lg">
                     <h4 className="text-lg font-semibold text-text-primary mb-6 flex items-center gap-2">
@@ -587,7 +739,7 @@ const PerformanceSection: React.FC = () => {
                     ))}
                   </div>
 
-                  {/* Trades Table - ИСПРАВЛЕНО: P&L отображение */}
+                  {/* Trades Table */}
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
@@ -609,7 +761,7 @@ const PerformanceSection: React.FC = () => {
                             <td className="py-3 px-4 text-center">
                               <span className={cn(
                                 "px-2 py-1 rounded-md text-xs font-medium uppercase",
-                                trade.type === 'LONG'
+                                trade.type === 'Long'
                                   ? 'bg-status-positive/10 text-status-positive border border-status-positive/20'
                                   : 'bg-status-negative/10 text-status-negative border border-status-negative/20'
                               )}>

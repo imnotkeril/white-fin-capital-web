@@ -1,9 +1,6 @@
-// src/services/PerformanceCalculator.ts
-// Упрощенный калькулятор метрик - только математика
-
+// src/services/performanceCalculator.ts - ИСПРАВЛЕН расчет доходности
 import { TradeRecord, BenchmarkPoint } from './ExcelProcessor';
 
-// Типы для возвращаемых значений
 export interface PortfolioMetrics {
   totalReturn: number;
   winRate: number;
@@ -25,19 +22,12 @@ export interface TimeSeriesPoint {
   portfolioValue: number;
 }
 
-export interface BenchmarkMetrics {
-  alpha: number;
-  beta: number;
-  correlation: number;
-  sharpeRatio: number;
-}
-
 export class PerformanceCalculator {
   private static readonly STARTING_PORTFOLIO = 1_000_000; // $1M
   private static readonly RISK_FREE_RATE = 0.05; // 5% annually
 
   /**
-   * Главный метод - рассчитывает все метрики портфеля
+   * ✅ ИСПРАВЛЕННЫЙ расчет метрик портфеля
    */
   static calculateAllMetrics(trades: TradeRecord[]): PortfolioMetrics {
     if (trades.length === 0) {
@@ -55,16 +45,16 @@ export class PerformanceCalculator {
     const losingTrades = sortedTrades.filter(t => t.pnlPercent <= 0);
     const winRate = (winningTrades.length / totalTrades) * 100;
 
-    // PnL статистика
+    // PnL статистика (уже в процентах)
     const allPnL = sortedTrades.map(t => t.pnlPercent);
     const bestTrade = Math.max(...allPnL);
     const worstTrade = Math.min(...allPnL);
 
-    // Временной ряд для сложных метрик
+    // ✅ ИСПРАВЛЕНИЕ: Правильный расчет временного ряда
     const timeSeries = this.calculateTimeSeries(sortedTrades);
     const totalReturn = timeSeries.length > 0 ? timeSeries[timeSeries.length - 1].cumulativeReturn : 0;
 
-    // Риск метрики
+    // Риск-метрики
     const maxDrawdown = this.calculateMaxDrawdown(timeSeries);
     const sharpeRatio = this.calculateSharpeRatio(timeSeries);
     const volatility = this.calculateVolatility(timeSeries);
@@ -96,14 +86,13 @@ export class PerformanceCalculator {
   }
 
   /**
-   * Расчет временного ряда доходности портфеля
+   * ✅ ИСПРАВЛЕННЫЙ расчет временного ряда доходности
    */
   static calculateTimeSeries(trades: TradeRecord[]): TimeSeriesPoint[] {
     if (trades.length === 0) return [];
 
     const timeSeries: TimeSeriesPoint[] = [];
     let portfolioValue = this.STARTING_PORTFOLIO;
-    let cumulativeReturn = 0;
 
     // Группируем трейды по дням
     const tradesByDate = new Map<string, TradeRecord[]>();
@@ -121,23 +110,24 @@ export class PerformanceCalculator {
     sortedDates.forEach(dateKey => {
       const dayTrades = tradesByDate.get(dateKey)!;
 
-      // Рассчитываем дневную доходность (weighted average by exposure)
-      const totalExposure = dayTrades.reduce((sum, t) => sum + t.portfolioExposure, 0);
-      const weightedReturn = dayTrades.reduce((sum, t) =>
-        sum + (t.pnlPercent * t.portfolioExposure / totalExposure), 0
-      );
+      // ✅ ИСПРАВЛЕНИЕ: Правильный расчет дневной доходности
+      // portfolioImpact уже в долях (влияние на портфель)
+      const dailyReturn = dayTrades.reduce((sum, trade) => {
+        return sum + trade.portfolioImpact; // Уже в долях
+      }, 0);
 
       // Обновляем значения портфеля
-      const dailyReturn = totalExposure > 0 ? weightedReturn : 0;
-      portfolioValue *= (1 + dailyReturn / 100);
-      cumulativeReturn = ((portfolioValue - this.STARTING_PORTFOLIO) / this.STARTING_PORTFOLIO) * 100;
+      portfolioValue *= (1 + dailyReturn); // dailyReturn уже в долях
+      const cumulativeReturn = ((portfolioValue - this.STARTING_PORTFOLIO) / this.STARTING_PORTFOLIO) * 100;
 
       timeSeries.push({
         date: new Date(dateKey),
         cumulativeReturn,
-        dailyReturn,
+        dailyReturn: dailyReturn * 100, // Конвертируем в проценты для отображения
         portfolioValue
       });
+
+      console.log(`${dateKey}: Daily return ${(dailyReturn * 100).toFixed(2)}%, Cumulative ${cumulativeReturn.toFixed(2)}%`);
     });
 
     return timeSeries;
@@ -170,7 +160,7 @@ export class PerformanceCalculator {
   static calculateSharpeRatio(timeSeries: TimeSeriesPoint[]): number {
     if (timeSeries.length < 2) return 0;
 
-    const dailyReturns = timeSeries.slice(1).map(point => point.dailyReturn);
+    const dailyReturns = timeSeries.slice(1).map(point => point.dailyReturn / 100); // В долях
     const avgDailyReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
 
     // Волатильность
@@ -181,8 +171,8 @@ export class PerformanceCalculator {
     if (dailyVolatility === 0) return 0;
 
     // Аннуализированные значения
-    const annualizedReturn = avgDailyReturn * 252;
-    const annualizedVolatility = dailyVolatility * Math.sqrt(252);
+    const annualizedReturn = avgDailyReturn * 252 * 100; // В процентах
+    const annualizedVolatility = dailyVolatility * Math.sqrt(252) * 100; // В процентах
     const riskFreeRate = this.RISK_FREE_RATE * 100;
 
     return (annualizedReturn - riskFreeRate) / annualizedVolatility;
@@ -194,13 +184,13 @@ export class PerformanceCalculator {
   static calculateVolatility(timeSeries: TimeSeriesPoint[]): number {
     if (timeSeries.length < 2) return 0;
 
-    const dailyReturns = timeSeries.slice(1).map(point => point.dailyReturn);
+    const dailyReturns = timeSeries.slice(1).map(point => point.dailyReturn / 100); // В долях
     const avgReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
 
     const variance = dailyReturns.reduce((sum, r) =>
       sum + Math.pow(r - avgReturn, 2), 0) / (dailyReturns.length - 1);
 
-    return Math.sqrt(variance) * Math.sqrt(252); // Аннуализируем
+    return Math.sqrt(variance) * Math.sqrt(252) * 100; // Аннуализируем и в процентах
   }
 
   /**
@@ -255,19 +245,14 @@ export class PerformanceCalculator {
   }
 
   /**
-   * Сравнение с бенчмарком
+   * Сравнение с бенчмарком - расчет Alpha/Beta
    */
   static calculateBenchmarkMetrics(
     portfolioTimeSeries: TimeSeriesPoint[],
     benchmarkData: BenchmarkPoint[]
-  ): BenchmarkMetrics {
+  ): { alpha: number; beta: number; correlation: number; sharpeRatio: number } {
     if (portfolioTimeSeries.length === 0 || benchmarkData.length === 0) {
-      return {
-        alpha: 0,
-        beta: 1,
-        correlation: 0,
-        sharpeRatio: 0
-      };
+      return { alpha: 0, beta: 1, correlation: 0, sharpeRatio: 0 };
     }
 
     // Выравниваем данные по датам
@@ -295,10 +280,10 @@ export class PerformanceCalculator {
     const benchmarkSharpe = this.calculateBenchmarkSharpe(benchmarkReturns);
 
     return {
-      alpha: Math.round(alpha * 100) / 100,
-      beta: Math.round(beta * 100) / 100,
-      correlation: Math.round(correlation * 100) / 100,
-      sharpeRatio: Math.round(benchmarkSharpe * 100) / 100
+      alpha,
+      beta,
+      correlation,
+      sharpeRatio: benchmarkSharpe
     };
   }
 
@@ -321,8 +306,8 @@ export class PerformanceCalculator {
 
       if (benchmarkReturn !== undefined) {
         aligned.push({
-          portfolioReturn: portfolioPoint.dailyReturn,
-          benchmarkReturn
+          portfolioReturn: portfolioPoint.dailyReturn / 100, // В долях
+          benchmarkReturn: benchmarkReturn / 100 // В долях
         });
       }
     });
@@ -378,8 +363,8 @@ export class PerformanceCalculator {
 
     if (volatility === 0) return 0;
 
-    const annualizedReturn = avgReturn * 252;
-    const annualizedVolatility = volatility * Math.sqrt(252);
+    const annualizedReturn = avgReturn * 252 * 100;
+    const annualizedVolatility = volatility * Math.sqrt(252) * 100;
     const riskFreeRate = this.RISK_FREE_RATE * 100;
 
     return (annualizedReturn - riskFreeRate) / annualizedVolatility;

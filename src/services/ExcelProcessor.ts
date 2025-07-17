@@ -1,9 +1,6 @@
-// src/services/ExcelProcessor.ts
-// Единый процессор для всех Excel файлов проекта
-
+// src/services/ExcelProcessor.ts - ИСПРАВЛЕН расчет процентов
 import * as XLSX from 'xlsx';
 
-// Базовые типы
 export interface TradeRecord {
   ticker: string;
   position: 'Long' | 'Short';
@@ -11,8 +8,8 @@ export interface TradeRecord {
   avgPrice: number;
   exitDate: Date;
   exitPrice: number;
-  pnlPercent: number;
-  portfolioExposure: number;
+  pnlPercent: number;  // ✅ Уже в процентах (15.5, не 0.155)
+  portfolioExposure: number; // ✅ В долях (0.1, не 10)
   holdingDays: number;
   portfolioImpact: number;
 }
@@ -33,24 +30,18 @@ export class ExcelProcessor {
   private static readonly TRADING_FILE = '/data/trading-data.xlsx';
   private static readonly BENCHMARK_FILE = '/data/SP500.xlsx';
 
-  /**
-   * Главный метод - загружает все данные из Excel файлов
-   */
   static async loadAllData(): Promise<LoadedData> {
     try {
       console.log('📊 Loading Excel data...');
 
-      // Параллельная загрузка файлов
       const [tradesResult, benchmarkResult] = await Promise.allSettled([
         this.loadTradingData(),
         this.loadBenchmarkData()
       ]);
 
-      // Обработка результатов
       const trades = tradesResult.status === 'fulfilled' ? tradesResult.value : [];
       const benchmark = benchmarkResult.status === 'fulfilled' ? benchmarkResult.value : [];
 
-      // Логирование ошибок
       if (tradesResult.status === 'rejected') {
         console.error('❌ Failed to load trading data:', tradesResult.reason);
       }
@@ -68,9 +59,6 @@ export class ExcelProcessor {
     }
   }
 
-  /**
-   * Загрузка данных трейдов из trading-data.xlsx
-   */
   private static async loadTradingData(): Promise<TradeRecord[]> {
     const workbook = await this.loadExcelFile(this.TRADING_FILE);
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -79,11 +67,10 @@ export class ExcelProcessor {
       throw new Error('No sheets found in trading data file');
     }
 
-    // Конвертируем в JSON с заголовками
     const rawData: any[] = XLSX.utils.sheet_to_json(sheet, {
       header: 1,
       defval: null,
-      raw: false // Получаем строки для лучшего контроля парсинга
+      raw: false
     });
 
     if (rawData.length < 2) {
@@ -95,7 +82,7 @@ export class ExcelProcessor {
 
     console.log(`Found headers: ${headers.join(', ')}`);
 
-    // Маппинг заголовков (гибкий поиск)
+    // Маппинг заголовков
     const headerMap = this.createHeaderMap(headers, {
       ticker: ['ticker', 'symbol', 'stock'],
       position: ['position', 'side', 'direction'],
@@ -107,15 +94,14 @@ export class ExcelProcessor {
       portfolioExposure: ['portfolio exposure', 'exposure', 'size']
     });
 
-    // Обработка каждой строки
     const trades: TradeRecord[] = [];
 
     for (let i = 0; i < dataRows.length; i++) {
       try {
         const row = dataRows[i];
-        if (!row || row.every(cell => !cell)) continue; // Пропускаем пустые строки
+        if (!row || row.every(cell => !cell)) continue;
 
-        const trade = this.parseTradeRow(row, headerMap, i + 2); // +2 для номера строки в Excel
+        const trade = this.parseTradeRow(row, headerMap, i + 2);
         if (trade) {
           trades.push(trade);
         }
@@ -131,13 +117,9 @@ export class ExcelProcessor {
     return trades;
   }
 
-  /**
-   * Загрузка данных бенчмарка из SP500.xlsx
-   */
   private static async loadBenchmarkData(): Promise<BenchmarkPoint[]> {
     const workbook = await this.loadExcelFile(this.BENCHMARK_FILE);
 
-    // Ищем лист "Daily, Close" или первый доступный
     const sheetName = workbook.SheetNames.find(name =>
       name.toLowerCase().includes('daily') ||
       name.toLowerCase().includes('close')
@@ -163,7 +145,6 @@ export class ExcelProcessor {
     const headers = rawData[0] as string[];
     const dataRows = rawData.slice(1);
 
-    // Находим колонки с датой и ценой
     const dateCol = this.findColumnIndex(headers, ['date', 'observation_date', 'time']);
     const priceCol = this.findColumnIndex(headers, ['sp500', 'price', 'close', 'value']);
 
@@ -171,7 +152,6 @@ export class ExcelProcessor {
       throw new Error('Could not find date and price columns in benchmark file');
     }
 
-    // Обработка данных
     const points: BenchmarkPoint[] = [];
     let startValue: number | null = null;
 
@@ -206,9 +186,87 @@ export class ExcelProcessor {
     return points.sort((a, b) => a.date.getTime() - b.date.getTime());
   }
 
+  // ============================================
+  // 🔧 ИСПРАВЛЕННЫЕ МЕТОДЫ ПАРСИНГА
+  // ============================================
+
+  private static parseTradeRow(row: any[], headerMap: Record<string, number>, rowNum: number): TradeRecord | null {
+    // Проверяем наличие обязательных полей
+    const required = ['ticker', 'position', 'entryDate', 'exitDate', 'pnlPercent'];
+    for (const field of required) {
+      if (!(field in headerMap) || !row[headerMap[field]]) {
+        throw new Error(`Missing required field: ${field}`);
+      }
+    }
+
+    const entryDate = this.parseDate(row[headerMap.entryDate], 'entry date');
+    const exitDate = this.parseDate(row[headerMap.exitDate], 'exit date');
+
+    // ✅ ИСПРАВЛЕНИЕ: PnL уже в процентах в Excel
+    const pnlPercent = this.parseNumber(row[headerMap.pnlPercent], 'PnL %');
+
+    // ✅ ИСПРАВЛЕНИЕ: Portfolio Exposure - правильная обработка
+    const portfolioExposure = headerMap.portfolioExposure ?
+      this.parsePortfolioExposure(row[headerMap.portfolioExposure], 'exposure') : 0.1;
+
+    // Рассчитываем производные поля
+    const holdingDays = Math.ceil((exitDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    // ✅ ИСПРАВЛЕНИЕ: portfolioImpact в процентах, не в долях
+    const portfolioImpact = (pnlPercent / 100) * portfolioExposure; // Доли для расчета
+
+    console.log(`Trade ${rowNum}: ${pnlPercent}% * ${portfolioExposure} = ${portfolioImpact * 100}% impact`);
+
+    return {
+      ticker: String(row[headerMap.ticker]).toUpperCase(),
+      position: this.parsePosition(row[headerMap.position]),
+      entryDate,
+      avgPrice: headerMap.avgPrice ? this.parseNumber(row[headerMap.avgPrice], 'avg price') : 0,
+      exitDate,
+      exitPrice: headerMap.exitPrice ? this.parseNumber(row[headerMap.exitPrice], 'exit price') : 0,
+      pnlPercent, // Уже в процентах
+      portfolioExposure, // В долях
+      holdingDays,
+      portfolioImpact // В долях для расчета
+    };
+  }
+
   /**
-   * Утилитные методы
+   * ✅ НОВЫЙ МЕТОД: Правильная обработка Portfolio Exposure
    */
+  private static parsePortfolioExposure(value: any, context: string): number {
+    let numericValue: number;
+
+    if (typeof value === 'number') {
+      numericValue = value;
+    } else if (typeof value === 'string') {
+      const cleaned = value.replace(/[%\s]/g, '');
+      numericValue = parseFloat(cleaned);
+
+      if (isNaN(numericValue)) {
+        throw new Error(`Cannot parse portfolio exposure "${value}" for ${context}`);
+      }
+    } else {
+      throw new Error(`Invalid portfolio exposure format for ${context}: ${typeof value}`);
+    }
+
+    // АВТОМАТИЧЕСКОЕ ОПРЕДЕЛЕНИЕ ФОРМАТА:
+    if (numericValue > 1) {
+      // Конвертируем проценты в доли: 15.5% -> 0.155
+      const asDecimal = numericValue / 100;
+      console.log(`🔄 Converting exposure: ${numericValue}% -> ${asDecimal}`);
+      return asDecimal;
+    } else {
+      // Уже в формате долей: 0.155 -> 0.155
+      console.log(`✅ Exposure in decimal: ${numericValue}`);
+      return numericValue;
+    }
+  }
+
+  // ============================================
+  // УТИЛИТНЫЕ МЕТОДЫ
+  // ============================================
+
   private static async loadExcelFile(filePath: string): Promise<XLSX.WorkBook> {
     const response = await fetch(filePath);
 
@@ -249,40 +307,6 @@ export class ExcelProcessor {
     }
 
     return -1;
-  }
-
-  private static parseTradeRow(row: any[], headerMap: Record<string, number>, rowNum: number): TradeRecord | null {
-    // Проверяем наличие обязательных полей
-    const required = ['ticker', 'position', 'entryDate', 'exitDate', 'pnlPercent'];
-    for (const field of required) {
-      if (!(field in headerMap) || !row[headerMap[field]]) {
-        throw new Error(`Missing required field: ${field}`);
-      }
-    }
-
-    const entryDate = this.parseDate(row[headerMap.entryDate], 'entry date');
-    const exitDate = this.parseDate(row[headerMap.exitDate], 'exit date');
-    const pnlPercent = this.parseNumber(row[headerMap.pnlPercent], 'PnL %');
-
-    // Рассчитываем производные поля
-    const holdingDays = Math.ceil((exitDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
-    const portfolioExposure = headerMap.portfolioExposure ?
-      this.parseNumber(row[headerMap.portfolioExposure], 'exposure') : 0.1; // Default 10%
-
-    const portfolioImpact = pnlPercent * portfolioExposure; // Impact на портфель
-
-    return {
-      ticker: String(row[headerMap.ticker]).toUpperCase(),
-      position: this.parsePosition(row[headerMap.position]),
-      entryDate,
-      avgPrice: headerMap.avgPrice ? this.parseNumber(row[headerMap.avgPrice], 'avg price') : 0,
-      exitDate,
-      exitPrice: headerMap.exitPrice ? this.parseNumber(row[headerMap.exitPrice], 'exit price') : 0,
-      pnlPercent,
-      portfolioExposure,
-      holdingDays,
-      portfolioImpact
-    };
   }
 
   private static parseDate(value: any, context: string): Date {
