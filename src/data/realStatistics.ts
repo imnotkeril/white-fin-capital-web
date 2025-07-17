@@ -1,7 +1,8 @@
-// Real statistics service using actual trading data - ИСПРАВЛЕНО
+// Real statistics service using actual trading data
 import { DataParser } from '@/services/dataParser';
 import { PerformanceCalculator } from '@/services/performanceCalculator';
 import { BenchmarkService } from '@/services/benchmarkService';
+import { PortfolioValidation } from '@/utils/portfolioValidation';
 import {
   ProcessedTradeRecord,
   CalculatedMetrics,
@@ -52,6 +53,20 @@ export class RealStatistics {
 
       const trades = parseResult.data;
       console.log(`Loaded ${trades.length} trades successfully`);
+
+      const validation = PortfolioValidation.validateExposures(trades);
+      if (!validation.isValid) {
+        console.warn('🚨 Portfolio Issues:', validation.warnings);
+        console.warn('📝 Recommendations:', validation.recommendations);
+      }
+
+      const drawdownValidation = PortfolioValidation.validateDrawdowns(trades);
+      if (drawdownValidation.warnings.length > 0) {
+        console.warn('⚠️ Drawdown Issues:', drawdownValidation.warnings);
+      }
+
+      console.log(`📊 Total Portfolio Exposure: ${(validation.totalExposure * 100).toFixed(1)}%`);
+      console.log(`📉 Max Position Drawdown: ${drawdownValidation.maxPositionDrawdown.toFixed(2)}%`);
 
       // Calculate portfolio performance over time with $1M base
       const performanceData = PerformanceCalculator.calculatePortfolioReturns(trades, this.STARTING_PORTFOLIO_VALUE);
@@ -118,12 +133,12 @@ export class RealStatistics {
     const dailyReturns = performanceData.map(p => p.dailyReturn);
     const avgDailyReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
 
-    // Calculate downside deviation (only negative returns)
-    const negativeReturns = dailyReturns.filter(r => r < 0);
-    const downsideVariance = negativeReturns.length > 0
-      ? negativeReturns.reduce((sum, ret) => sum + Math.pow(ret, 2), 0) / negativeReturns.length
+    const targetReturn = 0;
+    const downsideReturns = dailyReturns.filter(r => r < targetReturn);
+    const downsideVariance = downsideReturns.length > 0
+      ? downsideReturns.reduce((sum, ret) => sum + Math.pow(ret - targetReturn, 2), 0) / downsideReturns.length
       : 0;
-    const downsideDeviation = Math.sqrt(downsideVariance) * Math.sqrt(252); // Annualized
+    const downsideDeviation = Math.sqrt(downsideVariance) * Math.sqrt(252);
 
     const riskFreeRate = 5; // 5% annual
     const annualizedReturn = avgDailyReturn * 252;

@@ -147,5 +147,17 @@ export type {
   BenchmarkDataPoint as BenchmarkPoint
 };
 
+export interface PortfolioValidationResult {
+  exposureValidation: {
+    isValid: boolean;
+    totalExposure: number;
+    warnings: string[];
+  };
+  drawdownValidation: {
+    maxPositionDrawdown: number;
+    warnings: string[];
+  };
+  recommendations: string[];
+}
 
 export { KPIData } from './index';

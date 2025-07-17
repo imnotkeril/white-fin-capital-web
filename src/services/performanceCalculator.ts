@@ -26,6 +26,11 @@ export class PerformanceCalculator {
       throw new Error('No trades provided for calculation');
     }
 
+    const totalExposure = trades.reduce((sum, trade) => sum + trade.portfolioExposure, 0);
+    if (totalExposure > 1.5) { // If greater than 150%
+      console.warn(`High total exposure: ${(totalExposure * 100).toFixed(1)}%. Possible leverage or error.`);
+    }
+
     // Sort trades by exit date
     const sortedTrades = [...trades].sort((a, b) => a.exitDate.getTime() - b.exitDate.getTime());
 
@@ -133,11 +138,19 @@ export class PerformanceCalculator {
     sortedDates.forEach(dateKey => {
       const dayTrades = tradesByDate.get(dateKey)!;
 
-      // Calculate total portfolio impact for the day
-      const dayPortfolioImpact = dayTrades.reduce((sum, trade) => sum + trade.portfolioImpact, 0);
 
-      // Convert portfolio impact to daily return percentage
-      const dailyReturn = dayPortfolioImpact; // portfolioImpact is already in percentage
+      const totalDayExposure = dayTrades.reduce((sum, trade) => sum + trade.portfolioExposure, 0);
+
+
+      const normalizationFactor = totalDayExposure > 1 ? totalDayExposure : 1;
+
+
+      const dayPortfolioImpact = dayTrades.reduce((sum, trade) => {
+        const normalizedWeight = trade.portfolioExposure / normalizationFactor;
+        return sum + (trade.portfolioImpact * normalizedWeight);
+      }, 0);
+
+      const dailyReturn = dayPortfolioImpact;
 
       // Update cumulative return
       cumulativeReturn = ((1 + cumulativeReturn / 100) * (1 + dailyReturn / 100) - 1) * 100;
@@ -168,17 +181,20 @@ export class PerformanceCalculator {
 
     let maxDrawdown = 0;
     let peak = returns[0].portfolioValue;
+    let runningMax = returns[0].portfolioValue;
 
     returns.forEach(point => {
-      if (point.portfolioValue > peak) {
-        peak = point.portfolioValue;
-      } else {
-        const drawdown = ((peak - point.portfolioValue) / peak) * 100;
-        maxDrawdown = Math.max(maxDrawdown, drawdown);
-      }
+      // Обновляем running maximum
+      runningMax = Math.max(runningMax, point.portfolioValue);
+
+      // Рассчитываем текущую просадку от максимума
+      const currentDrawdown = ((runningMax - point.portfolioValue) / runningMax) * 100;
+
+      // Обновляем максимальную просадку
+      maxDrawdown = Math.max(maxDrawdown, currentDrawdown);
     });
 
-    return -maxDrawdown; // Return as negative value
+    return -maxDrawdown; // Возвращаем как отрицательное значение
   }
 
   /**
