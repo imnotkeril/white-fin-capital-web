@@ -1,8 +1,8 @@
-// Real statistics service using actual trading data
-import { DataParser } from '@/services/dataParser';
-import { PerformanceCalculator } from '@/services/performanceCalculator';
-import { BenchmarkService } from '@/services/benchmarkService';
-import { PortfolioValidation } from '@/utils/portfolioValidation';
+// Замените содержимое файла src/data/realStatistics.ts на этот код:
+
+// Real Statistics - упрощенный главный интерфейс для Performance секции
+import { ExcelDataProcessor } from '@/services/ExcelDataProcessor';
+import { PerformanceCalculator } from '@/services/PerformanceCalculator';
 import {
   ProcessedTradeRecord,
   CalculatedMetrics,
@@ -23,10 +23,9 @@ export class RealStatistics {
   } | null = null;
 
   private static readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-  private static readonly STARTING_PORTFOLIO_VALUE = 1000000; // $1M base
 
   /**
-   * Load and process all trading data
+   * Главная загрузка всех данных
    */
   static async loadData(forceRefresh: boolean = false): Promise<{
     trades: ProcessedTradeRecord[];
@@ -35,77 +34,35 @@ export class RealStatistics {
     benchmarkData: BenchmarkDataPoint[];
     comparisonMetrics: ComparisonMetrics | null;
   }> {
-    // Check cache
+    // Проверяем кэш
     if (!forceRefresh && this.cachedData &&
         Date.now() - this.cachedData.lastUpdated.getTime() < this.CACHE_DURATION) {
+      console.log('📦 Using cached data');
       return this.cachedData;
     }
 
     try {
-      console.log('Loading trading data from Excel file...');
+      console.log('🔄 Loading fresh data from Excel files...');
 
-      // Parse trading data
-      const parseResult = await DataParser.loadData();
+      // 1. Загружаем данные из Excel
+      const { trades, benchmarkData } = await ExcelDataProcessor.loadAllData();
 
-      if (!parseResult.success || parseResult.data.length === 0) {
-        throw new Error(`Failed to load trading data: ${parseResult.errors.map(e => e.error).join(', ')}`);
+      if (trades.length === 0) {
+        throw new Error('No valid trades loaded from Excel');
       }
 
-      const trades = parseResult.data;
-      console.log(`Loaded ${trades.length} trades successfully`);
+      // 2. Рассчитываем метрики портфеля
+      const metrics = PerformanceCalculator.calculateAllMetrics(trades, benchmarkData);
 
-      const validation = PortfolioValidation.validateExposures(trades);
-      if (!validation.isValid) {
-        console.warn('🚨 Portfolio Issues:', validation.warnings);
-        console.warn('📝 Recommendations:', validation.recommendations);
-      }
+      // 3. Строим временной ряд доходности
+      const performanceData = PerformanceCalculator.calculatePortfolioTimeSeries(trades);
 
-      const drawdownValidation = PortfolioValidation.validateDrawdowns(trades);
-      if (drawdownValidation.warnings.length > 0) {
-        console.warn('⚠️ Drawdown Issues:', drawdownValidation.warnings);
-      }
+      // 4. Сравниваем с бенчмарком
+      const comparisonMetrics = benchmarkData.length > 0
+        ? PerformanceCalculator.calculateBenchmarkComparison(metrics, performanceData, benchmarkData)
+        : null;
 
-      console.log(`📊 Total Portfolio Exposure: ${(validation.totalExposure * 100).toFixed(1)}%`);
-      console.log(`📉 Max Position Drawdown: ${drawdownValidation.maxPositionDrawdown.toFixed(2)}%`);
-
-      // Calculate portfolio performance over time with $1M base
-      const performanceData = PerformanceCalculator.calculatePortfolioReturns(trades, this.STARTING_PORTFOLIO_VALUE);
-
-      // Get benchmark data for the same period
-      const startDate = new Date(Math.min(...trades.map(t => t.entryDate.getTime())));
-      const endDate = new Date(Math.max(...trades.map(t => t.exitDate.getTime())));
-      const benchmarkData = await BenchmarkService.getSP500Data(startDate, endDate);
-
-      // Calculate performance metrics
-      const metrics = PerformanceCalculator.calculateMetrics(trades, {
-        startingPortfolioValue: this.STARTING_PORTFOLIO_VALUE,
-        riskFreeRate: 0.05,
-        benchmarkData,
-        includeBenchmarkComparison: true
-      });
-
-      // Calculate comparison metrics with S&P 500
-      let comparisonMetrics: ComparisonMetrics | null = null;
-      if (benchmarkData.length > 0) {
-        comparisonMetrics = PerformanceCalculator.calculateBenchmarkComparison(
-          metrics,
-          performanceData,
-          benchmarkData
-        );
-      }
-
-      console.log('Data loading completed successfully');
-      console.log('Portfolio metrics:', {
-        totalReturn: `${metrics.totalReturn.toFixed(1)}%`,
-        winRate: `${metrics.winRate.toFixed(1)}%`,
-        totalTrades: metrics.totalTrades,
-        averageGain: `${metrics.averageGain.toFixed(1)}%`,
-        averageLoss: `${metrics.averageLoss.toFixed(1)}%`,
-        alpha: comparisonMetrics?.alpha.toFixed(1),
-        beta: comparisonMetrics?.beta.toFixed(2)
-      });
-
-      // Cache the result
+      // 5. Кэшируем результат
       this.cachedData = {
         trades,
         metrics,
@@ -115,21 +72,29 @@ export class RealStatistics {
         lastUpdated: new Date()
       };
 
+      console.log('✅ Data loaded successfully:', {
+        trades: trades.length,
+        performancePoints: performanceData.length,
+        benchmarkPoints: benchmarkData.length,
+        totalReturn: `${metrics.totalReturn.toFixed(1)}%`,
+        winRate: `${metrics.winRate.toFixed(1)}%`
+      });
+
       return this.cachedData;
 
     } catch (error) {
-      console.error('Error loading real trading data:', error);
+      console.error('❌ Error loading data:', error);
       throw error;
     }
   }
 
   /**
-   * Get KPI data for dashboard - ОБНОВЛЕНО: добавлен Profit Factor (5 карточек)
+   * KPI данные для карточек метрик
    */
   static async getKPIData(): Promise<KPIData[]> {
     const { metrics, performanceData } = await this.loadData();
 
-    // Calculate Sortino Ratio (using built-in method)
+    // Рассчитываем Sortino Ratio
     const sortinoRatio = PerformanceCalculator.calculateSortinoRatio(performanceData);
 
     return [
@@ -147,19 +112,19 @@ export class RealStatistics {
       },
       {
         label: 'Sharpe Ratio',
-        value: Math.round(metrics.sharpeRatio * 100) / 100, // 2 decimal places
+        value: Math.round(metrics.sharpeRatio * 100) / 100,
         format: 'number' as const,
         trend: metrics.sharpeRatio > 1 ? 'up' as const : metrics.sharpeRatio > 0.5 ? 'neutral' as const : 'down' as const,
       },
       {
         label: 'Sortino Ratio',
-        value: Math.round(sortinoRatio * 100) / 100, // 2 decimal places
+        value: Math.round(sortinoRatio * 100) / 100,
         format: 'number' as const,
         trend: sortinoRatio > 1.5 ? 'up' as const : sortinoRatio > 1 ? 'neutral' as const : 'down' as const,
       },
       {
         label: 'Profit Factor',
-        value: Math.round(metrics.profitFactor * 100) / 100, // 2 decimal places
+        value: Math.round(metrics.profitFactor * 100) / 100,
         format: 'number' as const,
         trend: metrics.profitFactor > 1.5 ? 'up' as const : metrics.profitFactor > 1 ? 'neutral' as const : 'down' as const,
       },
@@ -167,7 +132,7 @@ export class RealStatistics {
   }
 
   /**
-   * Get performance chart data
+   * Данные для графика доходности портфеля
    */
   static async getPerformanceChartData(): Promise<Array<{
     date: string;
@@ -178,42 +143,34 @@ export class RealStatistics {
 
     return performanceData.map(point => ({
       date: point.dateString,
-      value: Math.round(point.cumulativeReturn * 10) / 10, // Округление
-      label: point.dateString
+      value: Math.round(point.cumulativeReturn * 10) / 10,
+      label: `Portfolio: ${Math.round(point.cumulativeReturn * 10) / 10}%`
     }));
   }
 
   /**
-     * Get benchmark chart data
-     */
-    static async getBenchmarkChartData(): Promise<Array<{
-      date: string;
-      value: number;
-      label?: string;
-    }>> {
-      const { benchmarkData } = await this.loadData();
+   * Данные для графика бенчмарка (S&P 500)
+   */
+  static async getBenchmarkChartData(): Promise<Array<{
+    date: string;
+    value: number;
+    label?: string;
+  }>> {
+    const { benchmarkData } = await this.loadData();
 
-      if (benchmarkData.length === 0) {
-        return [];
-      }
-
-      // Пересчитываем данные относительно первой точки для графика
-      const firstValue = benchmarkData[0].value;
-
-      return benchmarkData.map(point => {
-        // Считаем рост от первой точки графика, а не от начала года
-        const periodReturn = ((point.value - firstValue) / firstValue) * 100;
-
-        return {
-          date: point.dateString,
-          value: Math.round(periodReturn * 10) / 10,
-          label: `S&P 500: ${Math.round(periodReturn * 10) / 10}%`
-        };
-      });
+    if (benchmarkData.length === 0) {
+      return [];
     }
 
+    return benchmarkData.map(point => ({
+      date: point.dateString,
+      value: Math.round(point.cumulativeReturn * 10) / 10,
+      label: `S&P 500: ${Math.round(point.cumulativeReturn * 10) / 10}%`
+    }));
+  }
+
   /**
-   * Get closed trades for trade journal - ИСПРАВЛЕНО: P&L от $1M
+   * Закрытые трейды для журнала
    */
   static async getClosedTrades(): Promise<Array<{
     id: string;
@@ -228,14 +185,14 @@ export class RealStatistics {
   }>> {
     const { trades } = await this.loadData();
 
-    // Sort by exit date (most recent first) and take latest trades
-    const sortedTrades = [...trades]
+    // Берем последние 20 трейдов
+    const recentTrades = trades
       .sort((a, b) => b.exitDate.getTime() - a.exitDate.getTime())
-      .slice(0, 20); // Show last 20 trades
+      .slice(0, 20);
 
-    return sortedTrades.map(trade => {
-      // Рассчитываем P&L от $1M портфеля
-      const portfolioPnL = (trade.portfolioImpact / 100) * this.STARTING_PORTFOLIO_VALUE;
+    return recentTrades.map(trade => {
+      // P&L в долларах от $1M портфеля
+      const portfolioPnL = (trade.portfolioImpact / 100) * 1000000; // $1M base
 
       return {
         id: trade.id,
@@ -243,8 +200,8 @@ export class RealStatistics {
         type: trade.position,
         entryPrice: Math.round(trade.avgPrice * 100) / 100,
         exitPrice: Math.round(trade.exitPrice * 100) / 100,
-        pnl: Math.round(portfolioPnL * 100) / 100, // P&L в долларах от $1M
-        return: Math.round(trade.pnlPercent * 10) / 10, // Округление до 1 знака
+        pnl: Math.round(portfolioPnL * 100) / 100, // В долларах
+        return: Math.round(trade.pnlPercent * 10) / 10, // В процентах
         entryDate: trade.entryDate.toISOString().split('T')[0],
         closedAt: trade.exitDate.toISOString().split('T')[0]
       };
@@ -252,7 +209,7 @@ export class RealStatistics {
   }
 
   /**
-   * Get trade statistics for trade journal - ОБНОВЛЕНО: добавлены Average Gain/Loss
+   * Статистика по трейдам для журнала
    */
   static async getTradeStats(): Promise<KPIData[]> {
     const { metrics } = await this.loadData();
@@ -277,30 +234,24 @@ export class RealStatistics {
         format: 'number' as const,
       },
       {
-        label: 'Win Rate',
-        value: Math.round(metrics.winRate * 10) / 10,
-        trend: metrics.winRate > 50 ? 'up' as const : 'down' as const,
-        format: 'percentage' as const,
-      },
-      {
         label: 'Average Gain',
         value: Math.round(metrics.averageGain * 10) / 10,
-        format: 'percentage' as const,
         trend: metrics.averageGain > 0 ? 'up' as const : 'down' as const,
+        format: 'percentage' as const,
       },
       {
         label: 'Average Loss',
-        value: Math.round(metrics.averageLoss * 10) / 10,
+        value: Math.round(Math.abs(metrics.averageLoss) * 10) / 10,
+        trend: 'down' as const,
         format: 'percentage' as const,
-        trend: metrics.averageLoss > -5 ? 'up' as const : 'down' as const,
-      }
+      },
     ];
   }
 
   /**
-   * Get period statistics with proper alpha/beta calculation - ОБНОВЛЕНО: убран '1m' период
+   * Статистика по периодам
    */
-  static async getPeriodStatistics(period: '3m' | '6m' | '1y' | '2y' | 'all'): Promise<{
+  static async getPeriodStatistics(period: '1m' | '3m' | '6m' | '1y' | '2y' | 'all'): Promise<{
     currentReturn: number;
     bestDay: number;
     worstDay: number;
@@ -310,89 +261,40 @@ export class RealStatistics {
     beta: number;
     totalTrades: number;
   }> {
-    const { trades, performanceData, comparisonMetrics } = await this.loadData();
+    const { metrics, performanceData, comparisonMetrics } = await this.loadData();
 
-    // Filter trades by period
-    const now = new Date();
-    let periodStart: Date;
+    // Фильтруем данные по периоду (упрощенно - пока возвращаем полные данные)
+    // TODO: Добавить реальную фильтрацию по периодам
+    const filteredData = performanceData; // Пока без фильтрации
 
-    switch (period) {
-      case '3m':
-        periodStart = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        break;
-      case '6m':
-        periodStart = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
-        break;
-      case '1y':
-        periodStart = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-        break;
-      case '2y':
-        periodStart = new Date(now.getTime() - 730 * 24 * 60 * 60 * 1000);
-        break;
-      default:
-        periodStart = new Date(Math.min(...trades.map(t => t.entryDate.getTime())));
-    }
-
-    const periodTrades = trades.filter(t => t.exitDate >= periodStart);
-    const periodPerformance = performanceData.filter(p => p.date >= periodStart);
-
-    // Calculate period metrics
-    const periodMetrics = PerformanceCalculator.calculateMetrics(periodTrades, {
-      startingPortfolioValue: this.STARTING_PORTFOLIO_VALUE,
-      riskFreeRate: 0.05,
-      includeBenchmarkComparison: false
-    });
-
-    // Calculate volatility from daily returns
-    const dailyReturns = periodPerformance.map(p => p.dailyReturn);
-    const avgDailyReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
-    const variance = dailyReturns.reduce((sum, ret) => sum + Math.pow(ret - avgDailyReturn, 2), 0) / (dailyReturns.length - 1);
-    const volatility = Math.sqrt(variance) * Math.sqrt(252); // Annualized
-
-    // Best and worst day
-    const bestDay = Math.max(...dailyReturns);
-    const worstDay = Math.min(...dailyReturns);
-
-    // Use real alpha/beta from comparison metrics
-    const alpha = comparisonMetrics?.alpha || 0;
-    const beta = comparisonMetrics?.beta || 1.0;
+    const dailyReturns = filteredData.slice(1).map(p => p.dailyReturn);
+    const bestDay = dailyReturns.length > 0 ? Math.max(...dailyReturns) : 0;
+    const worstDay = dailyReturns.length > 0 ? Math.min(...dailyReturns) : 0;
+    const volatility = PerformanceCalculator.calculateVolatility(filteredData) * Math.sqrt(252); // Annualized
 
     return {
-      currentReturn: Math.round(periodMetrics.totalReturn * 10) / 10,
-      bestDay: Math.round(bestDay * 10) / 10,
-      worstDay: Math.round(worstDay * 10) / 10,
-      volatility: Math.round(volatility * 10) / 10,
-      maxDrawdown: Math.round(periodMetrics.maxDrawdown * 10) / 10,
-      alpha: Math.round(alpha * 10) / 10,
-      beta: Math.round(beta * 100) / 100, // Beta с точностью до 2 знаков
-      totalTrades: periodTrades.length
+      currentReturn: metrics.totalReturn,
+      bestDay: Math.round(bestDay * 100) / 100,
+      worstDay: Math.round(worstDay * 100) / 100,
+      volatility: Math.round(volatility * 100) / 100,
+      maxDrawdown: metrics.maxDrawdown,
+      alpha: comparisonMetrics?.alpha || 0,
+      beta: comparisonMetrics?.beta || 1.0,
+      totalTrades: metrics.totalTrades
     };
   }
 
   /**
-   * Get comparison with benchmark
-   */
-  static async getBenchmarkComparison(): Promise<ComparisonMetrics | null> {
-    try {
-      const { comparisonMetrics } = await this.loadData();
-      return comparisonMetrics;
-    } catch (error) {
-      console.error('Error getting benchmark comparison:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Refresh data cache
+   * Обновление кэша данных
    */
   static async refreshData(): Promise<void> {
-    console.log('Refreshing trading data cache...');
+    console.log('🔄 Refreshing data cache...');
     await this.loadData(true);
-    console.log('Data cache refreshed successfully');
+    console.log('✅ Data cache refreshed successfully');
   }
 
   /**
-   * Get data loading status
+   * Статус загрузки данных
    */
   static getDataStatus(): {
     isLoaded: boolean;
@@ -406,8 +308,12 @@ export class RealStatistics {
     };
   }
 
+  // ========================================
+  // МЕТОДЫ ОБРАТНОЙ СОВМЕСТИМОСТИ (Mock)
+  // ========================================
+
   /**
-   * Export methods for backward compatibility with existing components
+   * Для обратной совместимости со старыми компонентами
    */
   static async getMockStatistics() {
     const { metrics } = await this.loadData();

@@ -1,97 +1,79 @@
-// Performance calculator service for trading data - ИСПРАВЛЕНО: правильная обработка exposure
+// Performance Calculator - все расчеты метрик в одном месте
 import {
   ProcessedTradeRecord,
   CalculatedMetrics,
   PortfolioPerformancePoint,
-  CalculationOptions,
   BenchmarkDataPoint,
-  ComparisonMetrics
+  ComparisonMetrics,
+  CalculationOptions
 } from '@/types/realData';
 
 export class PerformanceCalculator {
+  private static readonly STARTING_PORTFOLIO_VALUE = 1000000; // $1M
+  private static readonly RISK_FREE_RATE = 0.05; // 5% annual
 
   /**
-   * Calculate all performance metrics from trade data - ИСПРАВЛЕНО
+   * Главный метод - рассчитывает ВСЕ метрики портфеля
    */
-  static calculateMetrics(
+  static calculateAllMetrics(
     trades: ProcessedTradeRecord[],
-    options: CalculationOptions = {
-      startingPortfolioValue: 1000000, // $1M default
-      riskFreeRate: 0.05, // 5% annual risk-free rate
-      includeBenchmarkComparison: false
-    }
+    benchmarkData: BenchmarkDataPoint[] = []
   ): CalculatedMetrics {
-
     if (trades.length === 0) {
       throw new Error('No trades provided for calculation');
     }
 
-    // ИСПРАВЛЕНО: Правильная валидация exposure (теперь в долях)
-    const totalExposure = trades.reduce((sum, trade) => sum + trade.portfolioExposure, 0);
+    console.log(`📊 Calculating metrics for ${trades.length} trades...`);
 
-    if (totalExposure > 1.5) { // Более 150%
-      console.warn(`⚠️ High total exposure: ${(totalExposure * 100).toFixed(1)}%. Check for leverage or data errors.`);
-    }
-
-    // Log sample trades for debugging - ИСПРАВЛЕНО формат вывода
-    console.log('Sample trades for debugging:');
-    trades.slice(0, 3).forEach(trade => {
-      console.log(`${trade.ticker}: PnL=${trade.pnlPercent.toFixed(2)}%, Exposure=${(trade.portfolioExposure * 100).toFixed(2)}%, Impact=${trade.portfolioImpact.toFixed(4)}%`);
-    });
-
-    // УБРАНО дублирование проверки
-
-    // Sort trades by exit date
+    // Сортируем трейды по дате выхода
     const sortedTrades = [...trades].sort((a, b) => a.exitDate.getTime() - b.exitDate.getTime());
 
-    // Basic trade statistics
+    // Базовая статистика трейдов
     const totalTrades = sortedTrades.length;
     const winningTrades = sortedTrades.filter(t => t.pnlPercent > 0);
-    const losingTrades = sortedTrades.filter(t => t.pnlPercent < 0);
+    const losingTrades = sortedTrades.filter(t => t.pnlPercent <= 0);
     const winRate = (winningTrades.length / totalTrades) * 100;
 
-    // Calculate portfolio returns using portfolio impact
-    const portfolioReturns = this.calculatePortfolioReturns(sortedTrades, options.startingPortfolioValue);
-    const totalReturn = portfolioReturns[portfolioReturns.length - 1]?.cumulativeReturn || 0;
+    // Считаем доходность портфеля
+    const portfolioReturns = this.calculatePortfolioTimeSeries(sortedTrades);
+    const totalReturn = portfolioReturns.length > 0 ? portfolioReturns[portfolioReturns.length - 1].cumulativeReturn : 0;
 
-    // PnL statistics
-    const pnlValues = sortedTrades.map(t => t.pnlPercent);
+    // PnL статистика
     const winningPnL = winningTrades.map(t => t.pnlPercent);
     const losingPnL = losingTrades.map(t => t.pnlPercent);
 
     const averageGain = winningPnL.length > 0 ? winningPnL.reduce((a, b) => a + b, 0) / winningPnL.length : 0;
     const averageLoss = losingPnL.length > 0 ? losingPnL.reduce((a, b) => a + b, 0) / losingPnL.length : 0;
-    const bestTrade = Math.max(...pnlValues);
-    const worstTrade = Math.min(...pnlValues);
 
-    // Advanced metrics
+    const allPnL = sortedTrades.map(t => t.pnlPercent);
+    const bestTrade = Math.max(...allPnL);
+    const worstTrade = Math.min(...allPnL);
+
+    // Расширенные метрики
     const averageHoldingDays = sortedTrades.reduce((sum, t) => sum + t.holdingDays, 0) / totalTrades;
     const averageExposure = sortedTrades.reduce((sum, t) => sum + t.portfolioExposure, 0) / totalTrades;
 
-    // Max drawdown calculation
+    // Риск-метрики
     const maxDrawdown = this.calculateMaxDrawdown(portfolioReturns);
+    const sharpeRatio = this.calculateSharpeRatio(portfolioReturns);
+    const volatility = this.calculateVolatility(portfolioReturns);
 
-    // Sharpe ratio calculation
-    const sharpeRatio = this.calculateSharpeRatio(portfolioReturns, options.riskFreeRate);
-
-    // Additional trading metrics
+    // Торговые метрики
     const profitFactor = this.calculateProfitFactor(winningPnL, losingPnL);
     const expectancy = this.calculateExpectancy(winningPnL, losingPnL, winRate);
-
-    // Consecutive wins/losses
     const { maxConsecutiveWins, maxConsecutiveLosses } = this.calculateConsecutiveWinsLosses(sortedTrades);
 
-    // Portfolio impact values
+    // Крупнейшие победы и поражения (в % от портфеля)
     const portfolioImpacts = sortedTrades.map(t => t.portfolioImpact);
     const largestWin = Math.max(...portfolioImpacts);
     const largestLoss = Math.min(...portfolioImpacts);
 
-    // Period information
+    // Период
     const startDate = sortedTrades[0].exitDate;
     const endDate = sortedTrades[sortedTrades.length - 1].exitDate;
     const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 
-    return {
+    const metrics: CalculatedMetrics = {
       totalReturn,
       winRate,
       totalTrades,
@@ -110,30 +92,35 @@ export class PerformanceCalculator {
       maxConsecutiveLosses,
       largestWin,
       largestLoss,
-      averageExposure: averageExposure * 100, // Конвертируем обратно в проценты для отображения
+      averageExposure: averageExposure * 100, // Конвертируем в проценты для отображения
       period: {
         startDate,
         endDate,
         totalDays
       }
     };
+
+    console.log('📈 Portfolio Metrics:', {
+      totalReturn: `${totalReturn.toFixed(1)}%`,
+      winRate: `${winRate.toFixed(1)}%`,
+      sharpeRatio: sharpeRatio.toFixed(2),
+      maxDrawdown: `${maxDrawdown.toFixed(1)}%`,
+      profitFactor: profitFactor.toFixed(2)
+    });
+
+    return metrics;
   }
 
   /**
-   * Calculate portfolio returns over time - ИСПРАВЛЕНО
+   * Расчет временного ряда доходности портфеля
    */
-  static calculatePortfolioReturns(
-    trades: ProcessedTradeRecord[],
-    startingValue: number = 1000000 // $1M default
-  ): PortfolioPerformancePoint[] {
-
+  static calculatePortfolioTimeSeries(trades: ProcessedTradeRecord[]): PortfolioPerformancePoint[] {
     const returns: PortfolioPerformancePoint[] = [];
     let cumulativeReturn = 0;
-    let portfolioValue = startingValue;
+    let portfolioValue = this.STARTING_PORTFOLIO_VALUE;
 
-    // Group trades by exit date to handle multiple trades on same day
+    // Группируем трейды по дням
     const tradesByDate = new Map<string, ProcessedTradeRecord[]>();
-
     trades.forEach(trade => {
       const dateKey = trade.exitDate.toISOString().split('T')[0];
       if (!tradesByDate.has(dateKey)) {
@@ -142,148 +129,151 @@ export class PerformanceCalculator {
       tradesByDate.get(dateKey)!.push(trade);
     });
 
-    // Sort dates
+    // Обрабатываем каждый день
     const sortedDates = Array.from(tradesByDate.keys()).sort();
 
     sortedDates.forEach(dateKey => {
       const dayTrades = tradesByDate.get(dateKey)!;
 
-      // ИСПРАВЛЕНО: portfolioImpact уже правильно рассчитан в processRecord
-      const dayPortfolioImpact = dayTrades.reduce((sum, trade) => {
-        return sum + trade.portfolioImpact;
-      }, 0);
+      // Суммируем impact всех трейдов за день
+      const dailyImpact = dayTrades.reduce((sum, trade) => sum + trade.portfolioImpact, 0);
+      const dailyReturn = dailyImpact; // portfolioImpact уже в процентах
 
-      const dailyReturn = dayPortfolioImpact;
+      // Обновляем кумулятивную доходность
+      cumulativeReturn += dailyReturn;
+      portfolioValue = this.STARTING_PORTFOLIO_VALUE * (1 + cumulativeReturn / 100);
 
-      // Update cumulative return
-      cumulativeReturn = ((1 + cumulativeReturn / 100) * (1 + dailyReturn / 100) - 1) * 100;
+      // Считаем активные позиции (примерно)
+      const activeTrades = dayTrades.length;
+      const totalExposure = dayTrades.reduce((sum, trade) => sum + trade.portfolioExposure, 0);
 
-      // Update portfolio value
-      portfolioValue = startingValue * (1 + cumulativeReturn / 100);
-
-      const date = new Date(dateKey);
       returns.push({
-        date,
+        date: new Date(dateKey),
         dateString: dateKey,
-        cumulativeReturn,
-        dailyReturn,
-        portfolioValue,
-        activeTrades: dayTrades.length,
-        totalExposure: dayTrades.reduce((sum, trade) => sum + trade.portfolioExposure, 0)
+        cumulativeReturn: Math.round(cumulativeReturn * 100) / 100,
+        dailyReturn: Math.round(dailyReturn * 100) / 100,
+        portfolioValue: Math.round(portfolioValue * 100) / 100,
+        activeTrades,
+        totalExposure: Math.round(totalExposure * 100) / 100
       });
     });
 
+    console.log(`📊 Generated ${returns.length} portfolio performance points`);
     return returns;
   }
 
   /**
-   * Calculate maximum drawdown from portfolio returns - ИСПРАВЛЕНО
+   * Максимальная просадка (Max Drawdown)
    */
-  private static calculateMaxDrawdown(returns: PortfolioPerformancePoint[]): number {
+  static calculateMaxDrawdown(returns: PortfolioPerformancePoint[]): number {
     if (returns.length === 0) return 0;
 
     let maxDrawdown = 0;
-    let peak = 0; // Начинаем с 0 (базовая доходность)
+    let peak = returns[0].portfolioValue;
 
     returns.forEach(point => {
-      // Update peak cumulative return
-      peak = Math.max(peak, point.cumulativeReturn);
-
-      // Calculate current drawdown from peak
-      const currentDrawdown = peak - point.cumulativeReturn;
-
-      // Update maximum drawdown
-      maxDrawdown = Math.max(maxDrawdown, currentDrawdown);
+      if (point.portfolioValue > peak) {
+        peak = point.portfolioValue;
+      } else {
+        const drawdown = ((peak - point.portfolioValue) / peak) * 100;
+        maxDrawdown = Math.max(maxDrawdown, drawdown);
+      }
     });
 
-    return -maxDrawdown; // Return as negative value
+    return Math.round(maxDrawdown * 100) / 100;
   }
 
   /**
-   * Calculate Sharpe ratio from portfolio returns - ИСПРАВЛЕНО
+   * Коэффициент Шарпа
    */
-  private static calculateSharpeRatio(returns: PortfolioPerformancePoint[], riskFreeRate: number): number {
+  static calculateSharpeRatio(returns: PortfolioPerformancePoint[]): number {
     if (returns.length < 2) return 0;
 
-    const dailyReturns = returns.map(r => r.dailyReturn);
+    const dailyReturns = returns.slice(1).map(point => point.dailyReturn);
     const avgDailyReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
-    const volatility = this.calculateVolatility(dailyReturns);
+    const volatility = this.calculateVolatility(returns);
 
     if (volatility === 0) return 0;
 
-    // Annualize returns and calculate Sharpe
+    // Annualized Sharpe ratio
     const annualizedReturn = avgDailyReturn * 252; // 252 trading days
     const annualizedVolatility = volatility * Math.sqrt(252);
-    const annualizedRiskFreeRate = riskFreeRate * 100; // Convert to percentage
+    const sharpeRatio = (annualizedReturn - this.RISK_FREE_RATE * 100) / annualizedVolatility;
 
-    return (annualizedReturn - annualizedRiskFreeRate) / annualizedVolatility;
+    return Math.round(sharpeRatio * 100) / 100;
   }
 
   /**
-   * Calculate Sortino ratio - focuses on downside deviation
+   * Коэффициент Сортино (только негативная волатильность)
    */
-  static calculateSortinoRatio(returns: PortfolioPerformancePoint[], targetReturn: number = 0): number {
+  static calculateSortinoRatio(returns: PortfolioPerformancePoint[]): number {
     if (returns.length < 2) return 0;
 
-    const dailyReturns = returns.map(r => r.dailyReturn);
+    const dailyReturns = returns.slice(1).map(point => point.dailyReturn);
     const avgDailyReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
 
-    // Calculate downside deviation
-    const downsideReturns = dailyReturns.filter(r => r < targetReturn);
-    if (downsideReturns.length === 0) return 0;
+    // Только негативные доходности для расчета downside deviation
+    const negativeReturns = dailyReturns.filter(r => r < 0);
 
-    const downsideVariance = downsideReturns.reduce((sum, ret) =>
-      sum + Math.pow(ret - targetReturn, 2), 0
-    ) / downsideReturns.length;
+    if (negativeReturns.length === 0) return 999; // Очень высокое значение, если нет убытков
 
-    const downsideDeviation = Math.sqrt(downsideVariance);
+    const downsideDeviation = Math.sqrt(
+      negativeReturns.reduce((sum, r) => sum + Math.pow(r, 2), 0) / negativeReturns.length
+    );
 
-    if (downsideDeviation === 0) return 0;
+    if (downsideDeviation === 0) return 999;
 
-    // Annualize
+    // Annualized Sortino ratio
     const annualizedReturn = avgDailyReturn * 252;
     const annualizedDownsideDeviation = downsideDeviation * Math.sqrt(252);
-    const annualizedTargetReturn = targetReturn * 252;
+    const sortinoRatio = (annualizedReturn - this.RISK_FREE_RATE * 100) / annualizedDownsideDeviation;
 
-    return (annualizedReturn - annualizedTargetReturn) / annualizedDownsideDeviation;
+    return Math.round(sortinoRatio * 100) / 100;
   }
 
   /**
-   * Calculate volatility (standard deviation) - ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ
+   * Волатильность (стандартное отклонение)
    */
-  private static calculateVolatility(returns: number[]): number {
+  static calculateVolatility(returns: PortfolioPerformancePoint[]): number {
     if (returns.length < 2) return 0;
 
-    const avg = returns.reduce((a, b) => a + b, 0) / returns.length;
-    const variance = returns.reduce((sum, ret) => sum + Math.pow(ret - avg, 2), 0) / returns.length;
+    const dailyReturns = returns.slice(1).map(point => point.dailyReturn);
+    const avgReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
+
+    const variance = dailyReturns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / (dailyReturns.length - 1);
 
     return Math.sqrt(variance);
   }
 
   /**
-   * Calculate profit factor
+   * Profit Factor (валовая прибыль / валовый убыток)
    */
-  private static calculateProfitFactor(winningPnL: number[], losingPnL: number[]): number {
-    const totalWins = winningPnL.reduce((a, b) => a + b, 0);
-    const totalLosses = Math.abs(losingPnL.reduce((a, b) => a + b, 0));
+  static calculateProfitFactor(winningPnL: number[], losingPnL: number[]): number {
+    const grossProfit = winningPnL.reduce((sum, p) => sum + p, 0);
+    const grossLoss = Math.abs(losingPnL.reduce((sum, p) => sum + p, 0));
 
-    return totalLosses === 0 ? (totalWins > 0 ? 999 : 0) : totalWins / totalLosses;
+    if (grossLoss === 0) return grossProfit > 0 ? 999 : 1;
+
+    return Math.round((grossProfit / grossLoss) * 100) / 100;
   }
 
   /**
-   * Calculate expectancy
+   * Математическое ожидание (Expectancy)
    */
-  private static calculateExpectancy(winningPnL: number[], losingPnL: number[], winRate: number): number {
+  static calculateExpectancy(winningPnL: number[], losingPnL: number[], winRate: number): number {
     const avgWin = winningPnL.length > 0 ? winningPnL.reduce((a, b) => a + b, 0) / winningPnL.length : 0;
-    const avgLoss = losingPnL.length > 0 ? losingPnL.reduce((a, b) => a + b, 0) / losingPnL.length : 0;
+    const avgLoss = losingPnL.length > 0 ? Math.abs(losingPnL.reduce((a, b) => a + b, 0) / losingPnL.length) : 0;
+    const lossRate = 100 - winRate;
 
-    return (winRate / 100) * avgWin + ((100 - winRate) / 100) * avgLoss;
+    const expectancy = (winRate / 100) * avgWin - (lossRate / 100) * avgLoss;
+
+    return Math.round(expectancy * 100) / 100;
   }
 
   /**
-   * Calculate consecutive wins/losses
+   * Последовательные победы и поражения
    */
-  private static calculateConsecutiveWinsLosses(trades: ProcessedTradeRecord[]): {
+  static calculateConsecutiveWinsLosses(trades: ProcessedTradeRecord[]): {
     maxConsecutiveWins: number;
     maxConsecutiveLosses: number;
   } {
@@ -297,54 +287,169 @@ export class PerformanceCalculator {
         currentWins++;
         currentLosses = 0;
         maxWins = Math.max(maxWins, currentWins);
-      } else if (trade.pnlPercent < 0) {
+      } else {
         currentLosses++;
         currentWins = 0;
         maxLosses = Math.max(maxLosses, currentLosses);
       }
     });
 
+    return { maxConsecutiveWins: maxWins, maxConsecutiveLosses: maxLosses };
+  }
+
+  /**
+   * Сравнение с бенчмарком
+   */
+  static calculateBenchmarkComparison(
+    portfolioMetrics: CalculatedMetrics,
+    portfolioReturns: PortfolioPerformancePoint[],
+    benchmarkData: BenchmarkDataPoint[]
+  ): ComparisonMetrics {
+    if (benchmarkData.length === 0) {
+      // Fallback к историческим данным S&P 500
+      return {
+        portfolio: portfolioMetrics,
+        benchmark: {
+          totalReturn: 18.2, // Примерная годовая доходность S&P 500
+          volatility: 16.5,
+          sharpeRatio: 0.95,
+          maxDrawdown: -8.2,
+          period: portfolioMetrics.period
+        },
+        alpha: portfolioMetrics.totalReturn - 18.2,
+        beta: 1.0,
+        correlation: 0.7,
+        trackingError: 8.0,
+        informationRatio: (portfolioMetrics.totalReturn - 18.2) / 8.0,
+        outperformance: portfolioMetrics.totalReturn - 18.2
+      };
+    }
+
+    // Выравниваем данные по датам
+    const alignedData = this.alignPortfolioAndBenchmark(portfolioReturns, benchmarkData);
+
+    if (alignedData.length < 2) {
+      console.warn('Insufficient aligned data for benchmark comparison');
+      return this.calculateBenchmarkComparison(portfolioMetrics, portfolioReturns, []);
+    }
+
+    // Рассчитываем метрики бенчмарка
+    const benchmarkTotalReturn = benchmarkData[benchmarkData.length - 1]?.cumulativeReturn || 0;
+    const benchmarkReturns = alignedData.map(d => d.benchmarkReturn);
+    const benchmarkVolatility = this.calculateVolatilityFromReturns(benchmarkReturns) * Math.sqrt(252);
+    const benchmarkSharpe = this.calculateSharpeFromReturns(benchmarkReturns);
+
+    // Метрики сравнения
+    const portfolioReturnsAligned = alignedData.map(d => d.portfolioReturn);
+    const correlation = this.calculateCorrelation(portfolioReturnsAligned, benchmarkReturns);
+    const beta = this.calculateBeta(portfolioReturnsAligned, benchmarkReturns);
+    const alpha = portfolioMetrics.totalReturn - (this.RISK_FREE_RATE * 100 + beta * (benchmarkTotalReturn - this.RISK_FREE_RATE * 100));
+
+    const trackingError = this.calculateVolatilityFromReturns(
+      alignedData.map(d => d.portfolioReturn - d.benchmarkReturn)
+    ) * Math.sqrt(252);
+
+    const informationRatio = trackingError === 0 ? 0 : (portfolioMetrics.totalReturn - benchmarkTotalReturn) / trackingError;
+
     return {
-      maxConsecutiveWins: maxWins,
-      maxConsecutiveLosses: maxLosses
+      portfolio: portfolioMetrics,
+      benchmark: {
+        totalReturn: Math.round(benchmarkTotalReturn * 10) / 10,
+        volatility: Math.round(benchmarkVolatility * 10) / 10,
+        sharpeRatio: Math.round(benchmarkSharpe * 100) / 100,
+        maxDrawdown: this.calculateDrawdownFromBenchmark(benchmarkData),
+        period: portfolioMetrics.period
+      },
+      alpha: Math.round(alpha * 10) / 10,
+      beta: Math.round(beta * 100) / 100,
+      correlation: Math.round(correlation * 100) / 100,
+      trackingError: Math.round(trackingError * 10) / 10,
+      informationRatio: Math.round(informationRatio * 100) / 100,
+      outperformance: Math.round((portfolioMetrics.totalReturn - benchmarkTotalReturn) * 10) / 10
     };
   }
 
   /**
-   * Calculate correlation between two series
+   * Утилитные методы для расчетов
    */
+  private static alignPortfolioAndBenchmark(
+    portfolioReturns: PortfolioPerformancePoint[],
+    benchmarkData: BenchmarkDataPoint[]
+  ): Array<{
+    date: Date;
+    portfolioReturn: number;
+    benchmarkReturn: number;
+  }> {
+    const aligned: Array<{
+      date: Date;
+      portfolioReturn: number;
+      benchmarkReturn: number;
+    }> = [];
+
+    const benchmarkMap = new Map(
+      benchmarkData.map(b => [b.dateString, b])
+    );
+
+    portfolioReturns.forEach(portfolioPoint => {
+      const benchmarkPoint = benchmarkMap.get(portfolioPoint.dateString);
+      if (benchmarkPoint) {
+        aligned.push({
+          date: portfolioPoint.date,
+          portfolioReturn: portfolioPoint.dailyReturn,
+          benchmarkReturn: benchmarkPoint.change
+        });
+      }
+    });
+
+    return aligned.sort((a, b) => a.date.getTime() - b.date.getTime());
+  }
+
+  private static calculateVolatilityFromReturns(returns: number[]): number {
+    if (returns.length < 2) return 0;
+
+    const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
+    const variance = returns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / (returns.length - 1);
+
+    return Math.sqrt(variance);
+  }
+
+  private static calculateSharpeFromReturns(returns: number[]): number {
+    if (returns.length < 2) return 0;
+
+    const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
+    const volatility = this.calculateVolatilityFromReturns(returns);
+
+    if (volatility === 0) return 0;
+
+    const annualizedReturn = avgReturn * 252;
+    const annualizedVolatility = volatility * Math.sqrt(252);
+
+    return (annualizedReturn - this.RISK_FREE_RATE * 100) / annualizedVolatility;
+  }
+
   private static calculateCorrelation(x: number[], y: number[]): number {
     if (x.length !== y.length || x.length < 2) return 0;
 
-    const n = x.length;
-    const sumX = x.reduce((a, b) => a + b, 0);
-    const sumY = y.reduce((a, b) => a + b, 0);
-    const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
-    const sumX2 = x.reduce((sum, xi) => sum + xi * xi, 0);
-    const sumY2 = y.reduce((sum, yi) => sum + yi * yi, 0);
+    const avgX = x.reduce((a, b) => a + b, 0) / x.length;
+    const avgY = y.reduce((a, b) => a + b, 0) / y.length;
 
-    const numerator = n * sumXY - sumX * sumY;
-    const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+    const numerator = x.reduce((sum, xi, i) => sum + (xi - avgX) * (y[i] - avgY), 0);
+    const denomX = Math.sqrt(x.reduce((sum, xi) => sum + Math.pow(xi - avgX, 2), 0));
+    const denomY = Math.sqrt(y.reduce((sum, yi) => sum + Math.pow(yi - avgY, 2), 0));
 
-    return denominator === 0 ? 0 : numerator / denominator;
+    return denomX === 0 || denomY === 0 ? 0 : numerator / (denomX * denomY);
   }
 
-  /**
-   * Calculate beta (portfolio sensitivity to benchmark)
-   */
   private static calculateBeta(portfolioReturns: number[], benchmarkReturns: number[]): number {
     if (portfolioReturns.length !== benchmarkReturns.length || portfolioReturns.length < 2) return 1;
 
-    const benchmarkVariance = this.calculateVolatility(benchmarkReturns) ** 2;
+    const benchmarkVariance = this.calculateVolatilityFromReturns(benchmarkReturns) ** 2;
     if (benchmarkVariance === 0) return 1;
 
     const covariance = this.calculateCovariance(portfolioReturns, benchmarkReturns);
     return covariance / benchmarkVariance;
   }
 
-  /**
-   * Calculate covariance between two series
-   */
   private static calculateCovariance(x: number[], y: number[]): number {
     if (x.length !== y.length || x.length < 2) return 0;
 
@@ -354,158 +459,21 @@ export class PerformanceCalculator {
     return x.reduce((sum, xi, i) => sum + (xi - avgX) * (y[i] - avgY), 0) / x.length;
   }
 
-  /**
-   * Align portfolio and benchmark data by dates for comparison
-   */
-  private static alignPortfolioAndBenchmark(
-    portfolioReturns: PortfolioPerformancePoint[],
-    benchmarkData: BenchmarkDataPoint[]
-  ): Array<{
-    date: Date;
-    portfolioReturn: number;
-    benchmarkReturn: number;
-    portfolioCumulative: number;
-    benchmarkCumulative: number;
-  }> {
-    const aligned: Array<{
-      date: Date;
-      portfolioReturn: number;
-      benchmarkReturn: number;
-      portfolioCumulative: number;
-      benchmarkCumulative: number;
-    }> = [];
+  private static calculateDrawdownFromBenchmark(benchmarkData: BenchmarkDataPoint[]): number {
+    if (benchmarkData.length === 0) return -8.2; // Historical S&P 500 typical max drawdown
 
-    // Create date maps for efficient lookup
-    const portfolioMap = new Map(
-      portfolioReturns.map(p => [p.dateString, p])
-    );
-    const benchmarkMap = new Map(
-      benchmarkData.map(b => [b.date.toISOString().split('T')[0], b])
-    );
+    let maxDrawdown = 0;
+    let peak = benchmarkData[0].value;
 
-    // Find common dates
-    portfolioReturns.forEach(portfolioPoint => {
-      const benchmarkPoint = benchmarkMap.get(portfolioPoint.dateString);
-      if (benchmarkPoint) {
-        aligned.push({
-          date: portfolioPoint.date,
-          portfolioReturn: portfolioPoint.dailyReturn,
-          benchmarkReturn: benchmarkPoint.dailyReturn,
-          portfolioCumulative: portfolioPoint.cumulativeReturn,
-          benchmarkCumulative: benchmarkPoint.cumulativeReturn
-        });
+    benchmarkData.forEach(point => {
+      if (point.value > peak) {
+        peak = point.value;
+      } else {
+        const drawdown = ((peak - point.value) / peak) * 100;
+        maxDrawdown = Math.max(maxDrawdown, drawdown);
       }
     });
 
-    return aligned.sort((a, b) => a.date.getTime() - b.date.getTime());
-  }
-
-  /**
-   * Calculate benchmark comparison metrics
-   */
-  static calculateBenchmarkComparison(
-    portfolioMetrics: CalculatedMetrics,
-    portfolioReturns: PortfolioPerformancePoint[],
-    benchmarkData: BenchmarkDataPoint[]
-  ): ComparisonMetrics {
-    // Align portfolio and benchmark data by dates
-    const alignedData = this.alignPortfolioAndBenchmark(portfolioReturns, benchmarkData);
-
-    if (alignedData.length < 2) {
-      // Fallback if not enough data
-      return {
-        portfolio: portfolioMetrics,
-        benchmark: {
-          totalReturn: 15, // Assume 15% S&P 500 return
-          volatility: 18,
-          sharpeRatio: 0.8,
-          maxDrawdown: -12,
-          period: portfolioMetrics.period
-        },
-        alpha: portfolioMetrics.totalReturn - 15,
-        beta: 1.0,
-        correlation: 0.7,
-        trackingError: 8,
-        informationRatio: (portfolioMetrics.totalReturn - 15) / 8,
-        outperformance: portfolioMetrics.totalReturn - 15
-      };
-    }
-
-    // Calculate benchmark metrics
-    const benchmarkReturns = alignedData.map(d => d.benchmarkReturn);
-    const benchmarkTotalReturn = alignedData[alignedData.length - 1]?.benchmarkCumulative || 0;
-    const benchmarkVolatility = this.calculateVolatility(benchmarkReturns) * Math.sqrt(252);
-    const benchmarkSharpe = this.calculateSharpeFromReturns(benchmarkReturns, 0.05);
-    const benchmarkDrawdown = this.calculateDrawdownFromReturns(
-      alignedData.map(d => ({ portfolioValue: 100 * (1 + d.benchmarkCumulative / 100) }))
-    );
-
-    // Calculate comparison metrics
-    const portfolioReturnsAligned = alignedData.map(d => d.portfolioReturn);
-    const correlation = this.calculateCorrelation(portfolioReturnsAligned, benchmarkReturns);
-    const beta = this.calculateBeta(portfolioReturnsAligned, benchmarkReturns);
-
-    // Calculate alpha: Portfolio return - (Risk-free rate + Beta * (Benchmark return - Risk-free rate))
-    const riskFreeRate = 5; // 5% annual
-    const alpha = portfolioMetrics.totalReturn - (riskFreeRate + beta * (benchmarkTotalReturn - riskFreeRate));
-
-    const trackingError = this.calculateVolatility(
-      alignedData.map(d => d.portfolioReturn - d.benchmarkReturn)
-    ) * Math.sqrt(252);
-
-    const informationRatio = trackingError === 0 ? 0 : alpha / trackingError;
-
-    return {
-      portfolio: portfolioMetrics,
-      benchmark: {
-        totalReturn: benchmarkTotalReturn,
-        volatility: benchmarkVolatility,
-        sharpeRatio: benchmarkSharpe,
-        maxDrawdown: benchmarkDrawdown,
-        period: portfolioMetrics.period
-      },
-      alpha,
-      beta,
-      correlation,
-      trackingError,
-      informationRatio,
-      outperformance: portfolioMetrics.totalReturn - benchmarkTotalReturn
-    };
-  }
-
-  /**
-   * Helper: Calculate Sharpe ratio from returns array
-   */
-  private static calculateSharpeFromReturns(returns: number[], riskFreeRate: number): number {
-    if (returns.length < 2) return 0;
-
-    const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
-    const volatility = this.calculateVolatility(returns);
-
-    if (volatility === 0) return 0;
-
-    const annualizedReturn = avgReturn * 252;
-    const annualizedVolatility = volatility * Math.sqrt(252);
-    const annualizedRiskFreeRate = riskFreeRate * 100;
-
-    return (annualizedReturn - annualizedRiskFreeRate) / annualizedVolatility;
-  }
-
-  /**
-   * Helper: Calculate drawdown from portfolio values
-   */
-  private static calculateDrawdownFromReturns(portfolioValues: Array<{ portfolioValue: number }>): number {
-    if (portfolioValues.length === 0) return 0;
-
-    let maxDrawdown = 0;
-    let peak = portfolioValues[0].portfolioValue;
-
-    portfolioValues.forEach(point => {
-      peak = Math.max(peak, point.portfolioValue);
-      const drawdown = (peak - point.portfolioValue) / peak * 100;
-      maxDrawdown = Math.max(maxDrawdown, drawdown);
-    });
-
-    return -maxDrawdown;
+    return -Math.round(maxDrawdown * 10) / 10;
   }
 }

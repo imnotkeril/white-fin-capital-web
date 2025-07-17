@@ -1,4 +1,1 @@
-// useTheme hook
-export function useTheme() {
-  // Hook implementation
-}
+export { useTheme } from '@/context/ThemeContext';
