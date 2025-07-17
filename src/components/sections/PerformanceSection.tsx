@@ -1,18 +1,12 @@
-import React, { useState, useMemo } from 'react';
-import { Download, TrendingUp, Award, BarChart3, PieChart } from 'lucide-react';
-import {
-  mockPerformanceChartData,
-  mockBenchmarkChartData,
-  mockKPIData,
-  mockClosedTrades,
-  mockTradeStats,
-} from '@/data/mockStatistics';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Download, TrendingUp, Award, BarChart3, PieChart, RefreshCw, AlertCircle } from 'lucide-react';
+import { RealStatistics } from '@/data/realStatistics';
 import { formatPerformanceValue, formatDate } from '@/utils/formatting';
 import { cn } from '@/utils/helpers';
 import Button from '@/components/common/Button';
 import Card, { MetricCard } from '@/components/common/Card';
 import PerformanceChart from '@/components/charts/PerformanceChart';
-import KPICounter, { KPIGrid } from '@/components/charts/KPICounter';
+import { KPIData } from '@/types/realData';
 
 interface PeriodData {
   currentReturn: number;
@@ -29,6 +23,19 @@ const PerformanceSection: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<'overview' | 'trades'>('overview');
   const [selectedPeriod, setSelectedPeriod] = useState<'1m' | '3m' | '6m' | '1y' | '2y' | 'all'>('1y');
 
+  // Data state
+  const [kpiData, setKpiData] = useState<KPIData[]>([]);
+  const [performanceData, setPerformanceData] = useState<Array<{ date: string; value: number; label?: string }>>([]);
+  const [benchmarkData, setBenchmarkData] = useState<Array<{ date: string; value: number; label?: string }>>([]);
+  const [closedTrades, setClosedTrades] = useState<Array<any>>([]);
+  const [tradeStats, setTradeStats] = useState<KPIData[]>([]);
+  const [periodData, setPeriodData] = useState<PeriodData | null>(null);
+
+  // Loading and error state
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
   const tabs = [
     { id: 'overview', label: 'Overview', icon: TrendingUp },
     { id: 'trades', label: 'Trade Journal', icon: Award },
@@ -43,113 +50,167 @@ const PerformanceSection: React.FC = () => {
     { id: 'all', label: 'All Time' },
   ] as const;
 
-  // Статистика сверху - общая за все время (БЕЗ полосок и анимаций)
-  const topKPIData = [
-    {
-      label: 'Total Return',
-      value: 24.7,
-      format: 'percentage' as const,
-      trend: 'up' as const,
-    },
-    {
-      label: 'Win Rate',
-      value: 68.5,
-      format: 'percentage' as const,
-      trend: 'up' as const,
-    },
-    {
-      label: 'Average Gain',
-      value: 8.3,
-      format: 'percentage' as const,
-      trend: 'up' as const,
-    },
-    {
-      label: 'Max Drawdown',
-      value: -5.2,
-      format: 'percentage' as const,
-      trend: 'down' as const,
-    },
-  ];
+  // Load initial data
+  useEffect(() => {
+    loadAllData();
+  }, []);
 
-  // Данные для каждого периода (для статистики под графиком)
-  const periodData: Record<typeof selectedPeriod, PeriodData> = {
-    '1m': {
-      currentReturn: 3.2,
-      bestDay: 4.1,
-      worstDay: -2.3,
-      volatility: 12.5,
-      maxDrawdown: -3.1,
-      alpha: 0.8,
-      beta: 0.92,
-      totalTrades: 28,
-    },
-    '3m': {
-      currentReturn: 8.7,
-      bestDay: 4.1,
-      worstDay: -3.2,
-      volatility: 15.2,
-      maxDrawdown: -4.5,
-      alpha: 1.2,
-      beta: 0.95,
-      totalTrades: 84,
-    },
-    '6m': {
-      currentReturn: 15.4,
-      bestDay: 4.1,
-      worstDay: -3.8,
-      volatility: 16.8,
-      maxDrawdown: -5.2,
-      alpha: 1.4,
-      beta: 0.98,
-      totalTrades: 168,
-    },
-    '1y': {
-      currentReturn: 24.7,
-      bestDay: 4.1,
-      worstDay: -4.2,
-      volatility: 18.3,
-      maxDrawdown: -5.2,
-      alpha: 1.6,
-      beta: 1.02,
-      totalTrades: 336,
-    },
-    '2y': {
-      currentReturn: 48.9,
-      bestDay: 4.1,
-      worstDay: -4.2,
-      volatility: 19.1,
-      maxDrawdown: -8.7,
-      alpha: 1.8,
-      beta: 1.05,
-      totalTrades: 672,
-    },
-    'all': {
-      currentReturn: 156.3,
-      bestDay: 4.1,
-      worstDay: -4.2,
-      volatility: 20.4,
-      maxDrawdown: -8.7,
-      alpha: 2.1,
-      beta: 1.08,
-      totalTrades: 1247,
-    },
+  // Load period-specific data when period changes
+  useEffect(() => {
+    loadPeriodData();
+  }, [selectedPeriod]);
+
+  const loadAllData = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      console.log('Loading real trading data...');
+
+      // Load main KPI data
+      const kpis = await RealStatistics.getKPIData();
+      setKpiData(kpis);
+
+      // Load chart data
+      const [perfData, benchData] = await Promise.all([
+        RealStatistics.getPerformanceChartData(),
+        RealStatistics.getBenchmarkChartData()
+      ]);
+
+      setPerformanceData(perfData);
+      setBenchmarkData(benchData);
+
+      // Load trade journal data
+      const [trades, stats] = await Promise.all([
+        RealStatistics.getClosedTrades(),
+        RealStatistics.getTradeStats()
+      ]);
+
+      setClosedTrades(trades);
+      setTradeStats(stats);
+
+      // Get data status
+      const status = RealStatistics.getDataStatus();
+      setLastUpdated(status.lastUpdated);
+
+      console.log(`Loaded data successfully: ${status.tradesCount} trades`);
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load trading data';
+      setError(errorMessage);
+      console.error('Error loading data:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const currentPeriodData = periodData[selectedPeriod];
-  const benchmarkData = mockBenchmarkChartData;
+  const loadPeriodData = async () => {
+    try {
+      const periodStats = await RealStatistics.getPeriodStatistics(selectedPeriod);
+      setPeriodData(periodStats);
+    } catch (err) {
+      console.error('Error loading period data:', err);
+    }
+  };
 
-  // Функции для статусных цветов (ИСПРАВЛЕНО: нейтральные элементы используют обычный цвет)
+  const handleRefreshData = async () => {
+    try {
+      await RealStatistics.refreshData();
+      await loadAllData();
+    } catch (err) {
+      setError('Failed to refresh data');
+    }
+  };
+
+  const handleExportTrades = async () => {
+    try {
+      const trades = await RealStatistics.getClosedTrades();
+      const csvContent = [
+        'Date,Symbol,Type,Entry Price,Exit Price,P&L,Return %',
+        ...trades.map(trade =>
+          `${trade.closedAt},${trade.symbol},${trade.type},${trade.entryPrice},${trade.exitPrice},${trade.pnl},${trade.return}`
+        )
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `white-fin-trades-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error exporting trades:', err);
+    }
+  };
+
+  // Функции для статусных цветов
   const getStatusColor = (value: number) => {
     if (value > 0) return 'text-status-positive';
     if (value < 0) return 'text-status-negative';
-    return 'text-text-primary'; // ИСПРАВЛЕНО: обычный цвет вместо status-neutral
+    return 'text-text-primary';
   };
 
   const getStatusClasses = (value: number) => {
     if (value > 0) return 'bg-status-positive/10 border-status-positive/30';
     if (value < 0) return 'bg-status-negative/10 border-status-negative/30';
-    return 'bg-background-secondary border-border'; // ИСПРАВЛЕНО: обычная рамка
+    return 'bg-background-secondary border-border';
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <section id="performance" className="section bg-background">
+        <div className="container">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
+              Track Record & Performance
+            </h2>
+            <p className="text-xl text-text-secondary max-w-3xl mx-auto leading-relaxed">
+              Loading real trading data and performance metrics...
+            </p>
+          </div>
+
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <RefreshCw className="w-12 h-12 text-primary-500 animate-spin mx-auto mb-4" />
+              <p className="text-text-secondary">Loading trading data from Excel file...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <section id="performance" className="section bg-background">
+        <div className="container">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
+              Track Record & Performance
+            </h2>
+          </div>
+
+          <Card ocean padding="lg" className="max-w-md mx-auto text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-text-primary mb-2">
+              Failed to Load Data
+            </h3>
+            <p className="text-text-secondary mb-6">
+              {error}
+            </p>
+            <Button variant="primary" onClick={handleRefreshData} icon={<RefreshCw className="w-4 h-4" />}>
+              Retry Loading
+            </Button>
+          </Card>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="performance" className="section bg-background">
@@ -160,14 +221,29 @@ const PerformanceSection: React.FC = () => {
             Track Record & Performance
           </h2>
           <p className="text-xl text-text-secondary max-w-3xl mx-auto leading-relaxed">
-            Transparent performance metrics with detailed analytics and comprehensive trade history
+            Real trading performance with {kpiData.find(k => k.label === 'Total Trades')?.value || 0} completed trades
           </p>
+
+          {/* Data Status */}
+          <div className="flex items-center justify-center gap-4 mt-4">
+            <span className="text-sm text-text-tertiary">
+              Last updated: {lastUpdated ? formatDate(lastUpdated, 'medium') : 'Never'}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefreshData}
+              icon={<RefreshCw className="w-4 h-4" />}
+            >
+              Refresh
+            </Button>
+          </div>
         </div>
 
-        {/* КПИ сверху (БЕЗ полосок и анимаций) - используем системные классы */}
+        {/* Top KPI Cards */}
         <div className="mb-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {topKPIData.map((kpi, index) => (
+            {kpiData.slice(0, 4).map((kpi, index) => (
               <Card
                 key={index}
                 ocean
@@ -179,10 +255,10 @@ const PerformanceSection: React.FC = () => {
                 </div>
                 <div className={cn(
                   "text-2xl font-bold mb-1",
-                  getStatusColor(kpi.value)
+                  getStatusColor(typeof kpi.value === 'number' ? kpi.value : 0)
                 )}>
                   {kpi.format === 'percentage' ?
-                    `${kpi.value > 0 ? '+' : ''}${kpi.value}%` :
+                    `${typeof kpi.value === 'number' && kpi.value > 0 ? '+' : ''}${kpi.value}%` :
                     kpi.value
                   }
                 </div>
@@ -193,7 +269,7 @@ const PerformanceSection: React.FC = () => {
 
         {/* Performance Tab Navigation */}
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Tab Navigation - используем Card ocean */}
+          {/* Tab Navigation */}
           <div className="lg:w-64 flex-shrink-0">
             <Card ocean padding="sm" className="space-y-2">
               {tabs.map((tab) => {
@@ -217,7 +293,7 @@ const PerformanceSection: React.FC = () => {
             </Card>
           </div>
 
-          {/* Tab Content Area - используем системные цвета */}
+          {/* Tab Content Area */}
           <div className="flex-1">
             {selectedTab === 'overview' && (
               <div className="space-y-8">
@@ -241,124 +317,131 @@ const PerformanceSection: React.FC = () => {
                   </div>
                 </Card>
 
-                {/* График БЕЗ встроенного селектора периодов и БЕЗ дублирующих статистик */}
+                {/* Chart */}
                 <PerformanceChart
-                  data={mockPerformanceChartData}
+                  data={performanceData}
                   height={400}
                   showPeriodSelector={false}
                   showBenchmark={true}
                   benchmarkData={benchmarkData}
                   chartType="area"
+                  title="Portfolio Performance vs S&P 500"
                 />
 
-                {/* ЕДИНСТВЕННАЯ статистика под графиком - зависит от selectedPeriod - используем Card ocean */}
-                <Card ocean padding="lg">
-                  <h4 className="text-lg font-semibold text-text-primary mb-6 flex items-center gap-2">
-                    <PieChart className="w-5 h-5 text-primary-500" />
-                    Statistics for {periods.find(p => p.id === selectedPeriod)?.label}
-                  </h4>
+                {/* Period Statistics */}
+                {periodData && (
+                  <Card ocean padding="lg">
+                    <h4 className="text-lg font-semibold text-text-primary mb-6 flex items-center gap-2">
+                      <PieChart className="w-5 h-5 text-primary-500" />
+                      Statistics for {periods.find(p => p.id === selectedPeriod)?.label}
+                    </h4>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className={cn(
-                      "text-center p-4 rounded-xl border transition-all duration-200 hover:-translate-y-1",
-                      getStatusClasses(currentPeriodData.currentReturn)
-                    )}>
-                      <div className="text-text-secondary text-sm mb-1">Current Return</div>
-                      <div className={cn("text-xl font-bold", getStatusColor(currentPeriodData.currentReturn))}>
-                        {currentPeriodData.currentReturn > 0 ? '+' : ''}{currentPeriodData.currentReturn}%
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      <div className={cn(
+                        "text-center p-4 rounded-xl border transition-all duration-200 hover:-translate-y-1",
+                        getStatusClasses(periodData.currentReturn)
+                      )}>
+                        <div className="text-text-secondary text-sm mb-1">Current Return</div>
+                        <div className={cn("text-xl font-bold", getStatusColor(periodData.currentReturn))}>
+                          {periodData.currentReturn > 0 ? '+' : ''}{periodData.currentReturn.toFixed(1)}%
+                        </div>
+                      </div>
+
+                      <div className={cn(
+                        "text-center p-4 rounded-xl border transition-all duration-200 hover:-translate-y-1",
+                        getStatusClasses(periodData.bestDay)
+                      )}>
+                        <div className="text-text-secondary text-sm mb-1">Best Day</div>
+                        <div className={cn("text-xl font-bold", getStatusColor(periodData.bestDay))}>
+                          +{periodData.bestDay.toFixed(1)}%
+                        </div>
+                      </div>
+
+                      <div className={cn(
+                        "text-center p-4 rounded-xl border transition-all duration-200 hover:-translate-y-1",
+                        getStatusClasses(periodData.worstDay)
+                      )}>
+                        <div className="text-text-secondary text-sm mb-1">Worst Day</div>
+                        <div className={cn("text-xl font-bold", getStatusColor(periodData.worstDay))}>
+                          {periodData.worstDay.toFixed(1)}%
+                        </div>
+                      </div>
+
+                      <div className={cn(
+                        "text-center p-4 rounded-xl border transition-all duration-200 hover:-translate-y-1",
+                        getStatusClasses(0)
+                      )}>
+                        <div className="text-text-secondary text-sm mb-1">Volatility</div>
+                        <div className={cn("text-xl font-bold", getStatusColor(0))}>
+                          {periodData.volatility.toFixed(1)}%
+                        </div>
+                      </div>
+
+                      <div className={cn(
+                        "text-center p-4 rounded-xl border transition-all duration-200 hover:-translate-y-1",
+                        getStatusClasses(periodData.maxDrawdown)
+                      )}>
+                        <div className="text-text-secondary text-sm mb-1">Max Drawdown</div>
+                        <div className={cn("text-xl font-bold", getStatusColor(periodData.maxDrawdown))}>
+                          {periodData.maxDrawdown.toFixed(1)}%
+                        </div>
+                      </div>
+
+                      <div className={cn(
+                        "text-center p-4 rounded-xl border transition-all duration-200 hover:-translate-y-1",
+                        getStatusClasses(periodData.alpha)
+                      )}>
+                        <div className="text-text-secondary text-sm mb-1">Alpha</div>
+                        <div className={cn("text-xl font-bold", getStatusColor(periodData.alpha))}>
+                          {periodData.alpha.toFixed(1)}
+                        </div>
+                      </div>
+
+                      <div className={cn(
+                        "text-center p-4 rounded-xl border transition-all duration-200 hover:-translate-y-1",
+                        getStatusClasses(periodData.beta - 1)
+                      )}>
+                        <div className="text-text-secondary text-sm mb-1">Beta</div>
+                        <div className={cn("text-xl font-bold", getStatusColor(periodData.beta - 1))}>
+                          {periodData.beta.toFixed(2)}
+                        </div>
+                      </div>
+
+                      <div className={cn(
+                        "text-center p-4 rounded-xl border transition-all duration-200 hover:-translate-y-1",
+                        getStatusClasses(0)
+                      )}>
+                        <div className="text-text-secondary text-sm mb-1">Total Trades</div>
+                        <div className={cn("text-xl font-bold", getStatusColor(0))}>
+                          {periodData.totalTrades}
+                        </div>
                       </div>
                     </div>
-
-                    <div className={cn(
-                      "text-center p-4 rounded-xl border transition-all duration-200 hover:-translate-y-1",
-                      getStatusClasses(currentPeriodData.bestDay)
-                    )}>
-                      <div className="text-text-secondary text-sm mb-1">Best Day</div>
-                      <div className={cn("text-xl font-bold", getStatusColor(currentPeriodData.bestDay))}>
-                        +{currentPeriodData.bestDay}%
-                      </div>
-                    </div>
-
-                    <div className={cn(
-                      "text-center p-4 rounded-xl border transition-all duration-200 hover:-translate-y-1",
-                      getStatusClasses(currentPeriodData.worstDay)
-                    )}>
-                      <div className="text-text-secondary text-sm mb-1">Worst Day</div>
-                      <div className={cn("text-xl font-bold", getStatusColor(currentPeriodData.worstDay))}>
-                        {currentPeriodData.worstDay}%
-                      </div>
-                    </div>
-
-                    <div className={cn(
-                      "text-center p-4 rounded-xl border transition-all duration-200 hover:-translate-y-1",
-                      getStatusClasses(0) // нейтральный
-                    )}>
-                      <div className="text-text-secondary text-sm mb-1">Volatility</div>
-                      <div className={cn("text-xl font-bold", getStatusColor(0))}>
-                        {currentPeriodData.volatility}%
-                      </div>
-                    </div>
-
-                    <div className={cn(
-                      "text-center p-4 rounded-xl border transition-all duration-200 hover:-translate-y-1",
-                      getStatusClasses(currentPeriodData.maxDrawdown)
-                    )}>
-                      <div className="text-text-secondary text-sm mb-1">Max Drawdown</div>
-                      <div className={cn("text-xl font-bold", getStatusColor(currentPeriodData.maxDrawdown))}>
-                        {currentPeriodData.maxDrawdown}%
-                      </div>
-                    </div>
-
-                    <div className={cn(
-                      "text-center p-4 rounded-xl border transition-all duration-200 hover:-translate-y-1",
-                      getStatusClasses(currentPeriodData.alpha)
-                    )}>
-                      <div className="text-text-secondary text-sm mb-1">Alpha</div>
-                      <div className={cn("text-xl font-bold", getStatusColor(currentPeriodData.alpha))}>
-                        {currentPeriodData.alpha}
-                      </div>
-                    </div>
-
-                    <div className={cn(
-                      "text-center p-4 rounded-xl border transition-all duration-200 hover:-translate-y-1",
-                      getStatusClasses(currentPeriodData.beta - 1) // beta близко к 1 = нейтрально
-                    )}>
-                      <div className="text-text-secondary text-sm mb-1">Beta</div>
-                      <div className={cn("text-xl font-bold", getStatusColor(currentPeriodData.beta - 1))}>
-                        {currentPeriodData.beta}
-                      </div>
-                    </div>
-
-                    <div className={cn(
-                      "text-center p-4 rounded-xl border transition-all duration-200 hover:-translate-y-1",
-                      getStatusClasses(0) // нейтральный
-                    )}>
-                      <div className="text-text-secondary text-sm mb-1">Total Trades</div>
-                      <div className={cn("text-xl font-bold", getStatusColor(0))}>
-                        {currentPeriodData.totalTrades}
-                      </div>
-                    </div>
-                  </div>
-                </Card>
+                  </Card>
+                )}
               </div>
             )}
 
             {selectedTab === 'trades' && (
               <div className="space-y-8">
-                {/* Trade Journal - ИСПРАВЛЕНО: улучшена видимость для светлого режима */}
+                {/* Trade Journal */}
                 <Card ocean padding="lg">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-2xl font-semibold text-text-primary">
                       Recent Closed Trades
                     </h3>
-                    <Button variant="secondary" icon={<Download className="w-4 h-4" />}>
+                    <Button
+                      variant="secondary"
+                      icon={<Download className="w-4 h-4" />}
+                      onClick={handleExportTrades}
+                    >
                       Export CSV
                     </Button>
                   </div>
 
-                  {/* Trade Stats - ИСПРАВЛЕНО: нейтральные используют обычный цвет */}
+                  {/* Trade Stats */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                    {mockTradeStats.map((stat, index) => (
+                    {tradeStats.map((stat, index) => (
                       <Card
                         key={index}
                         ocean
@@ -372,7 +455,7 @@ const PerformanceSection: React.FC = () => {
                           stat.trend === 'down' ? 'text-status-negative' : 'text-text-primary'
                         )}>
                           {stat.format === 'percentage' ?
-                            `${stat.value > 0 ? '+' : ''}${stat.value}%` :
+                            `${typeof stat.value === 'number' && stat.value > 0 ? '+' : ''}${stat.value}%` :
                             stat.value
                           }
                         </div>
@@ -380,7 +463,7 @@ const PerformanceSection: React.FC = () => {
                     ))}
                   </div>
 
-                  {/* Trades Table - ИСПРАВЛЕНО: правильная структура как на скриншоте */}
+                  {/* Trades Table */}
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
@@ -395,7 +478,7 @@ const PerformanceSection: React.FC = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {mockClosedTrades.slice(0, 8).map((trade, index) => (
+                        {closedTrades.slice(0, 15).map((trade, index) => (
                           <tr key={trade.id} className="border-b border-border hover:bg-background-secondary/30 dark:hover:bg-background-secondary/30 transition-colors duration-200">
                             <td className="py-3 px-4 text-text-secondary text-sm">{trade.closedAt}</td>
                             <td className="py-3 px-4 font-medium text-text-primary">{trade.symbol}</td>
@@ -419,13 +502,13 @@ const PerformanceSection: React.FC = () => {
                               "py-3 px-4 font-medium text-right",
                               trade.pnl >= 0 ? 'text-status-positive' : 'text-status-negative'
                             )}>
-                              {trade.pnl >= 0 ? '+' : ''}${trade.pnl.toLocaleString()}
+                              {trade.pnl >= 0 ? '+' : ''}${Math.abs(trade.pnl).toFixed(2)}
                             </td>
                             <td className={cn(
                               "py-3 px-4 font-medium text-right",
                               trade.return >= 0 ? 'text-status-positive' : 'text-status-negative'
                             )}>
-                              {trade.return >= 0 ? '+' : ''}{trade.return}%
+                              {trade.return >= 0 ? '+' : ''}{trade.return.toFixed(1)}%
                             </td>
                           </tr>
                         ))}

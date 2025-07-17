@@ -146,3 +146,6 @@ export type {
   CalculatedMetrics as Metrics,
   BenchmarkDataPoint as BenchmarkPoint
 };
+
+
+export { KPIData } from './index';

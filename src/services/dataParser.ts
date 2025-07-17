@@ -5,144 +5,145 @@ import {
   ProcessedTradeRecord,
   ParsedDataResult,
   ValidationError,
-  ValidationSchema
 } from '@/types/realData';
-import { generateUUID } from '@/utils/helpers';
 
 export class DataParser {
-  private static validationSchema: ValidationSchema = {
-    requiredFields: [
-      'Ticker',
-      'Position',
-      'Entry Date',
-      'Avg. Price',
-      'Exit Date',
-      'Exit Price',
-      'PnL %',
-      'Portfolio Exposure'
-    ],
-    fieldValidators: {
-      'Ticker': (value) => {
-        if (!value || typeof value !== 'string') {
-          return { row: 0, field: 'Ticker', value, error: 'Ticker must be a non-empty string' };
-        }
-        if (value.length > 10) {
-          return { row: 0, field: 'Ticker', value, error: 'Ticker must be 10 characters or less' };
-        }
-        return null;
-      },
-      'Position': (value) => {
-        if (!value || !['LONG', 'SHORT'].includes(value.toString().toUpperCase())) {
-          return { row: 0, field: 'Position', value, error: 'Position must be LONG or SHORT' };
-        }
-        return null;
-      },
-      'Portfolio Exposure': (value) => {
-        const numValue = DataParser.parsePercentage(value);
-        if (numValue === null || numValue < 0 || numValue > 100) {
-          return { row: 0, field: 'Portfolio Exposure', value, error: 'Portfolio Exposure must be between 0% and 100%' };
-        }
-        return null;
-      }
-    }
-  };
+  private static readonly REQUIRED_FIELDS: (keyof RawTradeRecord)[] = [
+    'Ticker',
+    'Position',
+    'Entry Date',
+    'Avg. Price',
+    'Exit Date',
+    'Exit Price',
+    'PnL %',
+    'Portfolio Exposure'
+  ];
 
   /**
-   * Parse Excel file and extract trading data
+   * Main method to load trading data from Excel file
    */
-  static async parseExcelFile(filePath: string): Promise<ParsedDataResult> {
+  static async loadTradingData(filePath: string = '/data/trading-data.xlsx'): Promise<ParsedDataResult> {
     try {
-      // Read Excel file
-      const response = await window.fs.readFile(filePath);
-      const workbook = XLSX.read(response, {
+      console.log(`Loading trading data from: ${filePath}`);
+
+      // Use fetch API for files in public directory
+      const response = await fetch(filePath);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch file: ${response.status} ${response.statusText}`);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      console.log(`File loaded successfully, size: ${arrayBuffer.byteLength} bytes`);
+
+      // Parse Excel file
+      const workbook = XLSX.read(arrayBuffer, {
+        cellStyles: true,
+        cellFormulas: true,
         cellDates: true,
-        cellNF: false,
-        cellText: false
+        cellNF: true,
+        sheetStubs: true
       });
 
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
+      if (workbook.SheetNames.length === 0) {
+        throw new Error('No sheets found in Excel file');
+      }
 
-      // Convert to JSON
-      const rawData: RawTradeRecord[] = XLSX.utils.sheet_to_json(worksheet, {
-        defval: '',
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+
+      console.log(`Processing sheet: ${firstSheetName}`);
+
+      // Convert to JSON with headers
+      const rawData: any[] = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1,
+        defval: null,
         blankrows: false
       });
 
-      return this.processRawData(rawData);
+      if (rawData.length < 2) {
+        throw new Error('Excel file must contain at least a header row and one data row');
+      }
+
+      // Extract headers and data
+      const headers = rawData[0] as string[];
+      const dataRows = rawData.slice(1);
+
+      console.log(`Found ${headers.length} columns and ${dataRows.length} data rows`);
+      console.log('Headers:', headers);
+
+      // Convert to objects
+      const rawRecords: RawTradeRecord[] = dataRows.map((row: any[], index: number) => {
+        const record: any = {};
+        headers.forEach((header: string, colIndex: number) => {
+          record[header] = row[colIndex];
+        });
+        return record;
+      });
+
+      // Validate and process data
+      return this.validateAndProcessData(rawRecords);
 
     } catch (error) {
-      console.error('Error parsing Excel file:', error);
-      return {
-        success: false,
-        data: [],
-        errors: [{
-          row: 0,
-          field: 'file',
-          value: filePath,
-          error: `Failed to parse Excel file: ${error instanceof Error ? error.message : 'Unknown error'}`
-        }],
-        summary: {
-          totalRows: 0,
-          validRows: 0,
-          invalidRows: 0,
-          duplicateRows: 0
-        },
-        rawData: []
-      };
+      console.error('Error loading trading data:', error);
+      throw new Error(`Failed to load trading data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Process raw data from Excel/CSV
+   * Alias for loadTradingData for backward compatibility
    */
-  static processRawData(rawData: RawTradeRecord[]): ParsedDataResult {
+  static async loadData(filePath: string = '/data/trading-data.xlsx'): Promise<ParsedDataResult> {
+    return this.loadTradingData(filePath);
+  }
+
+  private static validateAndProcessData(rawData: RawTradeRecord[]): ParsedDataResult {
     const errors: ValidationError[] = [];
     const processedData: ProcessedTradeRecord[] = [];
-    const duplicateChecker = new Set<string>();
-    let duplicateRows = 0;
+    const seenTrades = new Set<string>();
+    let duplicateCount = 0;
 
-    rawData.forEach((row, index) => {
+    rawData.forEach((raw, index) => {
+      const rowNumber = index + 2; // +2 because Excel is 1-indexed and we skip header
+
       try {
         // Validate required fields
-        const rowErrors = this.validateRow(row, index + 2); // +2 because Excel starts from 1 and has header
-        if (rowErrors.length > 0) {
-          errors.push(...rowErrors);
+        const validation = this.validateRecord(raw, rowNumber);
+        if (validation.length > 0) {
+          errors.push(...validation);
           return;
         }
 
-        // Check for duplicates (same ticker, entry date, exit date)
-        const duplicateKey = `${row.Ticker}-${row['Entry Date']}-${row['Exit Date']}`;
-        if (duplicateChecker.has(duplicateKey)) {
-          duplicateRows++;
+        // Process the record
+        const processed = this.processRecord(raw, rowNumber);
+
+        // Check for duplicates
+        const tradeKey = `${processed.ticker}-${processed.entryDate.getTime()}-${processed.exitDate.getTime()}`;
+        if (seenTrades.has(tradeKey)) {
+          duplicateCount++;
           errors.push({
-            row: index + 2,
+            row: rowNumber,
             field: 'duplicate',
-            value: duplicateKey,
-            error: 'Duplicate trade record'
+            value: tradeKey,
+            error: 'Duplicate trade detected'
           });
           return;
         }
-        duplicateChecker.add(duplicateKey);
 
-        // Process the row
-        const processedRow = this.processTradeRecord(row, index + 2);
-        if (processedRow) {
-          processedData.push(processedRow);
-        }
+        seenTrades.add(tradeKey);
+        processedData.push(processed);
 
       } catch (error) {
         errors.push({
-          row: index + 2,
+          row: rowNumber,
           field: 'processing',
-          value: row,
-          error: `Error processing row: ${error instanceof Error ? error.message : 'Unknown error'}`
+          value: raw,
+          error: error instanceof Error ? error.message : 'Processing failed'
         });
       }
     });
 
-    // Sort by exit date
-    processedData.sort((a, b) => a.exitDate.getTime() - b.exitDate.getTime());
+    console.log(`Processed ${processedData.length} valid trades, ${errors.length} errors`);
 
     return {
       success: errors.length === 0,
@@ -152,214 +153,164 @@ export class DataParser {
         totalRows: rawData.length,
         validRows: processedData.length,
         invalidRows: errors.length,
-        duplicateRows
+        duplicateRows: duplicateCount
       },
       rawData
     };
   }
 
-  /**
-   * Validate a single row of data
-   */
-  private static validateRow(row: RawTradeRecord, rowNumber: number): ValidationError[] {
+  private static validateRecord(record: RawTradeRecord, rowNumber: number): ValidationError[] {
     const errors: ValidationError[] = [];
 
     // Check required fields
-    this.validationSchema.requiredFields.forEach(field => {
-      const value = row[field];
-      if (value === null || value === undefined || value === '') {
+    this.REQUIRED_FIELDS.forEach(field => {
+      if (!record[field] || record[field] === null || record[field] === '') {
         errors.push({
           row: rowNumber,
           field,
-          value,
-          error: `${field} is required`
+          value: record[field],
+          error: `Required field '${field}' is missing or empty`
         });
       }
     });
-
-    // Run field validators
-    Object.entries(this.validationSchema.fieldValidators).forEach(([field, validator]) => {
-      const value = row[field as keyof RawTradeRecord];
-      const error = validator(value);
-      if (error) {
-        errors.push({
-          ...error,
-          row: rowNumber
-        });
-      }
-    });
-
-    // Validate dates
-    const entryDate = this.parseDate(row['Entry Date']);
-    const exitDate = this.parseDate(row['Exit Date']);
-
-    if (!entryDate) {
-      errors.push({
-        row: rowNumber,
-        field: 'Entry Date',
-        value: row['Entry Date'],
-        error: 'Invalid entry date format'
-      });
-    }
-
-    if (!exitDate) {
-      errors.push({
-        row: rowNumber,
-        field: 'Exit Date',
-        value: row['Exit Date'],
-        error: 'Invalid exit date format'
-      });
-    }
-
-    if (entryDate && exitDate && exitDate <= entryDate) {
-      errors.push({
-        row: rowNumber,
-        field: 'Exit Date',
-        value: row['Exit Date'],
-        error: 'Exit date must be after entry date'
-      });
-    }
-
-    // Validate prices
-    const avgPrice = this.parsePrice(row['Avg. Price']);
-    const exitPrice = this.parsePrice(row['Exit Price']);
-
-    if (avgPrice === null || avgPrice <= 0) {
-      errors.push({
-        row: rowNumber,
-        field: 'Avg. Price',
-        value: row['Avg. Price'],
-        error: 'Average price must be a positive number'
-      });
-    }
-
-    if (exitPrice === null || exitPrice <= 0) {
-      errors.push({
-        row: rowNumber,
-        field: 'Exit Price',
-        value: row['Exit Price'],
-        error: 'Exit price must be a positive number'
-      });
-    }
 
     return errors;
   }
 
-  /**
-   * Process a single trade record
-   */
-  private static processTradeRecord(row: RawTradeRecord, rowNumber: number): ProcessedTradeRecord | null {
-    try {
-      const entryDate = this.parseDate(row['Entry Date'])!;
-      const exitDate = this.parseDate(row['Exit Date'])!;
-      const avgPrice = this.parsePrice(row['Avg. Price'])!;
-      const exitPrice = this.parsePrice(row['Exit Price'])!;
-      const pnlPercent = this.parsePercentage(row['PnL %'])!;
-      const portfolioExposure = this.parsePercentage(row['Portfolio Exposure'])!;
-      const positionHigh = this.parsePrice(row['Position High']) || exitPrice;
-      const positionLow = this.parsePrice(row['Position Low']) || avgPrice;
-      const drawdown = this.parsePercentage(row['Drawdown']) || 0;
-      const runUp = this.parsePercentage(row['Run Up']) || 0;
+  private static processRecord(raw: RawTradeRecord, rowNumber: number): ProcessedTradeRecord {
+    // Parse dates
+    const entryDate = this.parseDate(raw['Entry Date'], `Entry Date at row ${rowNumber}`);
+    const exitDate = this.parseDate(raw['Exit Date'], `Exit Date at row ${rowNumber}`);
 
-      const holdingDays = Math.ceil((exitDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
-      const absolutePnL = (exitPrice - avgPrice) / avgPrice * 100;
-      const portfolioImpact = (pnlPercent * portfolioExposure) / 100;
-
-      return {
-        id: generateUUID(),
-        ticker: row.Ticker.toString().toUpperCase().trim(),
-        position: row.Position.toString().toUpperCase() as 'LONG' | 'SHORT',
-        entryDate,
-        avgPrice,
-        exitDate,
-        exitPrice,
-        pnlPercent,
-        portfolioExposure,
-        source: row.Source?.toString() || 'Unknown',
-        positionHigh,
-        positionLow,
-        drawdown,
-        runUp,
-        holdingDays,
-        absolutePnL,
-        portfolioImpact
-      };
-
-    } catch (error) {
-      console.error(`Error processing row ${rowNumber}:`, error);
-      return null;
+    // Debug logging for problematic rows
+    if ([20, 31, 32, 34, 44, 65, 101, 102, 103].includes(rowNumber)) {
+      console.log(`Row ${rowNumber} - ${raw.Ticker}: Entry=${entryDate.toISOString().split('T')[0]}, Exit=${exitDate.toISOString().split('T')[0]}`);
     }
+
+    // Validate date order (allow same-day trades)
+    if (entryDate > exitDate) {
+      throw new Error(`Entry date (${entryDate.toISOString().split('T')[0]}) must be before or equal to exit date (${exitDate.toISOString().split('T')[0]}) at row ${rowNumber}`);
+    }
+
+    // Parse numeric values
+    const avgPrice = this.parsePrice(raw['Avg. Price'], `Avg. Price at row ${rowNumber}`);
+    const exitPrice = this.parsePrice(raw['Exit Price'], `Exit Price at row ${rowNumber}`);
+    const pnlPercent = this.parsePercentage(raw['PnL %'], `PnL % at row ${rowNumber}`);
+    const portfolioExposure = this.parsePercentage(raw['Portfolio Exposure'], `Portfolio Exposure at row ${rowNumber}`);
+
+    // Parse optional fields with defaults
+    const positionHigh = raw['Position High'] ? this.parsePrice(raw['Position High'], `Position High at row ${rowNumber}`) : exitPrice;
+    const positionLow = raw['Position Low'] ? this.parsePrice(raw['Position Low'], `Position Low at row ${rowNumber}`) : avgPrice;
+    const drawdown = raw['Drawdown'] ? this.parsePercentage(raw['Drawdown'], `Drawdown at row ${rowNumber}`) : 0;
+    const runUp = raw['Run Up'] ? this.parsePercentage(raw['Run Up'], `Run Up at row ${rowNumber}`) : pnlPercent;
+
+    // Calculate derived fields
+    const holdingDays = Math.floor((exitDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
+    const absolutePnL = (exitPrice - avgPrice) * (portfolioExposure / 100) * 100; // Simplified calculation
+    const portfolioImpact = (pnlPercent * portfolioExposure) / 100;
+
+    return {
+      id: `${raw.Ticker}-${entryDate.getTime()}`,
+      ticker: String(raw.Ticker).toUpperCase(),
+      position: this.parsePosition(raw.Position, `Position at row ${rowNumber}`),
+      entryDate,
+      avgPrice,
+      exitDate,
+      exitPrice,
+      pnlPercent,
+      portfolioExposure,
+      source: String(raw.Source || 'Unknown'),
+      positionHigh,
+      positionLow,
+      drawdown,
+      runUp,
+      holdingDays,
+      absolutePnL,
+      portfolioImpact
+    };
   }
 
-  /**
-   * Parse date from various formats
-   */
-  private static parseDate(value: any): Date | null {
-    if (!value) return null;
-
-    // If already a Date object
-    if (value instanceof Date) {
-      return isNaN(value.getTime()) ? null : value;
+  private static parseDate(value: any, context: string): Date {
+    if (!value) {
+      throw new Error(`Invalid date value for ${context}`);
     }
 
-    // If string, try to parse
+    // Handle Excel date objects
+    if (value instanceof Date) {
+      return value;
+    }
+
+    // Handle Excel date numbers (правильная формула)
+    if (typeof value === 'number') {
+      // Excel date number to JS Date - правильная формула
+      const jsDate = new Date((value - 25569) * 86400 * 1000);
+      if (isNaN(jsDate.getTime())) {
+        throw new Error(`Invalid Excel date number "${value}" for ${context}`);
+      }
+      return jsDate;
+    }
+
+    // Handle string dates
     if (typeof value === 'string') {
-      // Handle Excel date serial numbers
-      if (/^\d+(\.\d+)?$/.test(value)) {
-        const excelDate = new Date((parseInt(value) - 25569) * 86400 * 1000);
-        return isNaN(excelDate.getTime()) ? null : excelDate;
+      const parsed = new Date(value);
+      if (isNaN(parsed.getTime())) {
+        throw new Error(`Cannot parse date "${value}" for ${context}`);
+      }
+      return parsed;
+    }
+
+    throw new Error(`Unsupported date format for ${context}: ${typeof value}`);
+  }
+
+  private static parsePrice(value: any, context: string): number {
+    if (typeof value === 'number') {
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      // Remove currency symbols and parse
+      const cleaned = value.replace(/[$,\s]/g, '');
+      const parsed = parseFloat(cleaned);
+
+      if (isNaN(parsed)) {
+        throw new Error(`Cannot parse price "${value}" for ${context}`);
       }
 
-      // Standard date parsing
-      const parsed = new Date(value);
-      return isNaN(parsed.getTime()) ? null : parsed;
+      return parsed;
     }
 
-    // If number (Excel serial date)
+    throw new Error(`Invalid price format for ${context}: ${typeof value}`);
+  }
+
+  private static parsePercentage(value: any, context: string): number {
     if (typeof value === 'number') {
-      const excelDate = new Date((value - 25569) * 86400 * 1000);
-      return isNaN(excelDate.getTime()) ? null : excelDate;
+      return value;
     }
 
-    return null;
+    if (typeof value === 'string') {
+      // Remove % symbol and parse
+      const cleaned = value.replace(/%/g, '');
+      const parsed = parseFloat(cleaned);
+
+      if (isNaN(parsed)) {
+        throw new Error(`Cannot parse percentage "${value}" for ${context}`);
+      }
+
+      return parsed;
+    }
+
+    throw new Error(`Invalid percentage format for ${context}: ${typeof value}`);
   }
 
-  /**
-   * Parse price from string (remove $ and commas)
-   */
-  private static parsePrice(value: any): number | null {
-    if (typeof value === 'number') return value;
-    if (!value) return null;
+  private static parsePosition(value: any, context: string): 'LONG' | 'SHORT' {
+    const position = String(value).toUpperCase().trim();
 
-    const stringValue = value.toString().replace(/[$,\s]/g, '');
-    const parsed = parseFloat(stringValue);
-    return isNaN(parsed) ? null : parsed;
-  }
+    if (position === 'LONG' || position === 'SHORT') {
+      return position;
+    }
 
-  /**
-   * Parse percentage from string (remove % and convert to number)
-   */
-  private static parsePercentage(value: any): number | null {
-    if (typeof value === 'number') return value;
-    if (!value) return null;
-
-    const stringValue = value.toString().replace(/[%\s]/g, '');
-    const parsed = parseFloat(stringValue);
-    return isNaN(parsed) ? null : parsed;
-  }
-
-  /**
-   * Get data file path
-   */
-  static getDataFilePath(): string {
-    return '/data/trading-data.xlsx';
-  }
-
-  /**
-   * Load and parse data file
-   */
-  static async loadData(): Promise<ParsedDataResult> {
-    const filePath = this.getDataFilePath();
-    return this.parseExcelFile(filePath);
+    throw new Error(`Invalid position "${value}" for ${context}. Must be LONG or SHORT`);
   }
 }
+
+export default DataParser;
