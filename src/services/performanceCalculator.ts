@@ -180,21 +180,20 @@ export class PerformanceCalculator {
     if (returns.length === 0) return 0;
 
     let maxDrawdown = 0;
-    let peak = returns[0].portfolioValue;
     let runningMax = returns[0].portfolioValue;
 
     returns.forEach(point => {
-      // Обновляем running maximum
+      // Update running maximum
       runningMax = Math.max(runningMax, point.portfolioValue);
 
-      // Рассчитываем текущую просадку от максимума
+      // Calculate current drawdown from running max
       const currentDrawdown = ((runningMax - point.portfolioValue) / runningMax) * 100;
 
-      // Обновляем максимальную просадку
+      // Update maximum drawdown
       maxDrawdown = Math.max(maxDrawdown, currentDrawdown);
     });
 
-    return -maxDrawdown; // Возвращаем как отрицательное значение
+    return -maxDrawdown; // Return as negative value
   }
 
   /**
