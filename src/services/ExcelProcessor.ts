@@ -287,6 +287,67 @@ export class ExcelProcessor {
     return syncedBenchmark;
   }
 
+
+  /**
+
+   */
+  static resyncBenchmarkAfterFiltering(
+    benchmarkPoints: BenchmarkPoint[],
+    filteredTrades: TradeRecord[]
+  ): BenchmarkPoint[] {
+    if (filteredTrades.length === 0 || benchmarkPoints.length === 0) {
+      console.warn('⚠️ No filtered trades or benchmark data for resync');
+      return benchmarkPoints;
+    }
+
+    console.log(`🔄 Resyncing benchmark for ${filteredTrades.length} filtered trades`);
+
+    // Найти дату первого ОТФИЛЬТРОВАННОГО трейда
+    const sortedFilteredTrades = [...filteredTrades].sort((a, b) => a.entryDate.getTime() - b.entryDate.getTime());
+    const firstFilteredTradeDate = sortedFilteredTrades[0].entryDate;
+
+    console.log(`📅 First filtered trade date: ${firstFilteredTradeDate.toISOString().split('T')[0]}`);
+
+    // Найти ближайшую точку бенчмарка к дате первого отфильтрованного трейда
+    let basePoint: BenchmarkPoint | null = null;
+    let minDiff = Infinity;
+
+    for (const point of benchmarkPoints) {
+      const diff = Math.abs(point.date.getTime() - firstFilteredTradeDate.getTime());
+      if (diff < minDiff) {
+        minDiff = diff;
+        basePoint = point;
+      }
+    }
+
+    if (!basePoint) {
+      console.warn('⚠️ Could not find benchmark base point for filtered period');
+      return benchmarkPoints;
+    }
+
+    const newStartValue = basePoint.value;
+    console.log(`📌 New benchmark base for filtered period: ${basePoint.date.toISOString().split('T')[0]} = ${newStartValue}`);
+
+    // Пересчитать все cumulativeReturn от новой базовой точки
+    const resyncedBenchmark = benchmarkPoints.map(point => {
+      const newCumulativeReturn = ((point.value - newStartValue) / newStartValue) * 100;
+
+      return {
+        ...point,
+        cumulativeReturn: newCumulativeReturn
+      };
+    });
+
+    // Логирование результата
+    const relevantPoints = resyncedBenchmark.filter(p => p.date >= firstFilteredTradeDate);
+    if (relevantPoints.length > 0) {
+      const lastRelevant = relevantPoints[relevantPoints.length - 1];
+      console.log(`✅ Resynced benchmark: 0% → ${lastRelevant.cumulativeReturn.toFixed(2)}%`);
+    }
+
+    return resyncedBenchmark;
+  }
+
   private static parseTradeRow(row: any[], headerMap: Record<string, number>, rowNum: number): TradeRecord | null {
     const required = ['ticker', 'position', 'entryDate', 'exitDate', 'pnlPercent'];
     for (const field of required) {

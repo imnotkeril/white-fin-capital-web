@@ -302,6 +302,12 @@ const PerformanceSection: React.FC = () => {
       const filteredTrades = filterTradesByPeriod(trades, selectedPeriod);
       const filteredBenchmark = filterBenchmarkByPeriod(benchmark, selectedPeriod);
 
+      // ✅ ПОВТОРНАЯ СИНХРОНИЗАЦИЯ после фильтрации
+      const resyncedBenchmark = ExcelProcessor.resyncBenchmarkAfterFiltering(
+        filteredBenchmark,
+        filteredTrades
+      );
+
       if (filteredTrades.length === 0) {
         console.warn(`No trades found for period: ${selectedPeriod}`);
         setPeriodData(null);
@@ -321,10 +327,10 @@ const PerformanceSection: React.FC = () => {
       let alpha = 0;
       let beta = 1;
 
-      if (filteredBenchmark.length > 0) {
+      if (resyncedBenchmark.length > 0) {
         const benchmarkMetrics = PerformanceCalculator.calculateBenchmarkMetrics(
           periodTimeSeries,
-          filteredBenchmark
+          resyncedBenchmark  // ← используем resyncedBenchmark
         );
         alpha = benchmarkMetrics.alpha;
         beta = benchmarkMetrics.beta;
