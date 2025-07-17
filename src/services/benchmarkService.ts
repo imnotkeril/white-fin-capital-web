@@ -42,21 +42,20 @@ export class BenchmarkService {
   }
 
   /**
-   * Read Excel file from file system
+   * Read Excel file from public directory
    */
   private static async readExcelFile(): Promise<ArrayBuffer> {
-    const filePath = 'SP500.xlsx'; // Файл доступен через window.fs
+    const filePath = '/data/SP500.xlsx'; // Файл в папке public/data/
 
     try {
-      // Используем window.fs.readFile для чтения файла
-      const uint8Array = await (window as any).fs.readFile(filePath);
+      // Используем обычный fetch для браузера
+      const response = await fetch(filePath);
 
-      // Конвертируем Uint8Array в ArrayBuffer
-      const arrayBuffer = uint8Array.buffer.slice(
-        uint8Array.byteOffset,
-        uint8Array.byteOffset + uint8Array.byteLength
-      );
+      if (!response.ok) {
+        throw new Error(`Failed to fetch Excel file: ${response.status} ${response.statusText}`);
+      }
 
+      const arrayBuffer = await response.arrayBuffer();
       console.log(`Excel file loaded successfully, size: ${arrayBuffer.byteLength} bytes`);
       return arrayBuffer;
 
@@ -362,10 +361,22 @@ export class BenchmarkService {
   }>> {
     const benchmarkData = await this.getSP500Data(startDate, endDate);
 
-    return benchmarkData.map(point => ({
-      date: point.dateString,
-      value: Math.round(point.cumulativeReturn * 10) / 10
-    }));
+    if (benchmarkData.length === 0) {
+      return [];
+    }
+
+    // Пересчитываем данные относительно первой точки (для графика)
+    const firstValue = benchmarkData[0].value;
+
+    return benchmarkData.map(point => {
+      // Считаем рост от первой точки графика, а не от начала года
+      const periodReturn = ((point.value - firstValue) / firstValue) * 100;
+
+      return {
+        date: point.dateString,
+        value: Math.round(periodReturn * 10) / 10
+      };
+    });
   }
 
   /**

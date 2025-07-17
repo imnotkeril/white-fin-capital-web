@@ -184,21 +184,33 @@ export class RealStatistics {
   }
 
   /**
-   * Get benchmark chart data
-   */
-  static async getBenchmarkChartData(): Promise<Array<{
-    date: string;
-    value: number;
-    label?: string;
-  }>> {
-    const { benchmarkData } = await this.loadData();
+     * Get benchmark chart data
+     */
+    static async getBenchmarkChartData(): Promise<Array<{
+      date: string;
+      value: number;
+      label?: string;
+    }>> {
+      const { benchmarkData } = await this.loadData();
 
-    return benchmarkData.map(point => ({
-      date: point.dateString,
-      value: Math.round(point.cumulativeReturn * 10) / 10, // Округление
-      label: `S&P 500: ${(Math.round(point.cumulativeReturn * 10) / 10).toFixed(1)}%`
-    }));
-  }
+      if (benchmarkData.length === 0) {
+        return [];
+      }
+
+      // Пересчитываем данные относительно первой точки для графика
+      const firstValue = benchmarkData[0].value;
+
+      return benchmarkData.map(point => {
+        // Считаем рост от первой точки графика, а не от начала года
+        const periodReturn = ((point.value - firstValue) / firstValue) * 100;
+
+        return {
+          date: point.dateString,
+          value: Math.round(periodReturn * 10) / 10,
+          label: `S&P 500: ${Math.round(periodReturn * 10) / 10}%`
+        };
+      });
+    }
 
   /**
    * Get closed trades for trade journal - ИСПРАВЛЕНО: P&L от $1M
