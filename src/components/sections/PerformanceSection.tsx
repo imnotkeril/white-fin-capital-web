@@ -106,8 +106,20 @@ const PerformanceSection: React.FC = () => {
 
   const loadPeriodData = async () => {
     try {
+      // Load period statistics
       const periodStats = await RealStatistics.getPeriodStatistics(selectedPeriod);
       setPeriodData(periodStats);
+
+      // Load period-specific chart data
+      const [perfData, benchData] = await Promise.all([
+        RealStatistics.getPerformanceChartData(),
+        RealStatistics.getBenchmarkChartData()
+      ]);
+
+      // Filter data by selected period - НЕ ФИЛЬТРУЕМ ТУТ, фильтрация в PerformanceChart
+      setPerformanceData(perfData);
+      setBenchmarkData(benchData);
+
     } catch (err) {
       console.error('Error loading period data:', err);
     }
@@ -338,6 +350,8 @@ const PerformanceSection: React.FC = () => {
                   benchmarkData={benchmarkData}
                   chartType="area"
                   title="Portfolio Performance vs S&P 500"
+                  selectedPeriod={selectedPeriod}
+                  onPeriodChange={setSelectedPeriod}
                 />
 
                 {/* Period Statistics - ИСПРАВЛЕНО: правильное форматирование */}

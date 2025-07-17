@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   LineChart,
   Line,
@@ -34,6 +34,8 @@ interface PerformanceChartProps {
   benchmarkData?: ChartDataPoint[];
   title?: string;
   showBenchmark?: boolean;
+  selectedPeriod?: '1m' | '3m' | '6m' | '1y' | '2y' | 'all';
+  onPeriodChange?: (period: '1m' | '3m' | '6m' | '1y' | '2y' | 'all') => void;
 }
 
 type CombinedChartDataPoint = ChartDataPoint & { portfolio: number; 'S&P 500'?: number };
@@ -44,21 +46,69 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
   height = 400,
   showGrid = true,
   showLegend = true,
-  showPeriodSelector = false, // По умолчанию отключен
+  showPeriodSelector = false,
   chartType = 'area',
   benchmarkData = [],
   title = 'Portfolio Performance',
   showBenchmark = false,
+  selectedPeriod = '1y',
+  onPeriodChange,
 }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState<'ytd' | '1y' | '2y' | 'all'>('ytd');
   const { actualTheme } = useTheme();
 
   const periods = [
-    { key: 'ytd', label: 'YTD' },
+    { key: '1m', label: '1M' },
+    { key: '3m', label: '3M' },
+    { key: '6m', label: '6M' },
     { key: '1y', label: '1Y' },
     { key: '2y', label: '2Y' },
     { key: 'all', label: 'All' },
   ] as const;
+
+  // Filter data based on selected period and recalculate returns relative to period start
+  const filterDataByPeriod = (data: ChartDataPoint[], period: '1m' | '3m' | '6m' | '1y' | '2y' | 'all') => {
+    if (period === 'all') return data;
+
+    const now = new Date();
+    let startDate: Date;
+
+    switch (period) {
+      case '1m':
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case '3m':
+        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        break;
+      case '6m':
+        startDate = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+        break;
+      case '1y':
+        startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+        break;
+      case '2y':
+        startDate = new Date(now.getTime() - 730 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        return data;
+    }
+
+    // Filter data by date
+    const filteredData = data.filter(point => new Date(point.date) >= startDate);
+
+    if (filteredData.length === 0) return [];
+
+    // Recalculate returns relative to the start of the period
+    const baseValue = filteredData[0].value;
+
+    return filteredData.map(point => ({
+      ...point,
+      value: point.value - baseValue // Calculate return relative to period start
+    }));
+  };
+
+  // Apply period filtering
+  const filteredData = filterDataByPeriod(data, selectedPeriod);
+  const filteredBenchmarkData = benchmarkData ? filterDataByPeriod(benchmarkData, selectedPeriod) : [];
 
   // ИСПРАВЛЕНО: адаптивные цвета для UI элементов, цвета данных - из дизайн-системы
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -136,20 +186,19 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
     'S&P 500'?: number;
   };
 
-  const chartData: CombinedChartDataPoint[] = data.map((point, index) => {
+  const chartData: CombinedChartDataPoint[] = filteredData.map((point, index) => {
     const combinedPoint: CombinedChartDataPoint = {
       ...point,
       date: point.date,
       portfolio: point.value,
     };
 
-    if (showBenchmark && benchmarkData && benchmarkData[index]) {
-      combinedPoint['S&P 500'] = benchmarkData[index].value;
+    if (showBenchmark && filteredBenchmarkData && filteredBenchmarkData[index]) {
+      combinedPoint['S&P 500'] = filteredBenchmarkData[index].value;
     }
 
     return combinedPoint;
   });
-
 
   const Chart = chartType === 'area' ? AreaChart : LineChart;
 
@@ -199,7 +248,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   key={period.key}
                   variant={selectedPeriod === period.key ? 'primary' : 'ghost'}
                   size="sm"
-                  onClick={() => setSelectedPeriod(period.key)}
+                  onClick={() => onPeriodChange?.(period.key)}
                   className={cn(
                     'text-xs font-medium px-4 py-1',
                     selectedPeriod === period.key
@@ -363,8 +412,6 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
           </Chart>
         </ResponsiveContainer>
       </div>
-
-      {/* Performance Summary ПОЛНОСТЬЮ УДАЛЕН - статистика теперь только в PerformanceSection */}
     </div>
   );
 };

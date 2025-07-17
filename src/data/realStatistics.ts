@@ -109,35 +109,50 @@ export class RealStatistics {
   }
 
   /**
-   * Get KPI data for dashboard - ИСПРАВЛЕНО: правильные метрики + округление
+   * Get KPI data for dashboard - ИЗМЕНЕНО: Sharpe и Sortino вместо Average Gain/Loss
    */
   static async getKPIData(): Promise<KPIData[]> {
-    const { metrics } = await this.loadData();
+    const { metrics, performanceData } = await this.loadData();
+
+    // Calculate Sortino Ratio (using downside deviation)
+    const dailyReturns = performanceData.map(p => p.dailyReturn);
+    const avgDailyReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
+
+    // Calculate downside deviation (only negative returns)
+    const negativeReturns = dailyReturns.filter(r => r < 0);
+    const downsideVariance = negativeReturns.length > 0
+      ? negativeReturns.reduce((sum, ret) => sum + Math.pow(ret, 2), 0) / negativeReturns.length
+      : 0;
+    const downsideDeviation = Math.sqrt(downsideVariance) * Math.sqrt(252); // Annualized
+
+    const riskFreeRate = 5; // 5% annual
+    const annualizedReturn = avgDailyReturn * 252;
+    const sortinoRatio = downsideDeviation === 0 ? 0 : (annualizedReturn - riskFreeRate) / downsideDeviation;
 
     return [
       {
         label: 'Total Return',
-        value: Math.round(metrics.totalReturn * 10) / 10, // Округление до 1 знака
+        value: Math.round(metrics.totalReturn * 10) / 10,
         format: 'percentage' as const,
         trend: metrics.totalReturn > 0 ? 'up' as const : 'down' as const,
       },
       {
         label: 'Win Rate',
-        value: Math.round(metrics.winRate * 10) / 10, // Округление до 1 знака
+        value: Math.round(metrics.winRate * 10) / 10,
         format: 'percentage' as const,
         trend: metrics.winRate > 50 ? 'up' as const : 'down' as const,
       },
       {
-        label: 'Average Gain',
-        value: Math.round(metrics.averageGain * 10) / 10, // Округление до 1 знака
-        format: 'percentage' as const,
-        trend: metrics.averageGain > 0 ? 'up' as const : 'down' as const,
+        label: 'Sharpe Ratio',
+        value: Math.round(metrics.sharpeRatio * 100) / 100, // 2 decimal places
+        format: 'number' as const,
+        trend: metrics.sharpeRatio > 1 ? 'up' as const : metrics.sharpeRatio > 0.5 ? 'neutral' as const : 'down' as const,
       },
       {
-        label: 'Average Loss',
-        value: Math.round(metrics.averageLoss * 10) / 10, // Округление до 1 знака
-        format: 'percentage' as const,
-        trend: metrics.averageLoss > -5 ? 'up' as const : 'down' as const,
+        label: 'Sortino Ratio',
+        value: Math.round(sortinoRatio * 100) / 100, // 2 decimal places
+        format: 'number' as const,
+        trend: sortinoRatio > 1.5 ? 'up' as const : sortinoRatio > 1 ? 'neutral' as const : 'down' as const,
       }
     ];
   }
@@ -216,7 +231,7 @@ export class RealStatistics {
   }
 
   /**
-   * Get trade statistics for trade journal
+   * Get trade statistics for trade journal - ОБНОВЛЕНО: добавлены Average Gain/Loss
    */
   static async getTradeStats(): Promise<KPIData[]> {
     const { metrics } = await this.loadData();
@@ -245,6 +260,18 @@ export class RealStatistics {
         value: Math.round(metrics.winRate * 10) / 10,
         trend: metrics.winRate > 50 ? 'up' as const : 'down' as const,
         format: 'percentage' as const,
+      },
+      {
+        label: 'Average Gain',
+        value: Math.round(metrics.averageGain * 10) / 10,
+        format: 'percentage' as const,
+        trend: metrics.averageGain > 0 ? 'up' as const : 'down' as const,
+      },
+      {
+        label: 'Average Loss',
+        value: Math.round(metrics.averageLoss * 10) / 10,
+        format: 'percentage' as const,
+        trend: metrics.averageLoss > -5 ? 'up' as const : 'down' as const,
       }
     ];
   }
@@ -397,3 +424,4 @@ export class RealStatistics {
     return this.getTradeStats();
   }
 }
+
