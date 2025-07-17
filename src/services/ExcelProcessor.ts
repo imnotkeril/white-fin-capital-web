@@ -40,13 +40,17 @@ export class ExcelProcessor {
       ]);
 
       const trades = tradesResult.status === 'fulfilled' ? tradesResult.value : [];
-      const benchmark = benchmarkResult.status === 'fulfilled' ? benchmarkResult.value : [];
+      let benchmark = benchmarkResult.status === 'fulfilled' ? benchmarkResult.value : [];
 
       if (tradesResult.status === 'rejected') {
         console.error('❌ Failed to load trading data:', tradesResult.reason);
       }
       if (benchmarkResult.status === 'rejected') {
         console.warn('⚠️ Failed to load benchmark data:', benchmarkResult.reason);
+      }
+
+      if (trades.length > 0 && benchmark.length > 0) {
+        benchmark = this.syncBenchmarkToPortfolio(benchmark, trades);
       }
 
       console.log(`✅ Loaded ${trades.length} trades, ${benchmark.length} benchmark points`);
@@ -186,12 +190,56 @@ export class ExcelProcessor {
     return points.sort((a, b) => a.date.getTime() - b.date.getTime());
   }
 
-  // ============================================
-  // 🔧 ИСПРАВЛЕННЫЕ МЕТОДЫ ПАРСИНГА
-  // ============================================
+
+  private static syncBenchmarkToPortfolio(benchmarkPoints: BenchmarkPoint[], trades: TradeRecord[]): BenchmarkPoint[] {
+    if (trades.length === 0 || benchmarkPoints.length === 0) {
+      return benchmarkPoints;
+    }
+
+    // ✅ ИСПРАВЛЕНИЕ: Используем entryDate, а не exitDate
+    const sortedTrades = [...trades].sort((a, b) => a.entryDate.getTime() - b.entryDate.getTime());
+    const firstTradeDate = sortedTrades[0].entryDate;
+
+    console.log(`🔄 Syncing benchmark to portfolio start date: ${firstTradeDate.toISOString().split('T')[0]}`);
+
+    // Находим ближайшую точку бенчмарка к дате первого трейда
+    let basePoint: BenchmarkPoint | null = null;
+    let minDiff = Infinity;
+
+    for (const point of benchmarkPoints) {
+      const diff = Math.abs(point.date.getTime() - firstTradeDate.getTime());
+      if (diff < minDiff) {
+        minDiff = diff;
+        basePoint = point;
+      }
+    }
+
+    if (!basePoint) {
+      console.warn('⚠️ Could not find benchmark base point, using original data');
+      return benchmarkPoints;
+    }
+
+    const newStartValue = basePoint.value;
+    console.log(`📌 New benchmark base: ${basePoint.date.toISOString().split('T')[0]} = ${newStartValue}`);
+
+    // Пересчитываем все cumulativeReturn от новой базовой точки
+    const syncedBenchmark = benchmarkPoints.map(point => {
+      const newCumulativeReturn = ((point.value - newStartValue) / newStartValue) * 100;
+
+      return {
+        ...point,
+        cumulativeReturn: newCumulativeReturn
+      };
+    });
+
+    console.log(`✅ Benchmark synced: first point = 0%, last point = ${syncedBenchmark[syncedBenchmark.length - 1].cumulativeReturn.toFixed(2)}%`);
+
+    return syncedBenchmark;
+  }
+
 
   private static parseTradeRow(row: any[], headerMap: Record<string, number>, rowNum: number): TradeRecord | null {
-    // Проверяем наличие обязательных полей
+
     const required = ['ticker', 'position', 'entryDate', 'exitDate', 'pnlPercent'];
     for (const field of required) {
       if (!(field in headerMap) || !row[headerMap[field]]) {
@@ -202,18 +250,18 @@ export class ExcelProcessor {
     const entryDate = this.parseDate(row[headerMap.entryDate], 'entry date');
     const exitDate = this.parseDate(row[headerMap.exitDate], 'exit date');
 
-    // ✅ ИСПРАВЛЕНИЕ: PnL уже в процентах в Excel
+
     const pnlPercent = this.parseNumber(row[headerMap.pnlPercent], 'PnL %');
 
-    // ✅ ИСПРАВЛЕНИЕ: Portfolio Exposure - правильная обработка
+
     const portfolioExposure = headerMap.portfolioExposure ?
       this.parsePortfolioExposure(row[headerMap.portfolioExposure], 'exposure') : 0.1;
 
-    // Рассчитываем производные поля
+
     const holdingDays = Math.ceil((exitDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
 
-    // ✅ ИСПРАВЛЕНИЕ: portfolioImpact в процентах, не в долях
-    const portfolioImpact = (pnlPercent / 100) * portfolioExposure; // Доли для расчета
+
+    const portfolioImpact = (pnlPercent / 100) * portfolioExposure;
 
     console.log(`Trade ${rowNum}: ${pnlPercent}% * ${portfolioExposure} = ${portfolioImpact * 100}% impact`);
 
@@ -224,15 +272,15 @@ export class ExcelProcessor {
       avgPrice: headerMap.avgPrice ? this.parseNumber(row[headerMap.avgPrice], 'avg price') : 0,
       exitDate,
       exitPrice: headerMap.exitPrice ? this.parseNumber(row[headerMap.exitPrice], 'exit price') : 0,
-      pnlPercent, // Уже в процентах
-      portfolioExposure, // В долях
+      pnlPercent,
+      portfolioExposure,
       holdingDays,
-      portfolioImpact // В долях для расчета
+      portfolioImpact
     };
   }
 
   /**
-   * ✅ НОВЫЙ МЕТОД: Правильная обработка Portfolio Exposure
+
    */
   private static parsePortfolioExposure(value: any, context: string): number {
     let numericValue: number;
