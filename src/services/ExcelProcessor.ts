@@ -1,4 +1,4 @@
-// src/services/ExcelProcessor.ts - ИСПРАВЛЕН расчет процентов
+// src/services/ExcelProcessor.ts - ПОЛНОСТЬЮ ИСПРАВЛЕННЫЙ ФАЙЛ
 import * as XLSX from 'xlsx';
 
 export interface TradeRecord {
@@ -28,7 +28,7 @@ export interface LoadedData {
 
 export class ExcelProcessor {
   private static readonly TRADING_FILE = '/data/trading-data.xlsx';
-  private static readonly BENCHMARK_FILE = '/data/SP500.xlsx';
+  private static readonly BENCHMARK_FILE = '/SP500.xlsx';  // ✅ Файл в корне public/
 
   static async loadAllData(): Promise<LoadedData> {
     try {
@@ -122,92 +122,126 @@ export class ExcelProcessor {
   }
 
   private static async loadBenchmarkData(): Promise<BenchmarkPoint[]> {
-    const workbook = await this.loadExcelFile(this.BENCHMARK_FILE);
+    console.log('📊 Loading benchmark data from SP500.xlsx...');
 
-    const sheetName = workbook.SheetNames.find(name =>
-      name.toLowerCase().includes('daily') ||
-      name.toLowerCase().includes('close')
-    ) || workbook.SheetNames[0];
+    try {
+      // ✅ Используем исправленный метод загрузки
+      const workbook = await this.loadExcelFile(this.BENCHMARK_FILE);
 
-    const sheet = workbook.Sheets[sheetName];
-    if (!sheet) {
-      throw new Error(`Sheet "${sheetName}" not found`);
-    }
+      console.log(`📋 Available sheets: ${workbook.SheetNames.join(', ')}`);
 
-    console.log(`Loading benchmark from sheet: ${sheetName}`);
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
 
-    const rawData: any[] = XLSX.utils.sheet_to_json(sheet, {
-      header: 1,
-      defval: null,
-      raw: false
-    });
+      if (!sheet) {
+        throw new Error('No sheets found in benchmark file');
+      }
 
-    if (rawData.length < 2) {
-      throw new Error('Benchmark file must have headers and data');
-    }
+      console.log(`📊 Processing sheet: ${sheetName}`);
 
-    const headers = rawData[0] as string[];
-    const dataRows = rawData.slice(1);
+      const rawData: any[] = XLSX.utils.sheet_to_json(sheet, {
+        header: 1,
+        defval: null,
+        raw: false
+      });
 
-    const dateCol = this.findColumnIndex(headers, ['date', 'observation_date', 'time']);
-    const priceCol = this.findColumnIndex(headers, ['sp500', 'price', 'close', 'value']);
+      if (rawData.length < 2) {
+        throw new Error('Benchmark file must have headers and data');
+      }
 
-    if (dateCol === -1 || priceCol === -1) {
-      throw new Error('Could not find date and price columns in benchmark file');
-    }
+      const headers = rawData[0] as string[];
+      const dataRows = rawData.slice(1);
 
-    const points: BenchmarkPoint[] = [];
-    let startValue: number | null = null;
+      console.log(`📋 Headers: ${headers.join(', ')}`);
+      console.log(`📊 Data rows: ${dataRows.length}`);
 
-    for (let i = 0; i < dataRows.length; i++) {
-      try {
+      const points: BenchmarkPoint[] = [];
+      let startValue: number | null = null;
+
+      for (let i = 0; i < dataRows.length; i++) {
         const row = dataRows[i];
-        if (!row || !row[dateCol] || !row[priceCol]) continue;
 
-        const date = this.parseDate(row[dateCol], `row ${i + 2}`);
-        const value = this.parseNumber(row[priceCol], `row ${i + 2}`);
-
-        if (startValue === null) {
-          startValue = value;
+        if (!row || !row[0] || !row[1]) {
+          continue;
         }
 
-        const previousValue = points.length > 0 ? points[points.length - 1].value : startValue;
-        const change = ((value - previousValue) / previousValue) * 100;
-        const cumulativeReturn = ((value - startValue) / startValue) * 100;
+        try {
+          const dateStr = row[0].toString();
+          const value = parseFloat(row[1].toString());
 
-        points.push({
-          date,
-          value,
-          change,
-          cumulativeReturn
-        });
+          if (isNaN(value)) {
+            continue;
+          }
 
-      } catch (error) {
-        console.warn(`⚠️ Skipping invalid benchmark row ${i + 2}:`, error);
+          const date = new Date(dateStr);
+          if (isNaN(date.getTime())) {
+            continue;
+          }
+
+          if (startValue === null) {
+            startValue = value;
+          }
+
+          const previousValue = points.length > 0 ? points[points.length - 1].value : startValue;
+          const change = ((value - previousValue) / previousValue) * 100;
+          const cumulativeReturn = ((value - startValue) / startValue) * 100;
+
+          points.push({
+            date,
+            value,
+            change,
+            cumulativeReturn
+          });
+
+        } catch (error) {
+          console.warn(`⚠️ Skipping invalid benchmark row ${i + 2}:`, error);
+        }
       }
+
+      const sortedPoints = points.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+      console.log(`✅ Loaded ${sortedPoints.length} benchmark points`);
+
+      if (sortedPoints.length > 0) {
+        const first = sortedPoints[0];
+        const last = sortedPoints[sortedPoints.length - 1];
+
+        console.log(`📅 Period: ${first.date.toISOString().split('T')[0]} → ${last.date.toISOString().split('T')[0]}`);
+        console.log(`📊 Values: ${first.value} → ${last.value}`);
+        console.log(`📈 Total return: ${last.cumulativeReturn.toFixed(2)}%`);
+      }
+
+      return sortedPoints;
+
+    } catch (error) {
+      console.error('❌ Error loading benchmark data:', error);
+      return [];
     }
-
-    return points.sort((a, b) => a.date.getTime() - b.date.getTime());
   }
-
 
   private static syncBenchmarkToPortfolio(benchmarkPoints: BenchmarkPoint[], trades: TradeRecord[]): BenchmarkPoint[] {
     if (trades.length === 0 || benchmarkPoints.length === 0) {
+      console.warn('⚠️ No trades or benchmark data available for sync');
       return benchmarkPoints;
     }
 
-    // ✅ ИСПРАВЛЕНИЕ: Используем entryDate, а не exitDate
-    const sortedTrades = [...trades].sort((a, b) => a.entryDate.getTime() - b.entryDate.getTime());
-    const firstTradeDate = sortedTrades[0].entryDate;
+    console.log(`📊 Input: ${benchmarkPoints.length} benchmark points, ${trades.length} trades`);
 
-    console.log(`🔄 Syncing benchmark to portfolio start date: ${firstTradeDate.toISOString().split('T')[0]}`);
+    // Получаем диапазон дат трейдов
+    const sortedTradesByEntry = [...trades].sort((a, b) => a.entryDate.getTime() - b.entryDate.getTime());
+    const sortedTradesByExit = [...trades].sort((a, b) => a.exitDate.getTime() - b.exitDate.getTime());
 
-    // Находим ближайшую точку бенчмарка к дате первого трейда
+    const portfolioStartDate = sortedTradesByEntry[0].entryDate;
+    const portfolioEndDate = sortedTradesByExit[sortedTradesByExit.length - 1].exitDate;
+
+    console.log(`📅 Portfolio period: ${portfolioStartDate.toISOString().split('T')[0]} → ${portfolioEndDate.toISOString().split('T')[0]}`);
+
+    // Найдем ближайшую точку бенчмарка к началу периода
     let basePoint: BenchmarkPoint | null = null;
     let minDiff = Infinity;
 
     for (const point of benchmarkPoints) {
-      const diff = Math.abs(point.date.getTime() - firstTradeDate.getTime());
+      const diff = Math.abs(point.date.getTime() - portfolioStartDate.getTime());
       if (diff < minDiff) {
         minDiff = diff;
         basePoint = point;
@@ -220,9 +254,9 @@ export class ExcelProcessor {
     }
 
     const newStartValue = basePoint.value;
-    console.log(`📌 New benchmark base: ${basePoint.date.toISOString().split('T')[0]} = ${newStartValue}`);
+    console.log(`📌 Benchmark base: ${basePoint.date.toISOString().split('T')[0]} = ${newStartValue}`);
 
-    // Пересчитываем все cumulativeReturn от новой базовой точки
+    // ✅ НЕ фильтруем данные, а только пересчитываем cumulativeReturn
     const syncedBenchmark = benchmarkPoints.map(point => {
       const newCumulativeReturn = ((point.value - newStartValue) / newStartValue) * 100;
 
@@ -232,14 +266,28 @@ export class ExcelProcessor {
       };
     });
 
-    console.log(`✅ Benchmark synced: first point = 0%, last point = ${syncedBenchmark[syncedBenchmark.length - 1].cumulativeReturn.toFixed(2)}%`);
+    console.log(`✅ Benchmark synced: ${syncedBenchmark.length} points processed`);
+
+    if (syncedBenchmark.length > 0) {
+      // Найдем первую и последнюю точки в диапазоне портфеля для логирования
+      const relevantPoints = syncedBenchmark.filter(p =>
+        p.date >= portfolioStartDate && p.date <= portfolioEndDate
+      );
+
+      console.log(`📊 Points in portfolio period: ${relevantPoints.length}`);
+
+      if (relevantPoints.length > 0) {
+        const firstRelevant = relevantPoints[0];
+        const lastRelevant = relevantPoints[relevantPoints.length - 1];
+        console.log(`   First: ${firstRelevant.date.toISOString().split('T')[0]} = ${firstRelevant.cumulativeReturn.toFixed(2)}%`);
+        console.log(`   Last:  ${lastRelevant.date.toISOString().split('T')[0]} = ${lastRelevant.cumulativeReturn.toFixed(2)}%`);
+      }
+    }
 
     return syncedBenchmark;
   }
 
-
   private static parseTradeRow(row: any[], headerMap: Record<string, number>, rowNum: number): TradeRecord | null {
-
     const required = ['ticker', 'position', 'entryDate', 'exitDate', 'pnlPercent'];
     for (const field of required) {
       if (!(field in headerMap) || !row[headerMap[field]]) {
@@ -249,18 +297,11 @@ export class ExcelProcessor {
 
     const entryDate = this.parseDate(row[headerMap.entryDate], 'entry date');
     const exitDate = this.parseDate(row[headerMap.exitDate], 'exit date');
-
-
     const pnlPercent = this.parseNumber(row[headerMap.pnlPercent], 'PnL %');
-
-
     const portfolioExposure = headerMap.portfolioExposure ?
       this.parsePortfolioExposure(row[headerMap.portfolioExposure], 'exposure') : 0.1;
 
-
     const holdingDays = Math.ceil((exitDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
-
-
     const portfolioImpact = (pnlPercent / 100) * portfolioExposure;
 
     console.log(`Trade ${rowNum}: ${pnlPercent}% * ${portfolioExposure} = ${portfolioImpact * 100}% impact`);
@@ -279,9 +320,6 @@ export class ExcelProcessor {
     };
   }
 
-  /**
-
-   */
   private static parsePortfolioExposure(value: any, context: string): number {
     let numericValue: number;
 
@@ -311,26 +349,33 @@ export class ExcelProcessor {
     }
   }
 
-  // ============================================
-  // УТИЛИТНЫЕ МЕТОДЫ
-  // ============================================
+  // ✅ ПОЛНОСТЬЮ ИСПРАВЛЕННЫЙ метод загрузки через fetch
+  private static async loadExcelFile(filename: string): Promise<XLSX.WorkBook> {
+    try {
+      console.log(`📂 Loading Excel file via fetch: ${filename}`);
 
-  private static async loadExcelFile(filePath: string): Promise<XLSX.WorkBook> {
-    const response = await fetch(filePath);
+      const response = await fetch(filename);
 
-    if (!response.ok) {
-      throw new Error(`Failed to load ${filePath}: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, {
+        cellStyles: true,
+        cellFormulas: true,
+        cellDates: true,
+        cellNF: true,
+        sheetStubs: true
+      });
+
+      console.log(`✅ Successfully loaded: ${filename}`);
+      return workbook;
+
+    } catch (error) {
+      console.error(`❌ Failed to load ${filename}:`, error);
+      throw new Error(`Failed to load ${filename}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-
-    const arrayBuffer = await response.arrayBuffer();
-
-    return XLSX.read(arrayBuffer, {
-      cellStyles: true,
-      cellFormulas: true,
-      cellDates: true,
-      cellNF: true,
-      sheetStubs: true
-    });
   }
 
   private static createHeaderMap(headers: string[], mapping: Record<string, string[]>): Record<string, number> {

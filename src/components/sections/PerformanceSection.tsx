@@ -143,13 +143,29 @@ const PerformanceSection: React.FC = () => {
       }));
       setPerformanceData(perfData);
 
-      // 5. Создаем данные для графика бенчмарка
-      const benchData = benchmarkPoints.map(point => ({
-        date: point.date.toISOString().split('T')[0],
-        value: Math.round(point.cumulativeReturn * 100) / 100,
-        label: `S&P 500: ${Math.round(point.cumulativeReturn * 100) / 100}%`
-      }));
-      setBenchmarkData(benchData);
+      // 5. Создаем данные для графика бенчмарка - С ОТЛАДКОЙ
+      console.log(`📊 Creating benchmark chart data from ${benchmarkPoints.length} points`);
+
+      if (benchmarkPoints.length === 0) {
+        console.warn('⚠️ No benchmark points available!');
+        setBenchmarkData([]);
+      } else {
+        console.log('📊 Sample benchmark points:');
+        benchmarkPoints.slice(0, 3).forEach(point => {
+          console.log(`   ${point.date.toISOString().split('T')[0]}: ${point.value} (${point.cumulativeReturn.toFixed(2)}%)`);
+        });
+
+        const benchData = benchmarkPoints.map(point => ({
+          date: point.date.toISOString().split('T')[0],
+          value: Math.round(point.cumulativeReturn * 100) / 100,
+          label: `S&P 500: ${Math.round(point.cumulativeReturn * 100) / 100}%`
+        }));
+
+        console.log(`✅ Created ${benchData.length} benchmark chart points`);
+        console.log('📊 Sample chart data:', benchData.slice(0, 3));
+
+        setBenchmarkData(benchData);
+      }
 
       // 6. Создаем данные закрытых трейдов для таблицы
       const tradesForTable = trades
