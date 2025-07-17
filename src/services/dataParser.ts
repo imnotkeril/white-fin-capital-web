@@ -1,4 +1,4 @@
-// Data parser service for trading data
+// Data parser service for trading data - ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ
 import * as XLSX from 'xlsx';
 import {
   RawTradeRecord,
@@ -196,7 +196,9 @@ export class DataParser {
     const avgPrice = this.parsePrice(raw['Avg. Price'], `Avg. Price at row ${rowNumber}`);
     const exitPrice = this.parsePrice(raw['Exit Price'], `Exit Price at row ${rowNumber}`);
     const pnlPercent = this.parsePercentage(raw['PnL %'], `PnL % at row ${rowNumber}`);
-    const portfolioExposure = this.parsePercentage(raw['Portfolio Exposure'], `Portfolio Exposure at row ${rowNumber}`);
+
+    // ИСПРАВЛЕНО: Используем специальную функцию для Portfolio Exposure
+    const portfolioExposure = this.parsePortfolioExposure(raw['Portfolio Exposure'], `Portfolio Exposure at row ${rowNumber}`);
 
     // Parse optional fields with defaults
     const positionHigh = raw['Position High'] ? this.parsePrice(raw['Position High'], `Position High at row ${rowNumber}`) : exitPrice;
@@ -205,9 +207,19 @@ export class DataParser {
     const runUp = raw['Run Up'] ? this.parsePercentage(raw['Run Up'], `Run Up at row ${rowNumber}`) : pnlPercent;
 
     // Calculate derived fields
-    const holdingDays = Math.floor((exitDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
-    const absolutePnL = (exitPrice - avgPrice) * (portfolioExposure / 100) * 100;
-    const portfolioImpact = (pnlPercent * portfolioExposure) / 100;
+    const holdingDays = Math.max(1, Math.floor((exitDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24)));
+
+    // ИСПРАВЛЕНО: portfolioExposure уже в правильном формате (доли), не нужно делить на 100
+    const absolutePnL = (exitPrice - avgPrice) * portfolioExposure * 100;
+
+    // ИСПРАВЛЕНО: Правильная формула portfolioImpact = PnL% * exposure (где exposure уже в долях)
+    // Теперь exposure в долях (0.0533), поэтому НЕ делим на 100
+    const portfolioImpact = pnlPercent * portfolioExposure;
+
+    // Debug logging for portfolio impact calculation
+    if (rowNumber <= 5) {
+      console.log(`📊 Row ${rowNumber} ${raw.Ticker}: PnL=${pnlPercent}% × Exposure=${portfolioExposure} = Impact=${portfolioImpact.toFixed(4)}%`);
+    }
 
     return {
       id: `${raw.Ticker}-${entryDate.getTime()}`,
@@ -218,7 +230,7 @@ export class DataParser {
       exitDate,
       exitPrice,
       pnlPercent,
-      portfolioExposure,
+      portfolioExposure, // Теперь это доли (0.05, 0.14, etc)
       source: String(raw.Source || 'Unknown'),
       positionHigh,
       positionLow,
@@ -226,7 +238,7 @@ export class DataParser {
       runUp,
       holdingDays,
       absolutePnL,
-      portfolioImpact
+      portfolioImpact // Теперь правильно рассчитанный portfolio impact
     };
   }
 
@@ -300,6 +312,42 @@ export class DataParser {
     }
 
     throw new Error(`Invalid percentage format for ${context}: ${typeof value}`);
+  }
+
+  /**
+   * НОВАЯ ФУНКЦИЯ: Специальная обработка Portfolio Exposure
+   * Автоматически определяет формат данных и нормализует к долям (0-1)
+   */
+  private static parsePortfolioExposure(value: any, context: string): number {
+    let numericValue: number;
+
+    if (typeof value === 'number') {
+      numericValue = value;
+    } else if (typeof value === 'string') {
+      // Remove % symbol and parse
+      const cleaned = value.replace(/%/g, '');
+      numericValue = parseFloat(cleaned);
+
+      if (isNaN(numericValue)) {
+        throw new Error(`Cannot parse portfolio exposure "${value}" for ${context}`);
+      }
+    } else {
+      throw new Error(`Invalid portfolio exposure format for ${context}: ${typeof value}`);
+    }
+
+    // АВТОМАТИЧЕСКОЕ ОПРЕДЕЛЕНИЕ ФОРМАТА:
+    // Если значение > 1, считаем что это проценты и конвертируем в доли
+    // Если значение <= 1, считаем что это уже доли
+    if (numericValue > 1) {
+      // Конвертируем проценты в доли: 15.5% -> 0.155
+      const asDecimal = numericValue / 100;
+      console.log(`🔄 Converting exposure from percentage: ${numericValue}% -> ${asDecimal} (${context})`);
+      return asDecimal;
+    } else {
+      // Уже в формате долей: 0.155 -> 0.155
+      console.log(`✅ Exposure already in decimal format: ${numericValue} (${context})`);
+      return numericValue;
+    }
   }
 
   private static parsePosition(value: any, context: string): 'LONG' | 'SHORT' {

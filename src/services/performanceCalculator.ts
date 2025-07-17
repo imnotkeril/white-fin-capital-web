@@ -1,4 +1,4 @@
-// Performance calculator service for trading data - ИСПРАВЛЕНО
+// Performance calculator service for trading data - ИСПРАВЛЕНО: правильная обработка exposure
 import {
   ProcessedTradeRecord,
   CalculatedMetrics,
@@ -11,7 +11,7 @@ import {
 export class PerformanceCalculator {
 
   /**
-   * Calculate all performance metrics from trade data
+   * Calculate all performance metrics from trade data - ИСПРАВЛЕНО
    */
   static calculateMetrics(
     trades: ProcessedTradeRecord[],
@@ -26,21 +26,20 @@ export class PerformanceCalculator {
       throw new Error('No trades provided for calculation');
     }
 
-    // Validate portfolio exposures
+    // ИСПРАВЛЕНО: Правильная валидация exposure (теперь в долях)
     const totalExposure = trades.reduce((sum, trade) => sum + trade.portfolioExposure, 0);
-    if (totalExposure > 150) { // More than 150%
-      console.warn(`⚠️ High total exposure: ${totalExposure.toFixed(1)}%. Check for leverage or data errors.`);
+
+    if (totalExposure > 1.5) { // Более 150%
+      console.warn(`⚠️ High total exposure: ${(totalExposure * 100).toFixed(1)}%. Check for leverage or data errors.`);
     }
 
-    // Log sample trades for debugging
+    // Log sample trades for debugging - ИСПРАВЛЕНО формат вывода
     console.log('Sample trades for debugging:');
     trades.slice(0, 3).forEach(trade => {
-      console.log(`${trade.ticker}: PnL=${trade.pnlPercent}%, Exposure=${trade.portfolioExposure}%, Impact=${trade.portfolioImpact}%`);
+      console.log(`${trade.ticker}: PnL=${trade.pnlPercent.toFixed(2)}%, Exposure=${(trade.portfolioExposure * 100).toFixed(2)}%, Impact=${trade.portfolioImpact.toFixed(4)}%`);
     });
 
-    if (totalExposure > 1.5) { // If greater than 150%
-      console.warn(`High total exposure: ${(totalExposure * 100).toFixed(1)}%. Possible leverage or error.`);
-    }
+    // УБРАНО дублирование проверки
 
     // Sort trades by exit date
     const sortedTrades = [...trades].sort((a, b) => a.exitDate.getTime() - b.exitDate.getTime());
@@ -111,7 +110,7 @@ export class PerformanceCalculator {
       maxConsecutiveLosses,
       largestWin,
       largestLoss,
-      averageExposure,
+      averageExposure: averageExposure * 100, // Конвертируем обратно в проценты для отображения
       period: {
         startDate,
         endDate,
@@ -121,7 +120,7 @@ export class PerformanceCalculator {
   }
 
   /**
-   * Calculate portfolio returns over time using portfolio exposure - ИСПРАВЛЕНО
+   * Calculate portfolio returns over time - ИСПРАВЛЕНО
    */
   static calculatePortfolioReturns(
     trades: ProcessedTradeRecord[],
@@ -149,7 +148,7 @@ export class PerformanceCalculator {
     sortedDates.forEach(dateKey => {
       const dayTrades = tradesByDate.get(dateKey)!;
 
-      // ИСПРАВЛЕНО: Убрана двойная нормализация - portfolioImpact уже учитывает exposure
+      // ИСПРАВЛЕНО: portfolioImpact уже правильно рассчитан в processRecord
       const dayPortfolioImpact = dayTrades.reduce((sum, trade) => {
         return sum + trade.portfolioImpact;
       }, 0);
@@ -214,15 +213,16 @@ export class PerformanceCalculator {
 
     // Annualize returns and calculate Sharpe
     const annualizedReturn = avgDailyReturn * 252; // 252 trading days
-    const annualizedRiskFreeRate = riskFreeRate; // ИСПРАВЛЕНО: riskFreeRate уже в правильном формате
+    const annualizedVolatility = volatility * Math.sqrt(252);
+    const annualizedRiskFreeRate = riskFreeRate * 100; // Convert to percentage
 
-    return (annualizedReturn - annualizedRiskFreeRate) / volatility;
+    return (annualizedReturn - annualizedRiskFreeRate) / annualizedVolatility;
   }
 
   /**
    * Calculate Sortino ratio - focuses on downside deviation
    */
-  private static calculateSortinoRatio(returns: PortfolioPerformancePoint[], targetReturn: number = 0): number {
+  static calculateSortinoRatio(returns: PortfolioPerformancePoint[], targetReturn: number = 0): number {
     if (returns.length < 2) return 0;
 
     const dailyReturns = returns.map(r => r.dailyReturn);
@@ -233,60 +233,55 @@ export class PerformanceCalculator {
     if (downsideReturns.length === 0) return 0;
 
     const downsideVariance = downsideReturns.reduce((sum, ret) =>
-      sum + Math.pow(ret - targetReturn, 2), 0) / downsideReturns.length;
-    const downsideDeviation = Math.sqrt(downsideVariance) * Math.sqrt(252);
+      sum + Math.pow(ret - targetReturn, 2), 0
+    ) / downsideReturns.length;
+
+    const downsideDeviation = Math.sqrt(downsideVariance);
 
     if (downsideDeviation === 0) return 0;
 
+    // Annualize
     const annualizedReturn = avgDailyReturn * 252;
-    return annualizedReturn / downsideDeviation;
+    const annualizedDownsideDeviation = downsideDeviation * Math.sqrt(252);
+    const annualizedTargetReturn = targetReturn * 252;
+
+    return (annualizedReturn - annualizedTargetReturn) / annualizedDownsideDeviation;
   }
 
   /**
-   * Public method to calculate Sortino ratio
+   * Calculate volatility (standard deviation) - ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ
    */
-  static getSortinoRatio(returns: PortfolioPerformancePoint[], targetReturn: number = 0): number {
+  private static calculateVolatility(returns: number[]): number {
     if (returns.length < 2) return 0;
 
-    const dailyReturns = returns.map(r => r.dailyReturn);
-    const avgDailyReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
+    const avg = returns.reduce((a, b) => a + b, 0) / returns.length;
+    const variance = returns.reduce((sum, ret) => sum + Math.pow(ret - avg, 2), 0) / returns.length;
 
-    const downsideReturns = dailyReturns.filter(r => r < targetReturn);
-    if (downsideReturns.length === 0) return 0;
-
-    const downsideVariance = downsideReturns.reduce((sum, ret) =>
-      sum + Math.pow(ret - targetReturn, 2), 0) / downsideReturns.length;
-    const downsideDeviation = Math.sqrt(downsideVariance) * Math.sqrt(252);
-
-    if (downsideDeviation === 0) return 0;
-
-    const annualizedReturn = avgDailyReturn * 252;
-    return annualizedReturn / downsideDeviation;
+    return Math.sqrt(variance);
   }
 
   /**
-   * Calculate profit factor (gross profit / gross loss)
+   * Calculate profit factor
    */
-  private static calculateProfitFactor(winningTrades: number[], losingTrades: number[]): number {
-    const grossProfit = winningTrades.reduce((sum, trade) => sum + trade, 0);
-    const grossLoss = Math.abs(losingTrades.reduce((sum, trade) => sum + trade, 0));
+  private static calculateProfitFactor(winningPnL: number[], losingPnL: number[]): number {
+    const totalWins = winningPnL.reduce((a, b) => a + b, 0);
+    const totalLosses = Math.abs(losingPnL.reduce((a, b) => a + b, 0));
 
-    return grossLoss === 0 ? (grossProfit > 0 ? Infinity : 0) : grossProfit / grossLoss;
+    return totalLosses === 0 ? (totalWins > 0 ? 999 : 0) : totalWins / totalLosses;
   }
 
   /**
-   * Calculate expectancy (average win * win rate - average loss * loss rate)
+   * Calculate expectancy
    */
-  private static calculateExpectancy(winningTrades: number[], losingTrades: number[], winRate: number): number {
-    const avgWin = winningTrades.length > 0 ? winningTrades.reduce((a, b) => a + b, 0) / winningTrades.length : 0;
-    const avgLoss = losingTrades.length > 0 ? Math.abs(losingTrades.reduce((a, b) => a + b, 0) / losingTrades.length) : 0;
-    const lossRate = 100 - winRate;
+  private static calculateExpectancy(winningPnL: number[], losingPnL: number[], winRate: number): number {
+    const avgWin = winningPnL.length > 0 ? winningPnL.reduce((a, b) => a + b, 0) / winningPnL.length : 0;
+    const avgLoss = losingPnL.length > 0 ? losingPnL.reduce((a, b) => a + b, 0) / losingPnL.length : 0;
 
-    return (avgWin * winRate / 100) - (avgLoss * lossRate / 100);
+    return (winRate / 100) * avgWin + ((100 - winRate) / 100) * avgLoss;
   }
 
   /**
-   * Calculate consecutive wins and losses
+   * Calculate consecutive wins/losses
    */
   private static calculateConsecutiveWinsLosses(trades: ProcessedTradeRecord[]): {
     maxConsecutiveWins: number;
@@ -302,7 +297,7 @@ export class PerformanceCalculator {
         currentWins++;
         currentLosses = 0;
         maxWins = Math.max(maxWins, currentWins);
-      } else {
+      } else if (trade.pnlPercent < 0) {
         currentLosses++;
         currentWins = 0;
         maxLosses = Math.max(maxLosses, currentLosses);
@@ -316,7 +311,97 @@ export class PerformanceCalculator {
   }
 
   /**
-   * Calculate benchmark comparison metrics - ИСПРАВЛЕНО
+   * Calculate correlation between two series
+   */
+  private static calculateCorrelation(x: number[], y: number[]): number {
+    if (x.length !== y.length || x.length < 2) return 0;
+
+    const n = x.length;
+    const sumX = x.reduce((a, b) => a + b, 0);
+    const sumY = y.reduce((a, b) => a + b, 0);
+    const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
+    const sumX2 = x.reduce((sum, xi) => sum + xi * xi, 0);
+    const sumY2 = y.reduce((sum, yi) => sum + yi * yi, 0);
+
+    const numerator = n * sumXY - sumX * sumY;
+    const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+
+    return denominator === 0 ? 0 : numerator / denominator;
+  }
+
+  /**
+   * Calculate beta (portfolio sensitivity to benchmark)
+   */
+  private static calculateBeta(portfolioReturns: number[], benchmarkReturns: number[]): number {
+    if (portfolioReturns.length !== benchmarkReturns.length || portfolioReturns.length < 2) return 1;
+
+    const benchmarkVariance = this.calculateVolatility(benchmarkReturns) ** 2;
+    if (benchmarkVariance === 0) return 1;
+
+    const covariance = this.calculateCovariance(portfolioReturns, benchmarkReturns);
+    return covariance / benchmarkVariance;
+  }
+
+  /**
+   * Calculate covariance between two series
+   */
+  private static calculateCovariance(x: number[], y: number[]): number {
+    if (x.length !== y.length || x.length < 2) return 0;
+
+    const avgX = x.reduce((a, b) => a + b, 0) / x.length;
+    const avgY = y.reduce((a, b) => a + b, 0) / y.length;
+
+    return x.reduce((sum, xi, i) => sum + (xi - avgX) * (y[i] - avgY), 0) / x.length;
+  }
+
+  /**
+   * Align portfolio and benchmark data by dates for comparison
+   */
+  private static alignPortfolioAndBenchmark(
+    portfolioReturns: PortfolioPerformancePoint[],
+    benchmarkData: BenchmarkDataPoint[]
+  ): Array<{
+    date: Date;
+    portfolioReturn: number;
+    benchmarkReturn: number;
+    portfolioCumulative: number;
+    benchmarkCumulative: number;
+  }> {
+    const aligned: Array<{
+      date: Date;
+      portfolioReturn: number;
+      benchmarkReturn: number;
+      portfolioCumulative: number;
+      benchmarkCumulative: number;
+    }> = [];
+
+    // Create date maps for efficient lookup
+    const portfolioMap = new Map(
+      portfolioReturns.map(p => [p.dateString, p])
+    );
+    const benchmarkMap = new Map(
+      benchmarkData.map(b => [b.date.toISOString().split('T')[0], b])
+    );
+
+    // Find common dates
+    portfolioReturns.forEach(portfolioPoint => {
+      const benchmarkPoint = benchmarkMap.get(portfolioPoint.dateString);
+      if (benchmarkPoint) {
+        aligned.push({
+          date: portfolioPoint.date,
+          portfolioReturn: portfolioPoint.dailyReturn,
+          benchmarkReturn: benchmarkPoint.dailyReturn,
+          portfolioCumulative: portfolioPoint.cumulativeReturn,
+          benchmarkCumulative: benchmarkPoint.cumulativeReturn
+        });
+      }
+    });
+
+    return aligned.sort((a, b) => a.date.getTime() - b.date.getTime());
+  }
+
+  /**
+   * Calculate benchmark comparison metrics
    */
   static calculateBenchmarkComparison(
     portfolioMetrics: CalculatedMetrics,
@@ -349,7 +434,7 @@ export class PerformanceCalculator {
     // Calculate benchmark metrics
     const benchmarkReturns = alignedData.map(d => d.benchmarkReturn);
     const benchmarkTotalReturn = alignedData[alignedData.length - 1]?.benchmarkCumulative || 0;
-    const benchmarkVolatility = this.calculateVolatility(benchmarkReturns);
+    const benchmarkVolatility = this.calculateVolatility(benchmarkReturns) * Math.sqrt(252);
     const benchmarkSharpe = this.calculateSharpeFromReturns(benchmarkReturns, 0.05);
     const benchmarkDrawdown = this.calculateDrawdownFromReturns(
       alignedData.map(d => ({ portfolioValue: 100 * (1 + d.benchmarkCumulative / 100) }))
@@ -366,7 +451,8 @@ export class PerformanceCalculator {
 
     const trackingError = this.calculateVolatility(
       alignedData.map(d => d.portfolioReturn - d.benchmarkReturn)
-    );
+    ) * Math.sqrt(252);
+
     const informationRatio = trackingError === 0 ? 0 : alpha / trackingError;
 
     return {
@@ -388,127 +474,38 @@ export class PerformanceCalculator {
   }
 
   /**
-   * Helper methods for benchmark comparison
+   * Helper: Calculate Sharpe ratio from returns array
    */
-  private static alignPortfolioAndBenchmark(
-    portfolioData: PortfolioPerformancePoint[],
-    benchmarkData: BenchmarkDataPoint[]
-  ) {
-    const aligned: Array<{
-      date: Date;
-      portfolioReturn: number;
-      benchmarkReturn: number;
-      portfolioCumulative: number;
-      benchmarkCumulative: number;
-    }> = [];
-
-    portfolioData.forEach(portfolioPoint => {
-      const benchmarkPoint = benchmarkData.find(b =>
-        b.dateString === portfolioPoint.dateString
-      );
-
-      if (benchmarkPoint) {
-        aligned.push({
-          date: portfolioPoint.date,
-          portfolioReturn: portfolioPoint.dailyReturn,
-          benchmarkReturn: benchmarkPoint.change,
-          portfolioCumulative: portfolioPoint.cumulativeReturn,
-          benchmarkCumulative: benchmarkPoint.cumulativeReturn
-        });
-      }
-    });
-
-    return aligned;
-  }
-
-  /**
-   * Calculate volatility - ИСПРАВЛЕНО
-   */
-  private static calculateVolatility(dailyReturns: number[]): number {
-    if (dailyReturns.length < 2) return 0;
-
-    const mean = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
-    const variance = dailyReturns.reduce((sum, ret) =>
-      sum + Math.pow(ret - mean, 2), 0) / (dailyReturns.length - 1); // ИСПРАВЛЕНО: используем n-1 для sample variance
-
-    return Math.sqrt(variance) * Math.sqrt(252); // Аннуализация
-  }
-
-  private static calculateCorrelation(x: number[], y: number[]): number {
-    if (x.length !== y.length || x.length < 2) return 0;
-
-    const n = x.length;
-    const avgX = x.reduce((a, b) => a + b, 0) / n;
-    const avgY = y.reduce((a, b) => a + b, 0) / n;
-
-    let numerator = 0;
-    let sumXSquared = 0;
-    let sumYSquared = 0;
-
-    for (let i = 0; i < n; i++) {
-      const deltaX = x[i] - avgX;
-      const deltaY = y[i] - avgY;
-      numerator += deltaX * deltaY;
-      sumXSquared += deltaX * deltaX;
-      sumYSquared += deltaY * deltaY;
-    }
-
-    const denominator = Math.sqrt(sumXSquared * sumYSquared);
-    return denominator === 0 ? 0 : numerator / denominator;
-  }
-
-  private static calculateBeta(portfolioReturns: number[], benchmarkReturns: number[]): number {
-    if (portfolioReturns.length !== benchmarkReturns.length || portfolioReturns.length < 2) return 1;
-
-    const correlation = this.calculateCorrelation(portfolioReturns, benchmarkReturns);
-    const portfolioVol = this.calculateVolatility(portfolioReturns);
-    const benchmarkVol = this.calculateVolatility(benchmarkReturns);
-
-    return benchmarkVol === 0 ? 1 : (correlation * portfolioVol) / benchmarkVol;
-  }
-
   private static calculateSharpeFromReturns(returns: number[], riskFreeRate: number): number {
     if (returns.length < 2) return 0;
 
     const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
     const volatility = this.calculateVolatility(returns);
 
-    return volatility === 0 ? 0 : (avgReturn * 252 - riskFreeRate * 100) / volatility;
-  }
+    if (volatility === 0) return 0;
 
-  private static calculateDrawdownFromReturns(data: Array<{ portfolioValue: number }>): number {
-    let maxDrawdown = 0;
-    let peak = data[0]?.portfolioValue || 100;
+    const annualizedReturn = avgReturn * 252;
+    const annualizedVolatility = volatility * Math.sqrt(252);
+    const annualizedRiskFreeRate = riskFreeRate * 100;
 
-    data.forEach(point => {
-      if (point.portfolioValue > peak) {
-        peak = point.portfolioValue;
-      } else {
-        const drawdown = ((peak - point.portfolioValue) / peak) * 100;
-        maxDrawdown = Math.max(maxDrawdown, drawdown);
-      }
-    });
-
-    return -maxDrawdown;
+    return (annualizedReturn - annualizedRiskFreeRate) / annualizedVolatility;
   }
 
   /**
-   * Calculate metrics for specific time period
+   * Helper: Calculate drawdown from portfolio values
    */
-  static calculatePeriodMetrics(
-    trades: ProcessedTradeRecord[],
-    startDate: Date,
-    endDate: Date,
-    options: CalculationOptions = {
-      startingPortfolioValue: 1000000,
-      riskFreeRate: 0.05,
-      includeBenchmarkComparison: false
-    }
-  ): CalculatedMetrics {
-    const filteredTrades = trades.filter(trade =>
-      trade.exitDate >= startDate && trade.exitDate <= endDate
-    );
+  private static calculateDrawdownFromReturns(portfolioValues: Array<{ portfolioValue: number }>): number {
+    if (portfolioValues.length === 0) return 0;
 
-    return this.calculateMetrics(filteredTrades, options);
+    let maxDrawdown = 0;
+    let peak = portfolioValues[0].portfolioValue;
+
+    portfolioValues.forEach(point => {
+      peak = Math.max(peak, point.portfolioValue);
+      const drawdown = (peak - point.portfolioValue) / peak * 100;
+      maxDrawdown = Math.max(maxDrawdown, drawdown);
+    });
+
+    return -maxDrawdown;
   }
 }
