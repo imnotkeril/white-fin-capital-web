@@ -335,7 +335,7 @@ export class PerformanceCalculator {
       sum + Math.pow(r - avgReturn, 2), 0) / (tradeReturns.length - 1);
 
     const totalDays = timeSeries.length > 1 ?
-      (timeSeries[timeSeries.length - 1].date.getTime() - timeSeries[0].date.getTime()) / (1000 * 60 * 60 * 24) : 252;
+      (timeSeries[timeSeries.length - 1]?.date?.getTime()! - timeSeries[0]?.date?.getTime()!) / (1000 * 60 * 60 * 24) : 252;
 
     const tradesPerYear = (tradeReturns.length / Math.max(totalDays, 1)) * 252;
 
