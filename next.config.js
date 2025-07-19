@@ -7,9 +7,6 @@ const nextConfig = {
     // Отключаем ESLint проверки во время билда чтобы избежать ошибок с TypeScript правилами
     ignoreDuringBuilds: true,
   },
-  experimental: {
-    optimizeCss: true,
-  },
   images: {
     unoptimized: true,
     domains: ['localhost'],
