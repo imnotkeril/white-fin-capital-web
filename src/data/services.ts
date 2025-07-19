@@ -75,30 +75,7 @@ export const services: Service[] = [
       },
     ],
   },
-  {
-    id: 'market-insights',
-    title: 'Market Insights & Education',
-    description: 'Weekly market updates, educational content, and exclusive webinars from our expert analysts.',
-    icon: 'BookOpen',
-    features: [
-      {
-        title: 'Weekly Market Updates',
-        description: 'Comprehensive market commentary and outlook from our research team',
-      },
-      {
-        title: 'Educational Content',
-        description: 'Trading tutorials, strategy guides, and market education resources',
-      },
-      {
-        title: 'Live Webinars',
-        description: 'Monthly webinars with Q&A sessions and market strategy discussions',
-      },
-      {
-        title: 'Research Library',
-        description: 'Access to our complete archive of research reports and market analysis',
-      },
-    ],
-  },
+
 ];
 
 // Service benefits for different user types
@@ -149,18 +126,7 @@ export const researchProcess = [
     description: 'Comprehensive risk analysis with position sizing and stop-loss recommendations',
     icon: 'Shield',
   },
-  {
-    step: 5,
-    title: 'Trade Execution',
-    description: 'Real-time alerts with precise instructions and reasoning for every recommendation',
-    icon: 'Zap',
-  },
-  {
-    step: 6,
-    title: 'Performance Tracking',
-    description: 'Continuous monitoring and transparent reporting of all trade outcomes',
-    icon: 'BarChart3',
-  },
+
 ];
 
 // Key differentiators
@@ -180,11 +146,7 @@ export const keyDifferentiators = [
     description: 'Proprietary algorithms and machine learning models enhance traditional analysis methods.',
     icon: 'Cpu',
   },
-  {
-    title: 'Education',
-    description: 'We teach you the "why" behind every recommendation to improve your investment skills.',
-    icon: 'GraduationCap',
-  },
+
 ];
 
 // Asset coverage

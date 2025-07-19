@@ -36,7 +36,6 @@ const SubscriptionSection: React.FC = () => {
   const planIcons = {
     essential: Shield,
     professional: Star,
-    enterprise: Crown,
   };
 
   const calculateSavings = (monthlyPrice: number, annualPrice: number) => {
@@ -94,12 +93,11 @@ const SubscriptionSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Pricing Cards - ИСПРАВЛЕНО: убрана голубая рамка у Professional, улучшена кнопка Enterprise */}
+        {/* Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
           {plans.map((plan, index) => {
             const IconComponent = planIcons[plan.id as keyof typeof planIcons] || Shield;
             const isPopular = plan.isPopular;
-            const isEnterprise = plan.isEnterprise;
 
             return (
               <Card
@@ -172,7 +170,6 @@ const SubscriptionSection: React.FC = () => {
                       fullWidth
                       onClick={() => handleSubscribe(plan.id)}
                     >
-                      {isEnterprise ? 'Contact Sales' : 'Start Free Trial'}
                     </Button>
                   </div>
 
@@ -187,18 +184,6 @@ const SubscriptionSection: React.FC = () => {
                       </div>
                     ))}
                   </div>
-
-                  {/* Enterprise Contact */}
-                  {isEnterprise && (
-                    <div className="mt-6 pt-6 border-t border-border text-center">
-                      <p className="text-text-secondary text-sm mb-2">
-                        Custom pricing available
-                      </p>
-                      <p className="text-text-tertiary text-xs">
-                        Volume discounts for teams
-                      </p>
-                    </div>
-                  )}
                 </div>
               </Card>
             );
@@ -225,7 +210,6 @@ const SubscriptionSection: React.FC = () => {
                   <th className="text-left py-4 px-4 font-semibold text-text-primary">Features</th>
                   <th className="text-center py-4 px-4 font-semibold text-text-primary">Essential</th>
                   <th className="text-center py-4 px-4 font-semibold text-text-primary">Professional</th>
-                  <th className="text-center py-4 px-4 font-semibold text-text-primary">Enterprise</th>
                 </tr>
               </thead>
               <tbody>
@@ -254,68 +238,12 @@ const SubscriptionSection: React.FC = () => {
                         <span className="text-text-secondary text-sm">{feature.professional}</span>
                       )}
                     </td>
-                    <td className="py-4 px-4 text-center">
-                      {typeof feature.enterprise === 'boolean' ? (
-                        feature.enterprise ? (
-                          <Check className="w-5 h-5 text-status-positive mx-auto" />
-                        ) : (
-                          <X className="w-5 h-5 text-text-tertiary mx-auto" />
-                        )
-                      ) : (
-                        <span className="text-text-secondary text-sm">{feature.enterprise}</span>
-                      )}
-                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </Card>
         )}
-
-        {/* FAQ Section */}
-        <div className="mb-16">
-          <div className="text-center mb-12">
-            <h3 className="text-3xl font-bold text-text-primary mb-4">
-              Frequently Asked Questions
-            </h3>
-            <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-              Everything you need to know about our pricing and subscription plans
-            </p>
-          </div>
-
-          <div className="max-w-3xl mx-auto space-y-4">
-            {pricingFAQs.map((faq, index) => (
-              <Card
-                key={index}
-                ocean
-                padding="none"
-                className="overflow-hidden"
-              >
-                <button
-                  onClick={() => setExpandedFAQ(expandedFAQ === index ? null : index)}
-                  className="w-full p-6 text-left flex items-center justify-between hover:bg-background-secondary/50 transition-colors duration-200"
-                >
-                  <div className="flex items-center gap-3">
-                    <HelpCircle className="w-5 h-5 text-primary-500 flex-shrink-0" />
-                    <span className="font-semibold text-text-primary">{faq.question}</span>
-                  </div>
-                  {expandedFAQ === index ? (
-                    <ChevronUp className="w-5 h-5 text-text-secondary" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-text-secondary" />
-                  )}
-                </button>
-                {expandedFAQ === index && (
-                  <div className="px-6 pb-6">
-                    <p className="text-text-secondary leading-relaxed">
-                      {faq.answer}
-                    </p>
-                  </div>
-                )}
-              </Card>
-            ))}
-          </div>
-        </div>
       </div>
     </section>
   );

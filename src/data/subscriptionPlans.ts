@@ -41,29 +41,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     ],
     isPopular: true,
   },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    price: 299,
-    period: 'monthly',
-    description: 'For institutions and serious investors requiring premium research and support',
-    features: [
-      'Everything in Professional',
-      'Custom Research Reports',
-      'Direct Analyst Access',
-      'Institutional-Grade Analytics',
-      'API Access for Integration',
-      'Dedicated Account Manager',
-      'Custom Alert Configurations',
-      'White-label Solutions',
-      'Priority Phone Support',
-      'Quarterly Strategy Reviews',
-      'Custom Risk Parameters',
-      'Multi-user Team Access',
-    ],
-    isPopular: false,
-    isEnterprise: true,
-  },
+
 ];
 
 // Annual pricing (with discount)
@@ -83,25 +61,21 @@ export const planComparisonFeatures = [
         name: 'Weekly Market Analysis',
         essential: true,
         professional: true,
-        enterprise: true,
       },
       {
         name: 'Daily Market Updates',
         essential: false,
         professional: true,
-        enterprise: true,
       },
       {
         name: 'Custom Research Reports',
         essential: false,
         professional: false,
-        enterprise: true,
       },
       {
         name: 'Institutional Analytics',
         essential: false,
         professional: false,
-        enterprise: true,
       },
     ],
   },
@@ -112,25 +86,21 @@ export const planComparisonFeatures = [
         name: 'Basic Trade Alerts',
         essential: '5 per month',
         professional: 'Unlimited',
-        enterprise: 'Unlimited',
       },
       {
         name: 'Real-time Notifications',
         essential: false,
         professional: true,
-        enterprise: true,
       },
       {
         name: 'Custom Alert Rules',
         essential: false,
         professional: false,
-        enterprise: true,
       },
       {
         name: 'Multi-asset Coverage',
         essential: 'Stocks only',
         professional: 'All assets',
-        enterprise: 'All assets',
       },
     ],
   },
@@ -141,25 +111,21 @@ export const planComparisonFeatures = [
         name: 'Portfolio Analytics',
         essential: false,
         professional: true,
-        enterprise: true,
       },
       {
         name: 'Risk Management Tools',
         essential: false,
         professional: true,
-        enterprise: true,
       },
       {
         name: 'API Access',
         essential: false,
         professional: false,
-        enterprise: true,
       },
       {
         name: 'Mobile App',
         essential: true,
         professional: true,
-        enterprise: true,
       },
     ],
   },
@@ -170,25 +136,21 @@ export const planComparisonFeatures = [
         name: 'Email Support',
         essential: 'Standard',
         professional: 'Priority',
-        enterprise: '24/7 Dedicated',
       },
       {
         name: 'Educational Content',
         essential: true,
         professional: true,
-        enterprise: true,
       },
       {
         name: 'Live Webinars',
         essential: false,
         professional: 'Monthly',
-        enterprise: 'Weekly',
       },
       {
         name: 'Direct Analyst Access',
         essential: false,
         professional: false,
-        enterprise: true,
       },
     ],
   },
@@ -202,7 +164,7 @@ export const pricingFAQs = [
   },
   {
     question: 'What payment methods do you accept?',
-    answer: 'We accept all major credit cards (Visa, MasterCard, American Express) and PayPal. For Enterprise plans, we also accept wire transfers and ACH payments.',
+    answer: 'We accept all major credit cards (Visa, MasterCard, American Express) and PayPal.',
   },
   {
     question: 'Do you offer a free trial?',
@@ -241,23 +203,10 @@ export const specialOffers = [
     discount: 25,
     type: 'percentage',
     permanent: true,
-    applicablePlans: ['essential', 'professional', 'enterprise'],
+    applicablePlans: ['essential', 'professional'],
   },
 ];
 
-// Enterprise features (for custom pricing)
-export const enterpriseFeatures = [
-  'Custom research on specific securities or sectors',
-  'White-label platform for financial advisors',
-  'Dedicated relationship manager',
-  'Custom integrations and API access',
-  'On-site training and education',
-  'Custom risk management parameters',
-  'Multi-user accounts with role-based access',
-  'Priority customer support (phone, email, chat)',
-  'Quarterly business reviews and strategy sessions',
-  'Custom reporting and analytics',
-];
 
 // Usage limits by plan
 export const usageLimits = {
@@ -275,13 +224,7 @@ export const usageLimits = {
     reportHistory: '12 months',
     apiCalls: 1000,
   },
-  enterprise: {
-    tradeAlerts: -1, // unlimited
-    customWatchlists: -1, // unlimited
-    portfolios: -1, // unlimited
-    reportHistory: 'unlimited',
-    apiCalls: 10000,
-  },
+
 };
 
 // Success stories by plan
@@ -296,11 +239,7 @@ export const planSuccessStories = {
     result: '+31.7% return in 12 months',
     quote: 'Real-time alerts and portfolio analytics completely transformed my trading results.',
   },
-  enterprise: {
-    customerName: 'hedge fund ABC Capital',
-    result: '+47.2% return with 12% lower volatility',
-    quote: 'Custom research and direct analyst access gave us the edge we needed.',
-  },
+
 };
 
 export default subscriptionPlans;

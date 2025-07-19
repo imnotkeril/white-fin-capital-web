@@ -44,7 +44,7 @@ interface BenchmarkPoint {
 
 const PerformanceSection: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<'overview' | 'trades'>('overview');
-  const [selectedPeriod, setSelectedPeriod] = useState<'1m' | '3m' | '6m' | '1y' | '2y' | 'all'>('1y');
+  const [selectedPeriod, setSelectedPeriod] = useState<'1m' | '3m' | '6m' | '1y' | 'all'>('1y');
 
   // Data state
   const [kpiData, setKpiData] = useState<KPIData[]>([]);
@@ -68,7 +68,6 @@ const PerformanceSection: React.FC = () => {
     { id: '3m', label: '3 Months' },
     { id: '6m', label: '6 Months' },
     { id: '1y', label: '1 Year' },
-    { id: '2y', label: '2 Years' },
     { id: 'all', label: 'All Time' },
   ] as const;
 
@@ -207,12 +206,6 @@ const PerformanceSection: React.FC = () => {
 
       const stats: KPIData[] = [
         {
-          label: 'Total Trades',
-          value: trades.length,
-          format: 'number' as const,
-          trend: 'neutral' as const,
-        },
-        {
           label: 'Winning Trades',
           value: winningTrades.length,
           format: 'number' as const,
@@ -235,12 +228,6 @@ const PerformanceSection: React.FC = () => {
           value: Math.round(averageLoss * 10) / 10,
           format: 'percentage' as const,
           trend: 'down' as const,
-        },
-        {
-          label: 'Avg Holding Days',
-          value: Math.round(metrics.averageHoldingDays),
-          format: 'number' as const,
-          trend: 'neutral' as const,
         },
       ];
       setTradeStats(stats);
@@ -343,9 +330,6 @@ const PerformanceSection: React.FC = () => {
         break;
       case '1y':
         startDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
-        break;
-      case '2y':
-        startDate = new Date(now.getFullYear() - 2, now.getMonth(), now.getDate());
         break;
       case 'all':
       default:
@@ -517,10 +501,6 @@ const PerformanceSection: React.FC = () => {
           <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
             Track Record & Performance
           </h2>
-          <p className="text-xl text-text-secondary max-w-3xl mx-auto leading-relaxed">
-            Real trading performance with {tradeStats.find(k => k.label === 'Total Trades')?.value || 0} completed trades
-          </p>
-
           {/* Data Status */}
           <div className="flex items-center justify-center gap-4 mt-4">
             <span className="text-sm text-text-tertiary">
@@ -723,16 +703,6 @@ const PerformanceSection: React.FC = () => {
                 {/* Trade Journal */}
                 <Card ocean padding="lg">
                   <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-2xl font-semibold text-text-primary">
-                      Recent Closed Trades
-                    </h3>
-                    <Button
-                      variant="secondary"
-                      icon={<Download className="w-4 h-4" />}
-                      onClick={handleExportTrades}
-                    >
-                      Export CSV
-                    </Button>
                   </div>
 
                   {/* Trade Stats */}

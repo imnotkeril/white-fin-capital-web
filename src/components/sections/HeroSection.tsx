@@ -41,9 +41,6 @@ const HeroSection: React.FC = () => {
     scrollToElement('#performance');
   };
 
-  const handleScrollDown = () => {
-    scrollToElement('#performance');
-  };
 
   return (
     <section
@@ -188,39 +185,6 @@ const HeroSection: React.FC = () => {
               Comprehensive risk assessment and portfolio protection strategies
             </p>
           </div>
-        </div>
-
-
-        {/* Newsletter Signup */}
-        <div className="max-w-md mx-auto mb-16">
-          <form onSubmit={handleSubmit} className="glass rounded-2xl p-6">
-            <h3 className="text-text-primary font-semibold text-lg mb-4">
-              Get Market Insights
-            </h3>
-            <div className="flex gap-3">
-              <input
-                type="email"
-                name="email"
-                value={values.email}
-                onChange={(e) => handleChange('email')(e.target.value)}
-                placeholder="Enter your email"
-                className={`form-input flex-1 ${
-                  errors.email ? 'border-status-negative focus:border-status-negative focus:ring-status-negative/20' : ''
-                }`}
-              />
-              <Button
-                type="submit"
-                variant="primary"
-                loading={isSubmitting}
-                disabled={!isValid || isSubmitting}
-              >
-                Subscribe
-              </Button>
-            </div>
-            {errors.email && (
-              <p className="form-error mt-2">{errors.email}</p>
-            )}
-          </form>
         </div>
       </div>
 
