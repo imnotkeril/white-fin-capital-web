@@ -220,47 +220,15 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
 
   return (
     <div className={cn('w-full', className)}>
-      {/* Header с опциональным селектором периодов */}
-      {(title || showPeriodSelector) && (
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          {title && (
-            <h3
-              className="text-2xl font-semibold"
-              style={{ color: titleColor }}
-            >
-              {title}
-            </h3>
-          )}
-
-          {showPeriodSelector && (
-            <div
-              className="flex rounded-lg p-1"
-              style={{
-                background: actualTheme === 'dark' ? '#0f2337' : '#f1f5f9'
-              }}
-            >
-              {periods.map((period) => (
-                <Button
-                  key={period.key}
-                  variant={selectedPeriod === period.key ? 'primary' : 'ghost'}
-                  size="sm"
-                  onClick={() => onPeriodChange?.(period.key)}
-                  className={cn(
-                    'text-xs font-medium px-4 py-1',
-                    selectedPeriod === period.key
-                      ? actualTheme === 'dark'
-                        ? 'bg-[#90bff9] text-[#05192c]'
-                        : 'bg-[#3b82f6] text-white'
-                      : actualTheme === 'dark'
-                        ? 'text-white/70 hover:text-white'
-                        : 'text-slate-600 hover:text-slate-900'
-                  )}
-                >
-                  {period.label}
-                </Button>
-              ))}
-            </div>
-          )}
+      {/* Header только с заголовком */}
+      {title && (
+        <div className="mb-6">
+          <h3
+            className="text-2xl font-semibold"
+            style={{ color: titleColor }}
+          >
+            {title}
+          </h3>
         </div>
       )}
 

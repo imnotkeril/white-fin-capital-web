@@ -112,7 +112,8 @@ export class PerformanceCalculator {
     const tradesByExitDate = new Map<string, TradeRecord[]>();
 
     sortedTrades.forEach(trade => {
-      const dateKey = trade.exitDate.toISOString().split('T')[0];
+      const dateKey = trade.exitDate?.toISOString().split('T')[0];
+      if (!dateKey) return; // ← УБРАТЬ [], просто return
       if (!tradesByExitDate.has(dateKey)) {
         tradesByExitDate.set(dateKey, []);
       }
@@ -126,7 +127,8 @@ export class PerformanceCalculator {
     let strategyValue = this.STARTING_EQUITY;
 
     for (const benchmarkPoint of benchmarkPoints) {
-      const dateKey = benchmarkPoint.date.toISOString().split('T')[0];
+      const dateKey = benchmarkPoint.date?.toISOString().split('T')[0];
+      if (!dateKey) continue;
       let dayStrategyReturn = 0;
 
       if (tradesByExitDate.has(dateKey)) {
@@ -153,7 +155,7 @@ export class PerformanceCalculator {
     console.log(`✅ Strategy equity built: ${dailyEquity.length} points`);
 
     if (dailyEquity.length > 0) {
-      const finalReturn = dailyEquity[dailyEquity.length - 1].cumulativeReturn;
+      const finalReturn = dailyEquity[dailyEquity.length - 1]?.cumulativeReturn || 0;
       console.log(`📈 Final STRATEGY return: ${finalReturn.toFixed(2)}%`);
     }
 
@@ -213,7 +215,7 @@ export class PerformanceCalculator {
         });
 
         if (worstPosition) {
-          console.log(`🎯 [DEBUG] Max Drawdown from worst position: ${maxSinglePositionImpact.toFixed(2)}% (${worstPosition.ticker})`);
+          console.log(`🎯 [DEBUG] Max Drawdown from worst position: ${maxSinglePositionImpact.toFixed(2)}% (${(worstPosition as any)?.ticker || 'Unknown'})`);
           return -maxSinglePositionImpact;
         }
       }
@@ -276,7 +278,7 @@ export class PerformanceCalculator {
     if (tradeVolatility === 0) return 0;
 
     const totalDays = timeSeries.length > 1 ?
-      (timeSeries[timeSeries.length - 1].date.getTime() - timeSeries[0].date.getTime()) / (1000 * 60 * 60 * 24) : 252;
+      (timeSeries[timeSeries.length - 1]?.date.getTime()! - timeSeries[0]?.date.getTime()!) / (1000 * 60 * 60 * 24) : 252;
 
     const tradesPerYear = (tradeReturns.length / Math.max(totalDays, 1)) * 252;
 
@@ -307,7 +309,7 @@ export class PerformanceCalculator {
     if (downsideDeviation === 0) return 0;
 
     const totalDays = timeSeries.length > 1 ?
-      (timeSeries[timeSeries.length - 1].date.getTime() - timeSeries[0].date.getTime()) / (1000 * 60 * 60 * 24) : 252;
+      (timeSeries[timeSeries.length - 1]?.date?.getTime()! - timeSeries[0]?.date?.getTime()!) / (1000 * 60 * 60 * 24) : 252;
 
     const tradesPerYear = (tradeReturns.length / Math.max(totalDays, 1)) * 252;
 
@@ -378,7 +380,7 @@ export class PerformanceCalculator {
     });
 
     const lastTrade = trades[trades.length - 1];
-    const currentStreak = lastTrade?.pnlPercent > 0 ? currentWins : -currentLosses;
+    const currentStreak = (lastTrade?.pnlPercent || 0) > 0 ? currentWins : -currentLosses;
 
     return { maxWins, maxLosses, currentStreak };
   }
@@ -403,8 +405,8 @@ export class PerformanceCalculator {
     const correlation = this.calculateCorrelation(strategyReturns, benchmarkReturns);
     const beta = this.calculateBeta(strategyReturns, benchmarkReturns);
 
-    const strategyAnnualReturn = strategyTimeSeries[strategyTimeSeries.length - 1].cumulativeReturn;
-    const benchmarkAnnualReturn = benchmarkData[benchmarkData.length - 1].cumulativeReturn;
+    const strategyAnnualReturn = strategyTimeSeries[strategyTimeSeries.length - 1]?.cumulativeReturn || 0;
+    const benchmarkAnnualReturn = benchmarkData[benchmarkData.length - 1]?.cumulativeReturn || 0;
     const riskFreeRate = this.RISK_FREE_RATE * 100;
 
     const alpha = strategyAnnualReturn - (riskFreeRate + beta * (benchmarkAnnualReturn - riskFreeRate));
@@ -446,7 +448,7 @@ export class PerformanceCalculator {
     const avgX = x.reduce((a, b) => a + b, 0) / x.length;
     const avgY = y.reduce((a, b) => a + b, 0) / y.length;
 
-    const numerator = x.reduce((sum, xi, i) => sum + (xi - avgX) * (y[i] - avgY), 0);
+    const numerator = x.reduce((sum, xi, i) => sum + (xi - avgX) * ((y[i] || 0) - avgY), 0);
     const denomX = Math.sqrt(x.reduce((sum, xi) => sum + Math.pow(xi - avgX, 2), 0));
     const denomY = Math.sqrt(y.reduce((sum, yi) => sum + Math.pow(yi - avgY, 2), 0));
 
@@ -476,7 +478,7 @@ export class PerformanceCalculator {
     const avgX = x.reduce((a, b) => a + b, 0) / x.length;
     const avgY = y.reduce((a, b) => a + b, 0) / y.length;
 
-    return x.reduce((sum, xi, i) => sum + (xi - avgX) * (y[i] - avgY), 0) / x.length;
+    return x.reduce((sum, xi, i) => sum + (xi - avgX) * ((y[i] || 0) - avgY), 0) / x.length;
   }
 
   private static calculateBenchmarkSharpe(returns: number[]): number {

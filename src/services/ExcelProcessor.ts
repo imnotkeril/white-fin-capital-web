@@ -111,12 +111,12 @@ export class ExcelProcessor {
       try {
         const ticker = parts[0]?.trim();
         const position = parts[1]?.trim();
-        const entryDate = this.parseCSVDate(parts[2]?.trim());
-        const avgPrice = this.parseCSVNumber(parts[3]?.trim());
-        const exitDate = this.parseCSVDate(parts[4]?.trim());
-        const exitPrice = this.parseCSVNumber(parts[5]?.trim());
-        const pnlPercent = this.parseCSVNumber(parts[6]?.trim().replace('%', ''));
-        const portfolioExposure = this.parseCSVNumber(parts[7]?.trim().replace('%', '')) / 100;
+        const entryDate = this.parseCSVDate(parts[2]?.trim() || '01.01.2020');
+        const avgPrice = this.parseCSVNumber(parts[3]?.trim() || '0');
+        const exitDate = this.parseCSVDate(parts[4]?.trim() || '01.01.2020');
+        const exitPrice = this.parseCSVNumber(parts[5]?.trim() || '0');
+        const pnlPercent = this.parseCSVNumber((parts[6]?.trim() || '0').replace('%', ''));
+        const portfolioExposure = this.parseCSVNumber((parts[7]?.trim() || '0').replace('%', '')) / 100;
 
         // Проверить все parts перед использованием:
         if (!ticker || !position || !entryDate || avgPrice === null || !exitDate || exitPrice === null || pnlPercent === null) {
@@ -218,7 +218,7 @@ export class ExcelProcessor {
     for (let i = 0; i < dataRows.length; i++) {
       try {
         const row = dataRows[i];
-        if (!row || row.every(cell => !cell)) continue;
+        if (!row || row.every((cell: any) => !cell)) continue;
 
         const trade = this.parseTradeRow(row, headerMap, i + 2);
         if (trade) {
@@ -288,7 +288,7 @@ export class ExcelProcessor {
           startValue = value;
         }
 
-        const previousValue = points.length > 0 ? points[points.length - 1].value : startValue;
+        const previousValue = points.length > 0 ? points[points.length - 1]?.value || startValue : startValue;
         const change = ((value - previousValue) / previousValue) * 100;
         const cumulativeReturn = ((value - startValue) / startValue) * 100;
 
@@ -311,9 +311,9 @@ export class ExcelProcessor {
     if (sortedPoints.length > 0) {
       const first = sortedPoints[0];
       const last = sortedPoints[sortedPoints.length - 1];
-      console.log(`📅 S&P 500 Period: ${first.date.toISOString().split('T')[0]} → ${last.date.toISOString().split('T')[0]}`);
-      console.log(`📊 S&P 500 Values: ${first.value} → ${last.value}`);
-      console.log(`📈 S&P 500 Total return: ${last.cumulativeReturn.toFixed(2)}%`);
+      console.log(`📅 S&P 500 Period: ${first?.date.toISOString().split('T')[0]} → ${last?.date.toISOString().split('T')[0]}`);
+      console.log(`📊 S&P 500 Values: ${first?.value} → ${last?.value}`);
+      console.log(`📈 S&P 500 Total return: ${last?.cumulativeReturn.toFixed(2)}%`);
     }
 
     return sortedPoints;
@@ -329,7 +329,7 @@ export class ExcelProcessor {
       console.log(`📋 Available sheets: ${workbook.SheetNames.join(', ')}`);
 
       const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
+      const sheet = workbook.Sheets[sheetName!];
 
       if (!sheet) {
         throw new Error('No sheets found in benchmark file');
@@ -380,7 +380,7 @@ export class ExcelProcessor {
             startValue = value;
           }
 
-          const previousValue = points.length > 0 ? points[points.length - 1].value : startValue;
+          const previousValue = points.length > 0 ? points[points.length - 1]?.value || startValue : startValue;
           const change = ((value - previousValue) / previousValue) * 100;
           const cumulativeReturn = ((value - startValue) / startValue) * 100;
 
@@ -404,9 +404,9 @@ export class ExcelProcessor {
         const first = sortedPoints[0];
         const last = sortedPoints[sortedPoints.length - 1];
 
-        console.log(`📅 Period: ${first.date.toISOString().split('T')[0]} → ${last.date.toISOString().split('T')[0]}`);
-        console.log(`📊 Values: ${first.value} → ${last.value}`);
-        console.log(`📈 Total return: ${last.cumulativeReturn.toFixed(2)}%`);
+        console.log(`📅 Period: ${first?.date.toISOString().split('T')[0]} → ${last?.date.toISOString().split('T')[0]}`);
+        console.log(`📊 Values: ${first?.value} → ${last?.value}`);
+        console.log(`📈 Total return: ${last?.cumulativeReturn.toFixed(2)}%`);
       }
 
       return sortedPoints;
@@ -430,8 +430,9 @@ export class ExcelProcessor {
     const sortedTradesByEntry = [...trades].sort((a, b) => a.entryDate.getTime() - b.entryDate.getTime());
     const sortedTradesByExit = [...trades].sort((a, b) => a.exitDate.getTime() - b.exitDate.getTime());
 
-    const portfolioStartDate = sortedTradesByEntry[0].entryDate;
-    const portfolioEndDate = sortedTradesByExit[sortedTradesByExit.length - 1].exitDate;
+    const portfolioStartDate = sortedTradesByEntry[0]?.entryDate;
+    const portfolioEndDate = sortedTradesByExit[sortedTradesByExit.length - 1]?.exitDate;
+    if (!portfolioStartDate || !portfolioEndDate) return benchmarkPoints;
 
     console.log(`📅 Portfolio period: ${portfolioStartDate.toISOString().split('T')[0]} → ${portfolioEndDate.toISOString().split('T')[0]}`);
 
@@ -476,8 +477,8 @@ export class ExcelProcessor {
       if (relevantPoints.length > 0) {
         const firstRelevant = relevantPoints[0];
         const lastRelevant = relevantPoints[relevantPoints.length - 1];
-        console.log(`   First: ${firstRelevant.date.toISOString().split('T')[0]} = ${firstRelevant.cumulativeReturn.toFixed(2)}%`);
-        console.log(`   Last:  ${lastRelevant.date.toISOString().split('T')[0]} = ${lastRelevant.cumulativeReturn.toFixed(2)}%`);
+        console.log(`   First: ${firstRelevant?.date.toISOString().split('T')[0]} = ${firstRelevant?.cumulativeReturn.toFixed(2)}%`);
+        console.log(`   Last:  ${lastRelevant?.date.toISOString().split('T')[0]} = ${lastRelevant?.cumulativeReturn.toFixed(2)}%`);
       }
     }
 
@@ -496,7 +497,8 @@ export class ExcelProcessor {
     console.log(`🔄 Resyncing benchmark for ${filteredTrades.length} filtered trades`);
 
     const sortedFilteredTrades = [...filteredTrades].sort((a, b) => a.entryDate.getTime() - b.entryDate.getTime());
-    const firstFilteredTradeDate = sortedFilteredTrades[0].entryDate;
+    const firstFilteredTradeDate = sortedFilteredTrades[0]?.entryDate;
+    if (!firstFilteredTradeDate) return benchmarkPoints;
 
     const originalFirstTrade = new Date('2024-01-03');
     const timeDiff = Math.abs(firstFilteredTradeDate.getTime() - originalFirstTrade.getTime());
@@ -542,7 +544,7 @@ export class ExcelProcessor {
     const relevantPoints = resyncedBenchmark.filter(p => p.date >= firstFilteredTradeDate);
     if (relevantPoints.length > 0) {
       const lastRelevant = relevantPoints[relevantPoints.length - 1];
-      console.log(`✅ Resynced benchmark: 0% → ${lastRelevant.cumulativeReturn.toFixed(2)}%`);
+      console.log(`✅ Resynced benchmark: 0% → ${lastRelevant?.cumulativeReturn.toFixed(2)}%`);
     }
 
     return resyncedBenchmark;
@@ -552,7 +554,7 @@ export class ExcelProcessor {
   private static parseCSVDate(dateStr: string): Date {
     // Ожидаем формат DD.MM.YYYY
     const [day, month, year] = dateStr.split('.').map(x => parseInt(x));
-    return new Date(year, month - 1, day);
+    return new Date(year || 2020, (month || 1) - 1, day || 1);
   }
 
   private static parseCSVNumber(str: string): number {
@@ -583,14 +585,14 @@ export class ExcelProcessor {
   private static parseTradeRow(row: any[], headerMap: Record<string, number>, rowNum: number): TradeRecord | null {
     const required = ['ticker', 'position', 'entryDate', 'exitDate', 'pnlPercent'];
     for (const field of required) {
-      if (!(field in headerMap) || !row[headerMap[field]]) {
+      if (!(field in headerMap) || !row[headerMap[field]!]) {
         throw new Error(`Missing required field: ${field}`);
       }
     }
 
-    const entryDate = this.parseDate(row[headerMap.entryDate], 'entry date');
-    const exitDate = this.parseDate(row[headerMap.exitDate], 'exit date');
-    const pnlPercent = this.parseNumber(row[headerMap.pnlPercent], 'PnL %');
+    const entryDate = this.parseDate(row[headerMap.entryDate!], 'entry date');
+    const exitDate = this.parseDate(row[headerMap.exitDate!], 'exit date');
+    const pnlPercent = this.parseNumber(row[headerMap.pnlPercent!], 'PnL %');
     const portfolioExposure = headerMap.portfolioExposure ?
       this.parsePortfolioExposure(row[headerMap.portfolioExposure], 'exposure') : 0.1;
 
@@ -611,8 +613,8 @@ export class ExcelProcessor {
       this.parseNumber(row[headerMap.runUp], 'run up') : 0;
 
     return {
-      ticker: String(row[headerMap.ticker]).toUpperCase(),
-      position: this.parsePosition(row[headerMap.position]),
+      ticker: String(row[headerMap.ticker!]).toUpperCase(),
+      position: this.parsePosition(row[headerMap.position!]),
       entryDate,
       avgPrice: headerMap.avgPrice ? this.parseNumber(row[headerMap.avgPrice], 'avg price') : 0,
       exitDate,
@@ -621,7 +623,6 @@ export class ExcelProcessor {
       portfolioExposure,
       holdingDays,
       portfolioImpact,
-      // ✅ ДОБАВИТЬ НОВЫЕ ПОЛЯ:
       positionHigh,
       positionLow,
       drawdown,

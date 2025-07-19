@@ -347,9 +347,6 @@ const PerformanceSection: React.FC = () => {
     let startDate: Date;
 
     switch (period) {
-      case '1m':
-        startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-        break;
       case '3m':
         startDate = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
         break;
@@ -358,9 +355,6 @@ const PerformanceSection: React.FC = () => {
         break;
       case '1y':
         startDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
-        break;
-      case '2y':
-        startDate = new Date(now.getFullYear() - 2, now.getMonth(), now.getDate());
         break;
       case 'all':
       default:
@@ -595,25 +589,6 @@ const PerformanceSection: React.FC = () => {
           <div className="flex-1">
             {selectedTab === 'overview' && (
               <div className="space-y-8">
-                {/* Period Selector */}
-                <Card ocean padding="lg">
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {periods.map((period) => (
-                      <button
-                        key={period.id}
-                        onClick={() => setSelectedPeriod(period.id)}
-                        className={cn(
-                          'px-4 py-2 rounded-lg font-medium transition-all duration-200',
-                          selectedPeriod === period.id
-                            ? 'bg-primary-500 text-white shadow-sm'
-                            : 'text-text-secondary hover:text-text-primary hover:bg-background-secondary/50 dark:hover:bg-background-tertiary bg-background-secondary/30 dark:bg-background-secondary/30 border border-border/50'
-                        )}
-                      >
-                        {period.label}
-                      </button>
-                    ))}
-                  </div>
-                </Card>
 
                 {/* Chart */}
                 <PerformanceChart
