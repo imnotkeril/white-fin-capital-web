@@ -7,6 +7,15 @@ import { useNotifications } from '@/context/AppContext';
 import { cn } from '@/utils/helpers';
 import Button from '@/components/common/Button';
 
+// Временная заглушка для contactAPI
+const contactAPI = {
+  sendMessage: async (data: any) => {
+    console.log('Message sent:', data);
+    // Симулируем отправку
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+};
+
 const ContactForm: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const { notifySuccess, notifyError } = useNotifications();

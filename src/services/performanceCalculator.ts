@@ -55,7 +55,7 @@ export class PerformanceCalculator {
       losingTrades.reduce((sum, t) => sum + (t.portfolioImpact * 100), 0) / losingTrades.length : 0;
 
     const timeSeries = this.calculateTimeSeries(sortedTrades, benchmarkPoints);
-    const totalReturn = timeSeries.length > 0 ? timeSeries[timeSeries.length - 1].cumulativeReturn : 0;
+    const totalReturn = timeSeries.length > 0 ? timeSeries[timeSeries.length - 1]?.cumulativeReturn || 0 : 0;
 
     const maxDrawdown = this.calculateMaxDrawdown(timeSeries, sortedTrades);
     const sharpeRatio = this.calculateSharpeRatio(timeSeries);

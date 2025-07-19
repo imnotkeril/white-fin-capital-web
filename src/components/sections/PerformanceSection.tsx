@@ -144,10 +144,11 @@ const PerformanceSection: React.FC = () => {
         value: Math.round(point.cumulativeReturn * 100) / 100,
         label: `Portfolio: ${Math.round(point.cumulativeReturn * 100) / 100}%`
       }));
-      setPerformanceData(perfData);
+      const validPerfData = perfData.filter(item => item.date !== undefined) as { date: string; value: number; label?: string; }[];
+      setPerformanceData(validPerfData);
 
       console.log(`✅ Portfolio equity: ${portfolioTimeSeries.length} daily points`);
-      console.log(`📈 Final portfolio return: ${portfolioTimeSeries.length > 0 ? portfolioTimeSeries[portfolioTimeSeries.length - 1].cumulativeReturn.toFixed(2) : 0}%`);
+      console.log(`📈 Final portfolio return: ${portfolioTimeSeries.length > 0 ? portfolioTimeSeries[portfolioTimeSeries.length - 1]?.cumulativeReturn?.toFixed(2) || 0 : 0}%`);
 
       // 5. ✅ ИСПРАВЛЕНО: Создаем данные для графика бенчмарка
       console.log(`📊 Creating benchmark chart data from ${benchmarkPoints.length} points`);
@@ -170,7 +171,8 @@ const PerformanceSection: React.FC = () => {
         console.log(`✅ Created ${benchData.length} benchmark chart points`);
         console.log('📊 Sample chart data:', benchData.slice(0, 3));
 
-        setBenchmarkData(benchData);
+        const validBenchData = benchData.filter(item => item.date !== undefined) as { date: string; value: number; label?: string; }[];
+        setBenchmarkData(validBenchData);
       }
 
       // 6. Создаем данные закрытых трейдов для таблицы (без изменений)
@@ -623,7 +625,7 @@ const PerformanceSection: React.FC = () => {
                   chartType="area"
                   title="Portfolio Performance vs S&P 500"
                   selectedPeriod={selectedPeriod}
-                  onPeriodChange={setSelectedPeriod}
+                  onPeriodChange={(period) => setSelectedPeriod(period as PeriodType)}
                 />
 
                 {/* Period Statistics */}

@@ -62,8 +62,8 @@ export class PortfolioValidation {
     warnings: string[];
   } {
     const warnings: string[] = [];
-    const drawdowns = trades.map(t => t.positionLow && t.entryPrice
-      ? ((t.positionLow - t.entryPrice) / t.entryPrice) * 100
+    const drawdowns = trades.map(t => t.positionLow && t.avgPrice
+      ? ((t.positionLow - t.avgPrice) / t.avgPrice) * 100
       : 0
     );
 
@@ -97,7 +97,7 @@ export class PortfolioValidation {
       impact: number;
       pnl: number;
       suspicious: boolean;
-      reason?: string;
+      reason?: string | undefined;
     }>;
   } {
     const details = trades.map(trade => {

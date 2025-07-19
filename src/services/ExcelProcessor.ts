@@ -102,21 +102,26 @@ export class ExcelProcessor {
 
     // Пропускаем заголовок (первая строка)
     for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
+      const line = lines[i]?.trim();
       if (!line) continue;
 
       const parts = line.split(';');
       if (parts.length < 8) continue;
 
       try {
-        const ticker = parts[0].trim();
-        const position = parts[1].trim();
-        const entryDate = this.parseCSVDate(parts[2].trim());
-        const avgPrice = this.parseCSVNumber(parts[3].trim());
-        const exitDate = this.parseCSVDate(parts[4].trim());
-        const exitPrice = this.parseCSVNumber(parts[5].trim());
-        const pnlPercent = this.parseCSVNumber(parts[6].trim().replace('%', ''));
-        const portfolioExposure = this.parseCSVNumber(parts[7].trim().replace('%', '')) / 100;
+        const ticker = parts[0]?.trim();
+        const position = parts[1]?.trim();
+        const entryDate = this.parseCSVDate(parts[2]?.trim());
+        const avgPrice = this.parseCSVNumber(parts[3]?.trim());
+        const exitDate = this.parseCSVDate(parts[4]?.trim());
+        const exitPrice = this.parseCSVNumber(parts[5]?.trim());
+        const pnlPercent = this.parseCSVNumber(parts[6]?.trim().replace('%', ''));
+        const portfolioExposure = this.parseCSVNumber(parts[7]?.trim().replace('%', '')) / 100;
+
+        // Проверить все parts перед использованием:
+        if (!ticker || !position || !entryDate || avgPrice === null || !exitDate || exitPrice === null || pnlPercent === null) {
+          continue;
+        }
 
         if (isNaN(entryDate.getTime()) || isNaN(exitDate.getTime()) ||
             isNaN(pnlPercent) || isNaN(portfolioExposure)) {
@@ -127,10 +132,10 @@ export class ExcelProcessor {
         const holdingDays = Math.ceil((exitDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
         const portfolioImpact = (pnlPercent / 100) * portfolioExposure;
 
-        const positionHigh = parts.length > 9 ? this.parseCSVNumber(parts[9].trim()) : avgPrice;
-        const positionLow = parts.length > 10 ? this.parseCSVNumber(parts[10].trim()) : avgPrice;
-        const drawdown = parts.length > 11 ? this.parseCSVNumber(parts[11].trim().replace('%', '')) : 0;
-        const runUp = parts.length > 12 ? this.parseCSVNumber(parts[12].trim().replace('%', '')) : 0;
+        const positionHigh = parts.length > 9 ? this.parseCSVNumber(parts[9]?.trim() || '0') : avgPrice;
+        const positionLow = parts.length > 10 ? this.parseCSVNumber(parts[10]?.trim() || '0') : avgPrice;
+        const drawdown = parts.length > 11 ? this.parseCSVNumber(parts[11]?.trim()?.replace('%', '') || '0') : 0;
+        const runUp = parts.length > 12 ? this.parseCSVNumber(parts[12]?.trim()?.replace('%', '') || '0') : 0;
 
         trades.push({
           ticker: ticker.toUpperCase(),
@@ -168,7 +173,9 @@ export class ExcelProcessor {
   // ✅ ПЕРЕИМЕНОВАННЫЙ МЕТОД: Загрузка трейдов из Excel
   private static async loadTradingDataFromExcel(): Promise<TradeRecord[]> {
     const workbook = await this.loadExcelFile(this.TRADING_FILE_XLSX);
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const firstSheetName = workbook.SheetNames[0];
+    if (!firstSheetName) throw new Error('No sheets found');
+    const sheet = workbook.Sheets[firstSheetName];
 
     if (!sheet) {
       throw new Error('No sheets found in trading data file');
@@ -262,7 +269,7 @@ export class ExcelProcessor {
     let startValue: number | null = null;
 
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
+      const line = lines[i]?.trim();
       if (!line) continue;
 
       const parts = line.split(';');
@@ -592,7 +599,8 @@ export class ExcelProcessor {
 
     console.log(`Trade ${rowNum}: ${pnlPercent}% * ${portfolioExposure} = ${portfolioImpact * 100}% impact`);
 
-    // ✅ ДОБАВИТЬ ПАРСИНГ ДОПОЛНИТЕЛЬНЫХ ПОЛЕЙ:
+
+    const avgPrice = headerMap.avgPrice ? this.parseNumber(row[headerMap.avgPrice], 'avg price') : 0;
     const positionHigh = headerMap.positionHigh ?
       this.parseNumber(row[headerMap.positionHigh], 'position high') : avgPrice;
     const positionLow = headerMap.positionLow ?
