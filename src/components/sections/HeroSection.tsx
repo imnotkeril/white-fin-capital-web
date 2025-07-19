@@ -107,7 +107,7 @@ const HeroSection: React.FC = () => {
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
           <div className={cn(
-            "glass p-6 rounded-xl text-center transition-all duration-300 group cursor-pointer",
+            "glass p-6 rounded-xl text-center transition-all duration-300 group cursor-pointer bg-white/10 backdrop-blur-20",
             "hover:-translate-y-2 hover:shadow-2xl",
             "hover:shadow-primary-500/25 hover:ring-1 hover:ring-primary-500/50",
             "dark:hover:shadow-primary-400/30 dark:hover:ring-primary-400/50"
@@ -125,7 +125,7 @@ const HeroSection: React.FC = () => {
           </div>
 
           <div className={cn(
-            "glass p-6 rounded-xl text-center transition-all duration-300 group cursor-pointer",
+            "glass p-6 rounded-xl text-center transition-all duration-300 group cursor-pointer bg-white/10 backdrop-blur-20",
             "hover:-translate-y-2 hover:shadow-2xl",
             "hover:shadow-primary-500/25 hover:ring-1 hover:ring-primary-500/50",
             "dark:hover:shadow-primary-400/30 dark:hover:ring-primary-400/50"
@@ -143,7 +143,7 @@ const HeroSection: React.FC = () => {
           </div>
 
           <div className={cn(
-            "glass p-6 rounded-xl text-center transition-all duration-300 group cursor-pointer",
+            "glass p-6 rounded-xl text-center transition-all duration-300 group cursor-pointer bg-white/10 backdrop-blur-20",
             "hover:-translate-y-2 hover:shadow-2xl",
             "hover:shadow-primary-500/25 hover:ring-1 hover:ring-primary-500/50",
             "dark:hover:shadow-primary-400/30 dark:hover:ring-primary-400/50"
