@@ -44,10 +44,38 @@ const HeroSection: React.FC = () => {
   return (
     <section
       id="hero"
-      className="relative min-h-screen pt-20 flex items-center justify-center overflow-hidden hero-background"
+      className="relative min-h-screen pt-20 flex items-center justify-center overflow-hidden"
     >
+      {/* Background with blur */}
+      {/* Два фоновых изображения с crossfade */}
+      <div className="absolute inset-0 z-0">
+        <div
+          className={cn(
+            "absolute inset-0 transition-opacity duration-500",
+            actualTheme === 'light' ? 'opacity-100' : 'opacity-0'
+          )}
+          style={{
+            backgroundImage: 'url("/images/ocean-light.jpg")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center center',
+            filter: 'blur(1.5px)',
+          }}
+        />
+        <div
+          className={cn(
+            "absolute inset-0 transition-opacity duration-500",
+            actualTheme === 'dark' ? 'opacity-100' : 'opacity-0'
+          )}
+          style={{
+            backgroundImage: 'url("/images/ocean.jpg")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center center',
+            filter: 'blur(1.5px)',
+          }}
+        />
+      </div>
       {/* Main Content */}
-      <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
+      <div className="relative z-20 max-w-6xl mx-auto px-6 text-center">
         {/* Hero Text */}
         <div className="mb-12">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-text-primary mb-6 leading-tight">
