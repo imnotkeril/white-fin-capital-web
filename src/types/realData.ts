@@ -160,4 +160,4 @@ export interface PortfolioValidationResult {
   recommendations: string[];
 }
 
-export { KPIData } from './index';
+export type { KPIData } from './index';

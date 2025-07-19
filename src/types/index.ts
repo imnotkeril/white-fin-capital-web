@@ -1,31 +1,4 @@
-// Main types for White Fin Capital - ИСПРАВЛЕНО
-
-// User Types
-export interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: 'user' | 'admin' | 'analyst';
-  subscriptionPlan?: 'basic' | 'professional' | 'enterprise';
-  subscriptionStatus: 'active' | 'inactive' | 'canceled';
-  profileImage?: string;
-  createdAt: string;
-  updatedAt: string;
-  preferences?: UserPreferences;
-}
-
-export interface UserPreferences {
-  theme: Theme;
-  notifications: {
-    email: boolean;
-    browser: boolean;
-    trades: boolean;
-    reports: boolean;
-  };
-  timezone: string;
-  language: string;
-}
+// Main types for White Fin Capital - Cleaned Version
 
 // Theme Types
 export type Theme = 'light' | 'dark';
@@ -47,7 +20,7 @@ export interface ButtonProps extends ComponentProps {
 
 export interface CardProps extends ComponentProps {
   hover?: boolean;
-  padding?: 'sm' | 'md' | 'lg' | 'xl' | 'none'; // ИСПРАВЛЕНО: добавлены xl и none
+  padding?: 'sm' | 'md' | 'lg' | 'xl' | 'none';
 }
 
 // Chart Types
@@ -72,31 +45,6 @@ export interface ThemeContextType {
   setTheme: (theme: Theme) => void;
 }
 
-// ИСПРАВЛЕНО: Notification добавлен в AppContextType
-export interface Notification {
-  id: string;
-  type: 'success' | 'error' | 'warning' | 'info';
-  title: string;
-  message?: string;
-  duration?: number;
-  timestamp: Date;
-}
-
-// App Context Types - ИСПРАВЛЕНО
-export interface AppContextType {
-  user: User | null;
-  setUser: (user: User | null) => void;
-  isLoading: boolean;
-  setIsLoading: (loading: boolean) => void;
-  notifications: Notification[];
-  isInitialized: boolean;
-  addNotification: (notification: Omit<Notification, 'id' | 'timestamp'>) => void;
-  removeNotification: (id: string) => void;
-  clearNotifications: () => void;
-  logout: () => void;
-  resetApp: () => void;
-}
-
 // Navigation Types
 export interface NavigationItem {
   id: string;
@@ -117,7 +65,7 @@ export interface FormState<T> {
   isSubmitting: boolean;
 }
 
-// ИСПРАВЛЕНО: Добавлены отсутствующие типы
+// Statistics and Trading Types
 export interface Statistics {
   totalReturn: number;
   winRate: number;
@@ -177,7 +125,7 @@ export interface TeamMember {
   twitter?: string;
 }
 
-// ИСПРАВЛЕНО: переименовано из Subscription в SubscriptionPlan
+// Subscription Types
 export interface SubscriptionPlan {
   id: string;
   name: string;
@@ -190,7 +138,7 @@ export interface SubscriptionPlan {
   isEnterprise?: boolean;
 }
 
-// ИСПРАВЛЕНО: добавлен Service тип
+// Service Types
 export interface Service {
   id: string;
   title: string;
@@ -245,7 +193,51 @@ export interface CSVData {
   };
 }
 
-// ИСПРАВЛЕНО: добавлен ValidationSchema тип
+// Modal Types
+export interface ModalProps extends ComponentProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+}
+
+// File Upload Props Types
+export interface FileUploadProps {
+  accept?: string;
+  maxSize?: number;
+  multiple?: boolean;
+  onFileSelect: (files: File[]) => void;
+  onError?: (error: string) => void;
+}
+
+// Loading States
+export interface LoadingState {
+  isLoading: boolean;
+  error?: string | null;
+  success?: boolean;
+}
+
+// Generic Response Types (for local data handling)
+export interface DataResponse<T> {
+  data: T;
+  success: boolean;
+  message?: string;
+}
+
+// Performance Statistics Types
+export interface PerformanceStats {
+  totalReturn: number;
+  annualizedReturn: number;
+  winRate: number;
+  totalTrades: number;
+  maxDrawdown: number;
+  sharpeRatio: number;
+  startDate: string;
+  endDate: string;
+  lastUpdated: string;
+}
+
+// Validation Schema Type
 export type ValidationSchema<T> = {
   [K in keyof T]?: Array<(value: T[K]) => string | null>;
 };

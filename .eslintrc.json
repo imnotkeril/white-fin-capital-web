@@ -10,22 +10,21 @@
       "jsx": true
     }
   },
-  "plugins": [
-    "@typescript-eslint",
-    "react",
-    "react-hooks"
-  ],
   "rules": {
-    "@typescript-eslint/no-unused-vars": "warn",
-    "@typescript-eslint/no-explicit-any": "warn",
     "react/no-unescaped-entities": "off",
     "@next/next/no-img-element": "warn",
     "react-hooks/exhaustive-deps": "warn",
-    "import/no-anonymous-default-export": "warn"
+    "import/no-anonymous-default-export": "off"
   },
   "env": {
     "browser": true,
     "es2022": true,
     "node": true
-  }
+  },
+  "ignorePatterns": [
+    "node_modules/",
+    ".next/",
+    "out/",
+    "dist/"
+  ]
 }

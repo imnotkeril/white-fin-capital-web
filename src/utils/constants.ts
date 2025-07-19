@@ -1,4 +1,4 @@
-// Constants for White Fin Capital
+// Constants for White Fin Capital - Simplified Version
 
 // Company Information
 export const COMPANY = {
@@ -25,25 +25,6 @@ export const NAVIGATION_ITEMS = [
   { id: 'contact', label: 'Contact', href: '#contact', section: 'contact' },
 ] as const;
 
-// API Endpoints
-export const API_ENDPOINTS = {
-  contact: '/api/contact',
-  subscribe: '/api/subscribe',
-  statistics: '/api/statistics',
-  uploadCsv: '/api/statistics/upload-csv',
-  health: '/api/health',
-  auth: {
-    login: '/api/auth/login',
-    register: '/api/auth/register',
-    refresh: '/api/auth/refresh',
-  },
-  subscription: {
-    create: '/api/subscription/create',
-    cancel: '/api/subscription/cancel',
-    webhook: '/api/subscription/webhook',
-  },
-} as const;
-
 // Theme Settings
 export const THEME = {
   default: 'dark' as const,
@@ -52,8 +33,8 @@ export const THEME = {
     primary: '#90bff9',
     secondary: '#7dd3fc',
     success: '#059669',
-    error: '#0369a1', // Ocean blue instead of red
-    warning: '#0891b2', // Ocean teal instead of yellow
+    error: '#0369a1',
+    warning: '#0891b2',
     neutral: '#64748b',
   },
 } as const;
@@ -72,7 +53,7 @@ export const ANIMATIONS = {
   },
 } as const;
 
-// Form Settings - COMPLETE
+// Form Settings
 export const FORM_SETTINGS = {
   validation: {
     email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
@@ -167,7 +148,7 @@ export const SUBSCRIPTION_FEATURES = {
     'Custom Research Projects',
     'Direct Analyst Access',
     'Institutional Reports',
-    'API Access',
+    'CSV Data Access',
     'Dedicated Account Manager',
     'Custom Integration Support',
   ],
@@ -187,9 +168,7 @@ export const BREAKPOINTS = {
 // Local Storage Keys
 export const STORAGE_KEYS = {
   theme: 'white-fin-theme',
-  user: 'white-fin-user',
   preferences: 'white-fin-preferences',
-  cart: 'white-fin-cart',
 } as const;
 
 // Error Messages
@@ -197,18 +176,6 @@ export const ERROR_MESSAGES = {
   network: 'Network error. Please check your connection and try again.',
   validation: 'Please check your input and try again.',
   server: 'Server error. Please try again later.',
-  unauthorized: 'You are not authorized to access this resource.',
-  notFound: 'The requested resource was not found.',
-  rateLimit: 'Too many requests. Please try again later.',
-  payment: 'Payment processing failed. Please try again.',
-  subscription: 'Subscription error. Please contact support.',
-} as const;
-
-// Success Messages
-export const SUCCESS_MESSAGES = {
-  contactSubmitted: 'Your message has been sent successfully. We\'ll get back to you soon.',
-  subscriptionCreated: 'Welcome! Your subscription has been activated.',
-  subscriptionCanceled: 'Your subscription has been canceled successfully.',
-  profileUpdated: 'Your profile has been updated successfully.',
-  passwordChanged: 'Your password has been changed successfully.',
+  fileUpload: 'File upload failed. Please try again.',
+  fileFormat: 'Invalid file format. Please upload a CSV file.',
 } as const;

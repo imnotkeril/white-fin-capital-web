@@ -94,7 +94,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
     if (filteredData.length === 0) return [];
 
     // Recalculate returns relative to the start of the period
-    const baseValue = filteredData[0].value;
+    const baseValue = filteredData[0]?.value ?? 0;
 
     return filteredData.map(point => ({
       ...point,

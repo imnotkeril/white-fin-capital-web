@@ -4,7 +4,6 @@ import { ContactFormData } from '@/types';
 import { CONTACT_PURPOSES } from '@/utils/constants';
 import { useForm } from '@/hooks/useForm';
 import { useNotifications } from '@/context/AppContext';
-import { contactAPI } from '@/services/api';
 import { cn } from '@/utils/helpers';
 import Button from '@/components/common/Button';
 

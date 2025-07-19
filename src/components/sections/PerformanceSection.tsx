@@ -10,7 +10,7 @@ import { KPIData } from '@/types';
 // Импорты упрощенных сервисов
 import { ExcelProcessor } from '@/services/ExcelProcessor';
 import { PerformanceCalculator } from '@/services/performanceCalculator';
-
+type PeriodType = '3m' | '6m' | '1y' | 'all';
 interface PeriodData {
   currentReturn: number;
   bestDay: number;
@@ -44,7 +44,7 @@ interface BenchmarkPoint {
 
 const PerformanceSection: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<'overview' | 'trades'>('overview');
-  const [selectedPeriod, setSelectedPeriod] = useState<'1m' | '3m' | '6m' | '1y' | 'all'>('1y');
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('1y');
 
   // Data state
   const [kpiData, setKpiData] = useState<KPIData[]>([]);
@@ -319,9 +319,6 @@ const PerformanceSection: React.FC = () => {
     let startDate: Date;
 
     switch (period) {
-      case '1m':
-        startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-        break;
       case '3m':
         startDate = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
         break;
