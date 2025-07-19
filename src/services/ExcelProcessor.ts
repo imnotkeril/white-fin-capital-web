@@ -27,12 +27,15 @@ export interface LoadedData {
 }
 
 export class ExcelProcessor {
-  private static readonly TRADING_FILE = '/data/trading-data.xlsx';
-  private static readonly BENCHMARK_FILE = '/SP500.xlsx';  // ✅ Файл в корне public/
+  // ✅ ИСПРАВЛЕНО: Поддержка CSV и Excel файлов
+  private static readonly TRADING_FILE_XLSX = '/data/trading-data.xlsx';
+  private static readonly TRADING_FILE_CSV = '/data/tradingdata.csv';
+  private static readonly BENCHMARK_FILE_XLSX = '/data/SP500.xlsx';
+  private static readonly BENCHMARK_FILE_CSV = '/data/SP500.csv';
 
   static async loadAllData(): Promise<LoadedData> {
     try {
-      console.log('📊 Loading Excel data...');
+      console.log('📊 Loading data (CSV/Excel support)...');
 
       const [tradesResult, benchmarkResult] = await Promise.allSettled([
         this.loadTradingData(),
@@ -58,13 +61,98 @@ export class ExcelProcessor {
       return { trades, benchmark };
 
     } catch (error) {
-      console.error('❌ Critical error loading Excel data:', error);
+      console.error('❌ Critical error loading data:', error);
       throw new Error(`Failed to load data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
+  // ✅ ИСПРАВЛЕНО: Попытка загрузить сначала CSV, потом Excel
   private static async loadTradingData(): Promise<TradeRecord[]> {
-    const workbook = await this.loadExcelFile(this.TRADING_FILE);
+    // Сначала пробуем CSV
+    try {
+      console.log('📂 Trying to load trading data from CSV...');
+      return await this.loadTradingDataFromCSV();
+    } catch (csvError) {
+      console.log('📂 CSV failed, trying Excel...', csvError);
+
+      // Если CSV не удался, пробуем Excel
+      try {
+        return await this.loadTradingDataFromExcel();
+      } catch (excelError) {
+        throw new Error(`Failed to load trading data from both CSV and Excel: ${csvError}, ${excelError}`);
+      }
+    }
+  }
+
+  // ✅ НОВЫЙ МЕТОД: Загрузка трейдов из CSV
+  private static async loadTradingDataFromCSV(): Promise<TradeRecord[]> {
+    const fileContent = await this.loadTextFile(this.TRADING_FILE_CSV);
+    const lines = fileContent.split('\n').filter(line => line.trim());
+
+    if (lines.length < 2) {
+      throw new Error('CSV file must have headers and data');
+    }
+
+    const trades: TradeRecord[] = [];
+
+    // Пропускаем заголовок (первая строка)
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      const parts = line.split(';');
+      if (parts.length < 8) continue;
+
+      try {
+        const ticker = parts[0].trim();
+        const position = parts[1].trim();
+        const entryDate = this.parseCSVDate(parts[2].trim());
+        const avgPrice = this.parseCSVNumber(parts[3].trim());
+        const exitDate = this.parseCSVDate(parts[4].trim());
+        const exitPrice = this.parseCSVNumber(parts[5].trim());
+        const pnlPercent = this.parseCSVNumber(parts[6].trim().replace('%', ''));
+        const portfolioExposure = this.parseCSVNumber(parts[7].trim().replace('%', '')) / 100;
+
+        if (isNaN(entryDate.getTime()) || isNaN(exitDate.getTime()) ||
+            isNaN(pnlPercent) || isNaN(portfolioExposure)) {
+          console.warn(`⚠️ Skipping invalid CSV trade at line ${i + 1}`);
+          continue;
+        }
+
+        const holdingDays = Math.ceil((exitDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
+        const portfolioImpact = (pnlPercent / 100) * portfolioExposure;
+
+        trades.push({
+          ticker: ticker.toUpperCase(),
+          position: position.toUpperCase() === 'LONG' ? 'Long' : 'Short',
+          entryDate,
+          avgPrice,
+          exitDate,
+          exitPrice,
+          pnlPercent,
+          portfolioExposure,
+          holdingDays,
+          portfolioImpact
+        });
+        console.log(`[DEBUG] Trade ${i}: ${ticker} - PnL: ${pnlPercent}%, Exp: ${portfolioExposure}, Impact: ${portfolioImpact}`);
+        console.log(`✅ CSV Trade ${i}: ${ticker} ${pnlPercent}% * ${portfolioExposure} = ${portfolioImpact * 100}% impact`);
+
+      } catch (error) {
+        console.warn(`⚠️ Skipping invalid CSV trade at line ${i + 1}:`, error);
+      }
+    }
+
+    if (trades.length === 0) {
+      throw new Error('No valid trades found in CSV file');
+    }
+
+    console.log(`✅ Loaded ${trades.length} trades from CSV`);
+    return trades.sort((a, b) => a.exitDate.getTime() - b.exitDate.getTime());
+  }
+
+  // ✅ ПЕРЕИМЕНОВАННЫЙ МЕТОД: Загрузка трейдов из Excel
+  private static async loadTradingDataFromExcel(): Promise<TradeRecord[]> {
+    const workbook = await this.loadExcelFile(this.TRADING_FILE_XLSX);
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
     if (!sheet) {
@@ -121,12 +209,95 @@ export class ExcelProcessor {
     return trades;
   }
 
+  // ✅ ИСПРАВЛЕНО: Попытка загрузить сначала CSV, потом Excel для benchmark
   private static async loadBenchmarkData(): Promise<BenchmarkPoint[]> {
+    console.log('📊 Loading benchmark data (CSV/Excel support)...');
+
+    // Сначала пробуем CSV
+    try {
+      return await this.loadBenchmarkDataFromCSV();
+    } catch (csvError) {
+      console.log('📂 CSV failed, trying Excel...', csvError);
+
+      // Если CSV не удался, пробуем Excel
+      try {
+        return await this.loadBenchmarkDataFromExcel();
+      } catch (excelError) {
+        console.warn(`⚠️ Failed to load benchmark from both sources: ${csvError}, ${excelError}`);
+        return [];
+      }
+    }
+  }
+
+  // ✅ НОВЫЙ МЕТОД: Загрузка S&P 500 из CSV
+  private static async loadBenchmarkDataFromCSV(): Promise<BenchmarkPoint[]> {
+    const fileContent = await this.loadTextFile(this.BENCHMARK_FILE_CSV);
+    const lines = fileContent.split('\n').filter(line => line.trim());
+
+    if (lines.length === 0) {
+      throw new Error('CSV file is empty');
+    }
+
+    const points: BenchmarkPoint[] = [];
+    let startValue: number | null = null;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      const parts = line.split(';');
+      if (parts.length !== 2) continue;
+
+      const [dateStr, valueStr] = parts;
+      if (!dateStr || !valueStr) continue;
+
+      try {
+        const date = this.parseCSVDate(dateStr);
+        const value = this.parseCSVNumber(valueStr.replace(',', '.'));
+
+        if (isNaN(date.getTime()) || isNaN(value)) continue;
+
+        if (startValue === null) {
+          startValue = value;
+        }
+
+        const previousValue = points.length > 0 ? points[points.length - 1].value : startValue;
+        const change = ((value - previousValue) / previousValue) * 100;
+        const cumulativeReturn = ((value - startValue) / startValue) * 100;
+
+        points.push({
+          date,
+          value,
+          change,
+          cumulativeReturn
+        });
+
+      } catch (error) {
+        console.warn(`⚠️ Skipping invalid CSV benchmark row ${i + 1}:`, error);
+      }
+    }
+
+    const sortedPoints = points.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    console.log(`✅ Loaded ${sortedPoints.length} benchmark points from CSV`);
+
+    if (sortedPoints.length > 0) {
+      const first = sortedPoints[0];
+      const last = sortedPoints[sortedPoints.length - 1];
+      console.log(`📅 S&P 500 Period: ${first.date.toISOString().split('T')[0]} → ${last.date.toISOString().split('T')[0]}`);
+      console.log(`📊 S&P 500 Values: ${first.value} → ${last.value}`);
+      console.log(`📈 S&P 500 Total return: ${last.cumulativeReturn.toFixed(2)}%`);
+    }
+
+    return sortedPoints;
+  }
+
+  // ✅ ПЕРЕИМЕНОВАННЫЙ МЕТОД: Загрузка S&P 500 из Excel
+  private static async loadBenchmarkDataFromExcel(): Promise<BenchmarkPoint[]> {
     console.log('📊 Loading benchmark data from SP500.xlsx...');
 
     try {
-      // ✅ Используем исправленный метод загрузки
-      const workbook = await this.loadExcelFile(this.BENCHMARK_FILE);
+      const workbook = await this.loadExcelFile(this.BENCHMARK_FILE_XLSX);
 
       console.log(`📋 Available sheets: ${workbook.SheetNames.join(', ')}`);
 
@@ -219,15 +390,16 @@ export class ExcelProcessor {
     }
   }
 
+  // ✅ ИСПРАВЛЕННАЯ СИНХРОНИЗАЦИЯ: Начинается с 0%
   private static syncBenchmarkToPortfolio(benchmarkPoints: BenchmarkPoint[], trades: TradeRecord[]): BenchmarkPoint[] {
     if (trades.length === 0 || benchmarkPoints.length === 0) {
       console.warn('⚠️ No trades or benchmark data available for sync');
       return benchmarkPoints;
     }
 
-    console.log(`📊 Input: ${benchmarkPoints.length} benchmark points, ${trades.length} trades`);
+    console.log(`📊 Syncing benchmark: ${benchmarkPoints.length} points, ${trades.length} trades`);
 
-    // Получаем диапазон дат трейдов
+    // Находим дату первого трейда (entry, не exit!)
     const sortedTradesByEntry = [...trades].sort((a, b) => a.entryDate.getTime() - b.entryDate.getTime());
     const sortedTradesByExit = [...trades].sort((a, b) => a.exitDate.getTime() - b.exitDate.getTime());
 
@@ -236,7 +408,7 @@ export class ExcelProcessor {
 
     console.log(`📅 Portfolio period: ${portfolioStartDate.toISOString().split('T')[0]} → ${portfolioEndDate.toISOString().split('T')[0]}`);
 
-    // Найдем ближайшую точку бенчмарка к началу периода
+    // Найдем ближайшую точку бенчмарка к началу торговли портфеля
     let basePoint: BenchmarkPoint | null = null;
     let minDiff = Infinity;
 
@@ -256,10 +428,9 @@ export class ExcelProcessor {
     const newStartValue = basePoint.value;
     console.log(`📌 Benchmark base: ${basePoint.date.toISOString().split('T')[0]} = ${newStartValue}`);
 
-    // ✅ НЕ фильтруем данные, а только пересчитываем cumulativeReturn
+    // ✅ ИСПРАВЛЕНО: Пересчитываем cumulativeReturn от базовой точки (начинаем с 0%)
     const syncedBenchmark = benchmarkPoints.map(point => {
       const newCumulativeReturn = ((point.value - newStartValue) / newStartValue) * 100;
-
       return {
         ...point,
         cumulativeReturn: newCumulativeReturn
@@ -269,7 +440,6 @@ export class ExcelProcessor {
     console.log(`✅ Benchmark synced: ${syncedBenchmark.length} points processed`);
 
     if (syncedBenchmark.length > 0) {
-      // Найдем первую и последнюю точки в диапазоне портфеля для логирования
       const relevantPoints = syncedBenchmark.filter(p =>
         p.date >= portfolioStartDate && p.date <= portfolioEndDate
       );
@@ -287,10 +457,6 @@ export class ExcelProcessor {
     return syncedBenchmark;
   }
 
-
-  /**
-
-   */
   static resyncBenchmarkAfterFiltering(
     benchmarkPoints: BenchmarkPoint[],
     filteredTrades: TradeRecord[]
@@ -302,11 +468,8 @@ export class ExcelProcessor {
 
     console.log(`🔄 Resyncing benchmark for ${filteredTrades.length} filtered trades`);
 
-
     const sortedFilteredTrades = [...filteredTrades].sort((a, b) => a.entryDate.getTime() - b.entryDate.getTime());
-
     const firstFilteredTradeDate = sortedFilteredTrades[0].entryDate;
-
 
     const originalFirstTrade = new Date('2024-01-03');
     const timeDiff = Math.abs(firstFilteredTradeDate.getTime() - originalFirstTrade.getTime());
@@ -356,6 +519,38 @@ export class ExcelProcessor {
     }
 
     return resyncedBenchmark;
+  }
+
+  // ✅ ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ для парсинга CSV
+  private static parseCSVDate(dateStr: string): Date {
+    // Ожидаем формат DD.MM.YYYY
+    const [day, month, year] = dateStr.split('.').map(x => parseInt(x));
+    return new Date(year, month - 1, day);
+  }
+
+  private static parseCSVNumber(str: string): number {
+    // Убираем символы валют, пробелы и заменяем запятую на точку
+    const cleaned = str.replace(/[$€£¥₽\s]/g, '').replace(',', '.');
+    return parseFloat(cleaned);
+  }
+
+  private static async loadTextFile(filename: string): Promise<string> {
+    try {
+      console.log(`📂 Loading text file: ${filename}`);
+      const response = await fetch(filename);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+      }
+
+      const text = await response.text();
+      console.log(`✅ Successfully loaded: ${filename} (${text.length} chars)`);
+      return text;
+
+    } catch (error) {
+      console.error(`❌ Failed to load ${filename}:`, error);
+      throw new Error(`Failed to load ${filename}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   private static parseTradeRow(row: any[], headerMap: Record<string, number>, rowNum: number): TradeRecord | null {
@@ -420,7 +615,6 @@ export class ExcelProcessor {
     }
   }
 
-  // ✅ ПОЛНОСТЬЮ ИСПРАВЛЕННЫЙ метод загрузки через fetch
   private static async loadExcelFile(filename: string): Promise<XLSX.WorkBook> {
     try {
       console.log(`📂 Loading Excel file via fetch: ${filename}`);

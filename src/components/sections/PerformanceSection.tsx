@@ -89,15 +89,17 @@ const PerformanceSection: React.FC = () => {
     try {
       console.log('Loading real trading data...');
 
-      // 1. Загружаем ВСЕ данные из Excel (трейды + бенчмарк)
+      // 1. Загружаем ВСЕ данные из CSV/Excel (трейды + бенчмарк)
       const { trades, benchmark: benchmarkPoints } = await ExcelProcessor.loadAllData();
 
       if (trades.length === 0) {
-        throw new Error('No valid trades found in Excel file');
+        throw new Error('No valid trades found in files');
       }
 
-      // 2. Рассчитываем метрики портфеля
-      const metrics = PerformanceCalculator.calculateAllMetrics(trades);
+      console.log(`✅ Loaded: ${trades.length} trades, ${benchmarkPoints.length} benchmark points`);
+
+      // 2. ✅ ИСПРАВЛЕНО: Рассчитываем метрики портфеля с поддержкой ежедневной эквити
+      const metrics = PerformanceCalculator.calculateAllMetrics(trades, benchmarkPoints);
 
       // 3. Создаем KPI данные
       const kpis: KPIData[] = [
@@ -134,8 +136,10 @@ const PerformanceSection: React.FC = () => {
       ];
       setKpiData(kpis);
 
-      // 4. Создаем данные для графика портфеля
-      const portfolioTimeSeries = PerformanceCalculator.calculateTimeSeries(trades);
+      // 4. ✅ ИСПРАВЛЕНО: Строим ежедневную эквити портфеля
+      console.log('📊 Building daily portfolio equity...');
+      const portfolioTimeSeries = PerformanceCalculator.calculateTimeSeries(trades, benchmarkPoints);
+
       const perfData = portfolioTimeSeries.map(point => ({
         date: point.date.toISOString().split('T')[0],
         value: Math.round(point.cumulativeReturn * 100) / 100,
@@ -143,7 +147,10 @@ const PerformanceSection: React.FC = () => {
       }));
       setPerformanceData(perfData);
 
-      // 5. Создаем данные для графика бенчмарка - С ОТЛАДКОЙ
+      console.log(`✅ Portfolio equity: ${portfolioTimeSeries.length} daily points`);
+      console.log(`📈 Final portfolio return: ${portfolioTimeSeries.length > 0 ? portfolioTimeSeries[portfolioTimeSeries.length - 1].cumulativeReturn.toFixed(2) : 0}%`);
+
+      // 5. ✅ ИСПРАВЛЕНО: Создаем данные для графика бенчмарка
       console.log(`📊 Creating benchmark chart data from ${benchmarkPoints.length} points`);
 
       if (benchmarkPoints.length === 0) {
@@ -167,7 +174,7 @@ const PerformanceSection: React.FC = () => {
         setBenchmarkData(benchData);
       }
 
-      // 6. Создаем данные закрытых трейдов для таблицы
+      // 6. Создаем данные закрытых трейдов для таблицы (без изменений)
       const tradesForTable = trades
         .sort((a, b) => b.exitDate.getTime() - a.exitDate.getTime())
         .slice(0, 20)
@@ -177,24 +184,23 @@ const PerformanceSection: React.FC = () => {
           type: trade.position,
           entryPrice: trade.avgPrice,
           exitPrice: trade.exitPrice,
-          pnl: trade.pnlPercent * trade.portfolioExposure * 10000, // Примерный расчет в долларах
+          pnl: trade.pnlPercent * trade.portfolioExposure * 10000,
           return: trade.pnlPercent,
           closedAt: trade.exitDate.toLocaleDateString(),
           entryDate: trade.entryDate.toLocaleDateString()
         }));
       setClosedTrades(tradesForTable);
 
-      // 7. Создаем РАСШИРЕННУЮ статистику трейдов
+      // 7. Создаем РАСШИРЕННУЮ статистику трейдов (без изменений)
       const winningTrades = trades.filter(t => t.pnlPercent > 0);
       const losingTrades = trades.filter(t => t.pnlPercent <= 0);
 
-      // Рассчитываем детальные метрики
       const averageGain = winningTrades.length > 0
-        ? winningTrades.reduce((sum, t) => sum + (t.portfolioImpact * 100), 0) / winningTrades.length // ✅ Изменено: portfolioImpact вместо pnlPercent
+        ? winningTrades.reduce((sum, t) => sum + (t.portfolioImpact * 100), 0) / winningTrades.length
         : 0;
 
       const averageLoss = losingTrades.length > 0
-        ? losingTrades.reduce((sum, t) => sum + (t.portfolioImpact * 100), 0) / losingTrades.length // ✅ Изменено: без Math.abs + portfolioImpact
+        ? losingTrades.reduce((sum, t) => sum + (t.portfolioImpact * 100), 0) / losingTrades.length
         : 0;
 
       const consecutiveStats = PerformanceCalculator.calculateConsecutiveWinLoss(trades);
@@ -279,8 +285,8 @@ const PerformanceSection: React.FC = () => {
       }
 
       // Рассчитываем метрики для отфильтрованных данных
-      const periodMetrics = PerformanceCalculator.calculateAllMetrics(filteredTrades);
-      const periodTimeSeries = PerformanceCalculator.calculateTimeSeries(filteredTrades);
+      const periodMetrics = PerformanceCalculator.calculateAllMetrics(filteredTrades, resyncedBenchmark);
+      const periodTimeSeries = PerformanceCalculator.calculateTimeSeries(filteredTrades, resyncedBenchmark);
 
       // Рассчитываем дневные возвраты для best/worst day
       const dailyReturns = periodTimeSeries.map(p => p.dailyReturn);
