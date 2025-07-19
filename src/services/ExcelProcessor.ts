@@ -8,10 +8,15 @@ export interface TradeRecord {
   avgPrice: number;
   exitDate: Date;
   exitPrice: number;
-  pnlPercent: number;  // ✅ Уже в процентах (15.5, не 0.155)
-  portfolioExposure: number; // ✅ В долях (0.1, не 10)
+  pnlPercent: number;
+  portfolioExposure: number;
   holdingDays: number;
   portfolioImpact: number;
+  // ✅ ДОБАВИТЬ ЭТИ ПОЛЯ:
+  positionHigh?: number;
+  positionLow?: number;
+  drawdown?: number;
+  runUp?: number;
 }
 
 export interface BenchmarkPoint {
@@ -122,6 +127,11 @@ export class ExcelProcessor {
         const holdingDays = Math.ceil((exitDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
         const portfolioImpact = (pnlPercent / 100) * portfolioExposure;
 
+        const positionHigh = parts.length > 9 ? this.parseCSVNumber(parts[9].trim()) : avgPrice;
+        const positionLow = parts.length > 10 ? this.parseCSVNumber(parts[10].trim()) : avgPrice;
+        const drawdown = parts.length > 11 ? this.parseCSVNumber(parts[11].trim().replace('%', '')) : 0;
+        const runUp = parts.length > 12 ? this.parseCSVNumber(parts[12].trim().replace('%', '')) : 0;
+
         trades.push({
           ticker: ticker.toUpperCase(),
           position: position.toUpperCase() === 'LONG' ? 'Long' : 'Short',
@@ -132,7 +142,12 @@ export class ExcelProcessor {
           pnlPercent,
           portfolioExposure,
           holdingDays,
-          portfolioImpact
+          portfolioImpact,
+          // ✅ ДОБАВИТЬ НОВЫЕ ПОЛЯ:
+          positionHigh,
+          positionLow,
+          drawdown,
+          runUp
         });
         console.log(`[DEBUG] Trade ${i}: ${ticker} - PnL: ${pnlPercent}%, Exp: ${portfolioExposure}, Impact: ${portfolioImpact}`);
         console.log(`✅ CSV Trade ${i}: ${ticker} ${pnlPercent}% * ${portfolioExposure} = ${portfolioImpact * 100}% impact`);
@@ -183,7 +198,12 @@ export class ExcelProcessor {
       exitDate: ['exit date', 'exit_date', 'close date'],
       exitPrice: ['exit price', 'close price'],
       pnlPercent: ['pnl %', 'pnl_percent', 'return %'],
-      portfolioExposure: ['portfolio exposure', 'exposure', 'size']
+      portfolioExposure: ['portfolio exposure', 'exposure', 'size'],
+      // ✅ ДОБАВИТЬ НОВЫЕ ПОЛЯ:
+      positionHigh: ['position high', 'high', 'max price'],
+      positionLow: ['position low', 'low', 'min price'],
+      drawdown: ['drawdown', 'dd', 'max dd'],
+      runUp: ['run up', 'runup', 'max gain']
     });
 
     const trades: TradeRecord[] = [];
@@ -572,6 +592,16 @@ export class ExcelProcessor {
 
     console.log(`Trade ${rowNum}: ${pnlPercent}% * ${portfolioExposure} = ${portfolioImpact * 100}% impact`);
 
+    // ✅ ДОБАВИТЬ ПАРСИНГ ДОПОЛНИТЕЛЬНЫХ ПОЛЕЙ:
+    const positionHigh = headerMap.positionHigh ?
+      this.parseNumber(row[headerMap.positionHigh], 'position high') : avgPrice;
+    const positionLow = headerMap.positionLow ?
+      this.parseNumber(row[headerMap.positionLow], 'position low') : avgPrice;
+    const drawdown = headerMap.drawdown ?
+      this.parseNumber(row[headerMap.drawdown], 'drawdown') : 0;
+    const runUp = headerMap.runUp ?
+      this.parseNumber(row[headerMap.runUp], 'run up') : 0;
+
     return {
       ticker: String(row[headerMap.ticker]).toUpperCase(),
       position: this.parsePosition(row[headerMap.position]),
@@ -582,7 +612,12 @@ export class ExcelProcessor {
       pnlPercent,
       portfolioExposure,
       holdingDays,
-      portfolioImpact
+      portfolioImpact,
+      // ✅ ДОБАВИТЬ НОВЫЕ ПОЛЯ:
+      positionHigh,
+      positionLow,
+      drawdown,
+      runUp
     };
   }
 

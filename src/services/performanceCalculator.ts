@@ -57,7 +57,7 @@ export class PerformanceCalculator {
     const timeSeries = this.calculateTimeSeries(sortedTrades, benchmarkPoints);
     const totalReturn = timeSeries.length > 0 ? timeSeries[timeSeries.length - 1].cumulativeReturn : 0;
 
-    const maxDrawdown = this.calculateMaxDrawdown(timeSeries);
+    const maxDrawdown = this.calculateMaxDrawdown(timeSeries, sortedTrades);
     const sharpeRatio = this.calculateSharpeRatio(timeSeries);
     const sortinoRatio = this.calculateSortinoRatio(timeSeries);
     const volatility = this.calculateVolatility(timeSeries);
@@ -186,15 +186,41 @@ export class PerformanceCalculator {
     return timeSeries;
   }
 
-  static calculateMaxDrawdown(timeSeries: TimeSeriesPoint[]): number {
+  static calculateMaxDrawdown(timeSeries: TimeSeriesPoint[], trades?: TradeRecord[]): number {
       if (timeSeries.length === 0) return 0;
 
-      // ✅ ИСПРАВЛЕНИЕ: Фильтруем только дни с реальными сделками
+      // ✅ ИСПРАВЛЕНО: Если есть данные о трейдах, используем просадки позиций
+      if (trades && trades.length > 0) {
+        console.log('🔍 [DEBUG] Calculating max drawdown using position drawdowns');
+
+        let maxSinglePositionImpact = 0;
+        let worstPosition: TradeRecord | null = null;
+
+        trades.forEach(trade => {
+          // Рассчитываем влияние просадки позиции на портфель
+          // Предполагаем, что у TradeRecord есть поле drawdown или рассчитываем из positionLow
+          const positionDrawdown = this.getPositionDrawdown(trade);
+          if (positionDrawdown < 0) {
+            const portfolioImpact = Math.abs((positionDrawdown * trade.portfolioExposure * 100) / 100);
+
+            if (portfolioImpact > maxSinglePositionImpact) {
+              maxSinglePositionImpact = portfolioImpact;
+              worstPosition = trade;
+            }
+
+            console.log(`   ${trade.ticker}: ${positionDrawdown.toFixed(2)}% × ${(trade.portfolioExposure * 100).toFixed(2)}% = ${portfolioImpact.toFixed(2)}% impact`);
+          }
+        });
+
+        if (worstPosition) {
+          console.log(`🎯 [DEBUG] Max Drawdown from worst position: ${maxSinglePositionImpact.toFixed(2)}% (${worstPosition.ticker})`);
+          return -maxSinglePositionImpact;
+        }
+      }
+
+      // ✅ Fallback: используем старый метод для кумулятивной кривой
       const tradeDays = timeSeries.filter(point => point.dailyReturn !== 0);
-
       if (tradeDays.length === 0) return 0;
-
-      console.log(`🔍 [DEBUG] Analyzing drawdown on ${tradeDays.length} trade days (from ${timeSeries.length} total days)`);
 
       let maxDrawdown = 0;
       let peak = 0;
@@ -204,20 +230,33 @@ export class PerformanceCalculator {
 
         if (currentReturn > peak) {
           peak = currentReturn;
-          console.log(`   [${index}] NEW PEAK: ${peak.toFixed(3)}%`);
         } else {
           const drawdown = peak - currentReturn;
           maxDrawdown = Math.max(maxDrawdown, drawdown);
-
-          if (drawdown > 0.1) {
-            console.log(`   [${index}] DRAWDOWN: ${peak.toFixed(3)}% → ${currentReturn.toFixed(3)}% = ${drawdown.toFixed(3)}%`);
-          }
         }
       });
 
-      console.log(`🎯 [DEBUG] Max Drawdown: ${maxDrawdown.toFixed(3)}%`);
+      console.log(`🎯 [DEBUG] Max Drawdown from equity curve: ${maxDrawdown.toFixed(3)}%`);
       return -maxDrawdown;
     }
+
+
+    private static getPositionDrawdown(trade: TradeRecord): number {
+        // Если в TradeRecord есть поле drawdown, используем его
+        if ('drawdown' in trade && typeof trade.drawdown === 'number') {
+          return trade.drawdown;
+        }
+
+        // Иначе рассчитываем из positionLow и avgPrice
+        if ('positionLow' in trade && 'avgPrice' in trade &&
+            typeof trade.positionLow === 'number' && typeof trade.avgPrice === 'number') {
+          return ((trade.positionLow - trade.avgPrice) / trade.avgPrice) * 100;
+        }
+
+        // Если данных нет, возвращаем 0
+        return 0;
+      }
+
 
   static calculateSharpeRatio(timeSeries: TimeSeriesPoint[]): number {
     if (timeSeries.length < 2) return 0;
