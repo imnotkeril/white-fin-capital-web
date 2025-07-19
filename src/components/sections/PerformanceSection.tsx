@@ -120,10 +120,10 @@ const PerformanceSection: React.FC = () => {
           trend: metrics.sharpeRatio > 1 ? 'up' as const : metrics.sharpeRatio > 0.5 ? 'neutral' as const : 'down' as const,
         },
         {
-          label: 'Max Drawdown',
-          value: Math.round(Math.abs(metrics.maxDrawdown) * 10) / 10,
-          format: 'percentage' as const,
-          trend: Math.abs(metrics.maxDrawdown) < 10 ? 'up' as const : 'down' as const,
+          label: 'Sortino Ratio',
+          value: Math.round(metrics.sortinoRatio * 100) / 100,
+          format: 'number' as const,
+          trend: metrics.sortinoRatio > 1 ? 'up' as const : metrics.sortinoRatio > 0.5 ? 'neutral' as const : 'down' as const,
         },
         {
           label: 'Profit Factor',
@@ -190,11 +190,11 @@ const PerformanceSection: React.FC = () => {
 
       // Рассчитываем детальные метрики
       const averageGain = winningTrades.length > 0
-        ? winningTrades.reduce((sum, t) => sum + t.pnlPercent, 0) / winningTrades.length
+        ? winningTrades.reduce((sum, t) => sum + (t.portfolioImpact * 100), 0) / winningTrades.length // ✅ Изменено: portfolioImpact вместо pnlPercent
         : 0;
 
       const averageLoss = losingTrades.length > 0
-        ? Math.abs(losingTrades.reduce((sum, t) => sum + t.pnlPercent, 0) / losingTrades.length)
+        ? losingTrades.reduce((sum, t) => sum + (t.portfolioImpact * 100), 0) / losingTrades.length // ✅ Изменено: без Math.abs + portfolioImpact
         : 0;
 
       const consecutiveStats = PerformanceCalculator.calculateConsecutiveWinLoss(trades);
@@ -219,12 +219,6 @@ const PerformanceSection: React.FC = () => {
           trend: 'down' as const,
         },
         {
-          label: 'Win Rate',
-          value: Math.round(metrics.winRate * 10) / 10,
-          format: 'percentage' as const,
-          trend: metrics.winRate > 50 ? 'up' as const : 'down' as const,
-        },
-        {
           label: 'Average Gain',
           value: Math.round(averageGain * 10) / 10,
           format: 'percentage' as const,
@@ -237,40 +231,10 @@ const PerformanceSection: React.FC = () => {
           trend: 'down' as const,
         },
         {
-          label: 'Profit Factor',
-          value: Math.round(metrics.profitFactor * 100) / 100,
-          format: 'number' as const,
-          trend: metrics.profitFactor > 1.5 ? 'up' as const : 'neutral' as const,
-        },
-        {
-          label: 'Best Trade',
-          value: Math.round(metrics.bestTrade * 10) / 10,
-          format: 'percentage' as const,
-          trend: 'up' as const,
-        },
-        {
-          label: 'Worst Trade',
-          value: Math.round(Math.abs(metrics.worstTrade) * 10) / 10,
-          format: 'percentage' as const,
-          trend: 'down' as const,
-        },
-        {
           label: 'Avg Holding Days',
           value: Math.round(metrics.averageHoldingDays),
           format: 'number' as const,
           trend: 'neutral' as const,
-        },
-        {
-          label: 'Max Consecutive Wins',
-          value: consecutiveStats.maxWins,
-          format: 'number' as const,
-          trend: 'up' as const,
-        },
-        {
-          label: 'Max Consecutive Losses',
-          value: consecutiveStats.maxLosses,
-          format: 'number' as const,
-          trend: 'down' as const,
         },
       ];
       setTradeStats(stats);
