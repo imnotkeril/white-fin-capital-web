@@ -106,19 +106,9 @@ const SubscriptionSection: React.FC = () => {
                   key={plan.id}
                   ocean
                   padding="lg"
-                  className={cn(
-                    'relative overflow-hidden transition-all duration-200 hover:-translate-y-1',
-                    isPopular ? 'shadow-xl' : ''
-                  )}
+                  className="relative overflow-hidden transition-all duration-200 hover:-translate-y-1"
                 >
-                  {/* Popular Badge */}
-                  {isPopular && (
-                    <div className="absolute top-0 left-0 right-0 bg-primary-500 text-white text-center py-2 text-sm font-medium">
-                      Most Popular
-                    </div>
-                  )}
-
-                  <div className={cn('p-8', isPopular ? 'pt-16' : '')}>
+                  <div className="p-8">
                     {/* Plan Header */}
                     <div className="text-center mb-8">
                       <div className="w-16 h-16 bg-background-secondary border border-border rounded-full flex items-center justify-center mx-auto mb-4">
@@ -166,7 +156,7 @@ const SubscriptionSection: React.FC = () => {
 
                       {/* CTA Button - исправленные кнопки */}
                       <Button
-                        variant={isPopular ? 'primary' : 'outline'}
+                        variant="outline"
                         size="lg"
                         fullWidth
                         onClick={() => handleSubscribe(plan.id)}

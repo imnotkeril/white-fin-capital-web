@@ -541,32 +541,57 @@ const PerformanceSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Performance Tab Navigation */}
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Tab Navigation */}
-          <div className="lg:w-64 flex-shrink-0">
-            <Card ocean padding="sm" className="space-y-2">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setSelectedTab(tab.id)}
-                    className={cn(
-                      'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200',
-                      selectedTab === tab.id
-                        ? 'bg-primary-500 text-white shadow-lg'
-                        : 'text-text-secondary hover:text-text-primary hover:bg-background-secondary/50 dark:hover:bg-background-tertiary bg-background-secondary/20 dark:bg-background-tertiary/20'
-                    )}
-                  >
-                    <Icon className="w-5 h-5" />
-                    <span>{tab.label}</span>
-                  </button>
-                );
-              })}
-            </Card>
-          </div>
+        {/* Top Navigation - Tabs and Period Selector */}
+        <div className="mb-8">
+          <Card ocean padding="lg">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              {/* Tab Navigation */}
+              <div className="flex gap-2">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setSelectedTab(tab.id)}
+                      className={cn(
+                        'flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200',
+                        selectedTab === tab.id
+                          ? 'bg-primary-500 text-white shadow-lg'
+                          : 'text-text-secondary hover:text-text-primary hover:bg-background-secondary/50 dark:hover:bg-background-tertiary bg-background-secondary/20 dark:bg-background-tertiary/20'
+                      )}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
 
+              {/* Period Selector - only show for overview tab */}
+              {selectedTab === 'overview' && (
+                <div className="flex flex-wrap gap-2">
+                  {periods.map((period) => (
+                    <button
+                      key={period.id}
+                      onClick={() => setSelectedPeriod(period.id)}
+                      className={cn(
+                        'px-4 py-2 rounded-lg font-medium transition-all duration-200',
+                        selectedPeriod === period.id
+                          ? 'bg-primary-500 text-white shadow-lg'
+                          : 'text-text-secondary hover:text-text-primary hover:bg-background-secondary/50 dark:hover:bg-background-tertiary bg-background-secondary/20 dark:bg-background-tertiary/20'
+                      )}
+                    >
+                      {period.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
+
+        {/* Content Area - Full Width */}
+        <div className="space-y-8">
           {/* Tab Content Area */}
           <div className="flex-1">
             {selectedTab === 'overview' && (
