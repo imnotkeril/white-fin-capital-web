@@ -94,100 +94,115 @@ const SubscriptionSection: React.FC = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          {plans.map((plan, index) => {
-            const IconComponent = planIcons[plan.id as keyof typeof planIcons] || Shield;
-            const isPopular = plan.isPopular;
+        <div className="max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+            {plans.map((plan, index) => {
+              const IconComponent = planIcons[plan.id as keyof typeof planIcons] || Shield;
+              const isPopular = plan.isPopular;
+              const isEnterprise = plan.isEnterprise;
 
-            return (
-              <Card
-                key={plan.id}
-                ocean
-                padding="lg"
-                className={cn(
-                  'relative overflow-hidden transition-all duration-200 hover:-translate-y-1',
-                  // ИСПРАВЛЕНО: убрана ring-2 ring-primary-500 для популярного плана
-                  isPopular ? 'shadow-xl' : ''
-                )}
-              >
-                {/* Popular Badge */}
-                {isPopular && (
-                  <div className="absolute top-0 left-0 right-0 bg-primary-500 text-white text-center py-2 text-sm font-medium">
-                    Most Popular
-                  </div>
-                )}
-
-                <div className={cn('p-8', isPopular ? 'pt-16' : '')}>
-                  {/* Plan Header */}
-                  <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-background-secondary border border-border rounded-full flex items-center justify-center mx-auto mb-4">
-                      <IconComponent className="w-8 h-8 text-primary-500" />
+              return (
+                <Card
+                  key={plan.id}
+                  ocean
+                  padding="lg"
+                  className={cn(
+                    'relative overflow-hidden transition-all duration-200 hover:-translate-y-1',
+                    isPopular ? 'shadow-xl' : ''
+                  )}
+                >
+                  {/* Popular Badge */}
+                  {isPopular && (
+                    <div className="absolute top-0 left-0 right-0 bg-primary-500 text-white text-center py-2 text-sm font-medium">
+                      Most Popular
                     </div>
+                  )}
 
-                    <h3 className="text-2xl font-bold text-text-primary mb-2">
-                      {plan.name}
-                    </h3>
-
-                    <p className="text-text-secondary text-sm mb-6">
-                      {plan.description}
-                    </p>
-
-                    {/* Pricing */}
-                    <div className="mb-6">
-                      <div className="flex items-baseline justify-center gap-2">
-                        <span className="text-4xl font-bold text-text-primary">
-                          {formatCurrency(plan.price)}
-                        </span>
-                        <span className="text-text-secondary">
-                          /{plan.period === 'monthly' ? 'mo' : 'year'}
-                        </span>
+                  <div className={cn('p-8', isPopular ? 'pt-16' : '')}>
+                    {/* Plan Header */}
+                    <div className="text-center mb-8">
+                      <div className="w-16 h-16 bg-background-secondary border border-border rounded-full flex items-center justify-center mx-auto mb-4">
+                        <IconComponent className="w-8 h-8 text-primary-500" />
                       </div>
 
-                      {plan.originalPrice && (
-                        <div className="flex items-center justify-center gap-2 mt-2">
-                          <span className="text-text-tertiary line-through">
-                            {formatCurrency(plan.originalPrice)}
+                      <h3 className="text-2xl font-bold text-text-primary mb-2">
+                        {plan.name}
+                      </h3>
+
+                      <p className="text-text-secondary text-sm mb-6">
+                        {plan.description}
+                      </p>
+
+                      {/* Pricing */}
+                      <div className="mb-6">
+                        <div className="flex items-baseline justify-center gap-2">
+                          <span className="text-4xl font-bold text-text-primary">
+                            {formatCurrency(plan.price)}
                           </span>
-                          {billingPeriod === 'annual' && (
-                            <span className="text-status-positive text-sm font-medium">
-                              Save {calculateSavings(subscriptionPlans[index]?.price || 0, plan.price).percentage}%
-                            </span>
-                          )}
+                          <span className="text-text-secondary">
+                            /{plan.period === 'monthly' ? 'mo' : 'year'}
+                          </span>
                         </div>
-                      )}
 
-                      {billingPeriod === 'annual' && (
-                        <p className="text-text-tertiary text-sm mt-2">
-                          ${Math.round(plan.price / 12)}/month billed annually
-                        </p>
-                      )}
+                        {plan.originalPrice && (
+                          <div className="flex items-center justify-center gap-2 mt-2">
+                            <span className="text-text-tertiary line-through">
+                              {formatCurrency(plan.originalPrice)}
+                            </span>
+                            {billingPeriod === 'annual' && (
+                              <span className="text-status-positive text-sm font-medium">
+                                Save {calculateSavings(subscriptionPlans[index]?.price || 0, plan.price).percentage}%
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {billingPeriod === 'annual' && (
+                          <p className="text-text-tertiary text-sm mt-2">
+                            ${Math.round(plan.price / 12)}/month billed annually
+                          </p>
+                        )}
+                      </div>
+
+                      {/* CTA Button - исправленные кнопки */}
+                      <Button
+                        variant={isPopular ? 'primary' : 'outline'}
+                        size="lg"
+                        fullWidth
+                        onClick={() => handleSubscribe(plan.id)}
+                      >
+                        {isEnterprise ? 'Contact Sales' : 'Start Free Trial'}
+                      </Button>
                     </div>
 
-                    {/* CTA Button - ИСПРАВЛЕНО: только Popular использует primary, остальные outline */}
-                    <Button
-                      variant={isPopular ? 'primary' : 'outline'}
-                      size="lg"
-                      fullWidth
-                      onClick={() => handleSubscribe(plan.id)}
-                    >
-                    </Button>
-                  </div>
+                    {/* Features List */}
+                    <div className="space-y-3">
+                      {plan.features.map((feature: string, featureIndex: number) => (
+                        <div key={featureIndex} className="flex items-start gap-3">
+                          <Check className="w-5 h-5 text-status-positive flex-shrink-0 mt-0.5" />
+                          <span className="text-text-secondary text-sm">
+                            {feature}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
 
-                  {/* Features List - ИСПРАВЛЕНО: используем системные цвета */}
-                  <div className="space-y-3">
-                    {plan.features.map((feature: string, featureIndex: number) => (
-                      <div key={featureIndex} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-status-positive flex-shrink-0 mt-0.5" />
-                        <span className="text-text-secondary text-sm">
-                          {feature}
-                        </span>
+                    {/* Enterprise Contact */}
+                    {isEnterprise && (
+                      <div className="mt-6 pt-6 border-t border-border text-center">
+                        <p className="text-text-secondary text-sm mb-2">
+                          Custom pricing available
+                        </p>
+                        <p className="text-text-tertiary text-xs">
+                          Volume discounts for teams
+                        </p>
                       </div>
-                    ))}
+                    )}
                   </div>
-                </div>
-              </Card>
-            );
-          })}
+                </Card>
+              );
+            })}
+          </div>
         </div>
 
         {/* Comparison Table Toggle */}

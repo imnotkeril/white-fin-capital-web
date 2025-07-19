@@ -31,7 +31,7 @@ const App: React.FC = () => {
     }
 
     // Add any initial setup here
-    console.log('🌊 White Fin Capital - Ocean Theme Initialized');
+    console.log(' White Fin Capital - Ocean Theme Initialized');
   }, []);
 
   return (

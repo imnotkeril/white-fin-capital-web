@@ -76,7 +76,7 @@ const Header: React.FC = () => {
               className="flex items-center space-x-3 hover:opacity-80 transition-opacity group"
             >
               {/* Logo Image */}
-              <div className="w-10 h-10 rounded-lg overflow-hidden">
+              <div className="w-16 h-16 rounded-lg overflow-hidden">
                 <img
                   src={actualTheme === 'dark' ? "/logo-dark.png" : "/logo.png"}
                   alt={`${COMPANY.name} Logo`}
@@ -125,16 +125,6 @@ const Header: React.FC = () => {
                 <Moon className="w-5 h-5" />
               )}
             </button>
-
-            {/* Login Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleNavClick('#contact', 'contact')}
-              className="text-text-secondary hover:text-text-primary"
-            >
-              Log In
-            </Button>
 
             {/* Subscribe Button */}
             <Button
