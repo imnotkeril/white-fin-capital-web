@@ -2,10 +2,14 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  output: 'export', // ✅ ВАЖНО: позволяет использовать next export для генерации статики
+  output: 'export',
   eslint: {
-    // Отключаем ESLint проверки во время билда чтобы избежать ошибок с TypeScript правилами
+    // Временно отключаем ESLint проверки во время билда
     ignoreDuringBuilds: true,
+  },
+  typescript: {
+    // Также можно отключить проверки TypeScript во время билда если нужно
+    // ignoreBuildErrors: true,
   },
   images: {
     unoptimized: true,
@@ -23,6 +27,10 @@ const nextConfig = {
       config.optimization.splitChunks.chunks = 'all';
     }
     return config;
+  },
+  // Добавляем экспериментальные функции для совместимости
+  experimental: {
+    // forceSwcTransforms: true,
   },
 };
 
