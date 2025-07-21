@@ -34,7 +34,7 @@ export interface LoadedData {
 export class ExcelProcessor {
   // ✅ ИСПРАВЛЕНО: Поддержка CSV и Excel файлов
   private static readonly TRADING_FILE_XLSX = '/data/trading-data.xlsx';
-  private static readonly TRADING_FILE_CSV = '/data/tradingdata.csv';
+  private static readonly TRADING_FILE_CSV = '/data/trading-data.csv';
   private static readonly BENCHMARK_FILE_XLSX = '/data/SP500.xlsx';
   private static readonly BENCHMARK_FILE_CSV = '/data/SP500.csv';
 

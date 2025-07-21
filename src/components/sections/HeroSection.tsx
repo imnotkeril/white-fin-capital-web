@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowDown, TrendingUp, BarChart3, Shield } from 'lucide-react';
+import { ArrowDown, TrendingUp, BarChart3, Search, Cpu, Shield } from 'lucide-react';
 import { COMPANY } from '@/utils/constants';
 import { scrollToElement, cn } from '@/utils/helpers';
 import Button from '@/components/common/Button';
@@ -47,7 +47,6 @@ const HeroSection: React.FC = () => {
       className="relative min-h-screen pt-20 flex items-center justify-center overflow-hidden"
     >
       {/* Background with blur */}
-      {/* Два фоновых изображения с crossfade */}
       <div className="absolute inset-0 z-0">
         <div
           className={cn(
@@ -79,15 +78,12 @@ const HeroSection: React.FC = () => {
         {/* Hero Text */}
         <div className="mb-12">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-text-primary mb-6 leading-tight">
-            Where Deep Research
-            <span className="block text-primary-400">
-              Meets Financial Markets
-            </span>
+            From Data to Alpha
+
           </h1>
           <div className="max-w-3xl mx-auto">
             <p className="text-lg md:text-xl text-text-secondary leading-relaxed mb-8">
-              Navigate global markets with professional-grade analysis and data-driven insights
-              from our expert research team. Make informed decisions with confidence.
+              Applying proprietary quantitative models, institution-grade technical analysis and data-driven fundamental research into a dynamic trading and investing strategy.
             </p>
           </div>
 
@@ -112,15 +108,15 @@ const HeroSection: React.FC = () => {
             "hover:shadow-primary-500/25 hover:ring-1 hover:ring-primary-500/50",
             "dark:hover:shadow-primary-400/30 dark:hover:ring-primary-400/50"
           )}>
-            <TrendingUp className={cn(
+            <Search className={cn(
               "w-12 h-12 text-primary-500 dark:text-primary-400 mx-auto mb-4 transition-all duration-300",
               "group-hover:scale-110 group-hover:text-primary-600 dark:group-hover:text-primary-300"
             )} />
             <h3 className="text-text-primary font-semibold text-lg mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-300 transition-colors duration-300">
-              Expert Analysis
+              Multilevel Research
             </h3>
             <p className="text-text-secondary text-sm">
-              Deep market research and technical analysis from seasoned professionals
+              Innovative fusion of data analytics, fundamental and macro research and technical analysis.
             </p>
           </div>
 
@@ -130,15 +126,15 @@ const HeroSection: React.FC = () => {
             "hover:shadow-primary-500/25 hover:ring-1 hover:ring-primary-500/50",
             "dark:hover:shadow-primary-400/30 dark:hover:ring-primary-400/50"
           )}>
-            <BarChart3 className={cn(
+            <Cpu className={cn(
               "w-12 h-12 text-primary-500 dark:text-primary-400 mx-auto mb-4 transition-all duration-300",
               "group-hover:scale-110 group-hover:text-primary-600 dark:group-hover:text-primary-300"
             )} />
             <h3 className="text-text-primary font-semibold text-lg mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-300 transition-colors duration-300">
-              Real-Time Data
+              Technology Driven
             </h3>
             <p className="text-text-secondary text-sm">
-              Live market insights and performance tracking with detailed metrics
+              We use proprietary models and AI to extract insights from market data
             </p>
           </div>
 
@@ -153,10 +149,10 @@ const HeroSection: React.FC = () => {
               "group-hover:scale-110 group-hover:text-primary-600 dark:group-hover:text-primary-300"
             )} />
             <h3 className="text-text-primary font-semibold text-lg mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-300 transition-colors duration-300">
-              Risk Management
+              Hybrid Strategy
             </h3>
             <p className="text-text-secondary text-sm">
-              Comprehensive risk assessment and portfolio protection strategies
+              Short, medium and long term trading, driven by research and risk management.
             </p>
           </div>
         </div>
