@@ -89,7 +89,7 @@ const HeroSection: React.FC = () => {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button
-              variant="primary"
+              variant="outline"
               size="lg"
               onClick={handleSubscribeClick}
               icon={<TrendingUp className="w-5 h-5" />}

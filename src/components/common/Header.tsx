@@ -125,7 +125,7 @@ const Header: React.FC = () => {
 
             {/* Subscribe Button */}
             <Button
-              variant="primary"
+              variant="outline"
               size="sm"
               onClick={handleSubscribeClick}
               className="shadow-md hover:shadow-lg"
