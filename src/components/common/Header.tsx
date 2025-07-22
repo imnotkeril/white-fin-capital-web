@@ -76,20 +76,17 @@ const Header: React.FC = () => {
               className="flex items-center space-x-3 hover:opacity-80 transition-opacity group"
             >
               {/* Logo Image */}
-              <div className="w-16 h-16 rounded-lg overflow-hidden">
+              <div className="w-20 h-16 rounded-lg overflow-hidden">
                 <img
-                  src={actualTheme === 'dark' ? "/logo-dark.png" : "/logo.png"}
+                  src={actualTheme === 'dark' ? "/logo-dark2.png" : "/logo2.png"}
                   alt={`${COMPANY.name} Logo`}
                   className="w-full h-full object-contain transition-opacity duration-300"
                 />
               </div>
 
               <div className="flex flex-col">
-                <span className="font-bold text-lg text-text-primary leading-none">
+                <span className="font-bold text-xl text-text-primary leading-none">
                   {COMPANY.name}
-                </span>
-                <span className="text-xs text-text-secondary leading-none opacity-75">
-                  Financial Research
                 </span>
               </div>
             </button>

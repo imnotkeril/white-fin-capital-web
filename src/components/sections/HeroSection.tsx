@@ -54,7 +54,7 @@ const HeroSection: React.FC = () => {
             actualTheme === 'light' ? 'opacity-100' : 'opacity-0'
           )}
           style={{
-            backgroundImage: 'url("/images/ocean-light.jpg")',
+            backgroundImage: 'url("/images/ocean-light2.jpg")',
             backgroundSize: 'cover',
             backgroundPosition: 'center center',
             filter: 'blur(1.5px)',
@@ -66,7 +66,7 @@ const HeroSection: React.FC = () => {
             actualTheme === 'dark' ? 'opacity-100' : 'opacity-0'
           )}
           style={{
-            backgroundImage: 'url("/images/ocean.jpg")',
+            backgroundImage: 'url("/images/ocean2.jpg")',
             backgroundSize: 'cover',
             backgroundPosition: 'center center',
             filter: 'blur(1.5px)',
@@ -79,7 +79,6 @@ const HeroSection: React.FC = () => {
         <div className="mb-12">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-text-primary mb-6 leading-tight">
             From Data to Alpha
-
           </h1>
           <div className="max-w-3xl mx-auto">
             <p className="text-lg md:text-xl text-text-secondary leading-relaxed mb-8">
