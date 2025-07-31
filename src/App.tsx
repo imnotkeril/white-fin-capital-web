@@ -10,7 +10,6 @@ import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 import HeroSection from '@/components/sections/HeroSection';
 import PerformanceSection from '@/components/sections/PerformanceSection';
-import ServicesSection from '@/components/sections/ServicesSection';
 
 import SubscriptionSection from '@/components/sections/SubscriptionSection';
 import ContactSection from '@/components/sections/ContactSection';
@@ -49,9 +48,6 @@ const App: React.FC = () => {
 
             {/* Performance Section */}
             <PerformanceSection />
-
-            {/* Services Section */}
-            <ServicesSection />
 
 
             {/* Subscription Section */}

@@ -34,8 +34,8 @@ const SubscriptionSection: React.FC = () => {
   };
 
   const planIcons = {
-    essential: Shield,
-    professional: Star,
+    professional: Shield,
+    premium: Star,
   };
 
   const calculateSavings = (monthlyPrice: number, annualPrice: number) => {
@@ -45,10 +45,6 @@ const SubscriptionSection: React.FC = () => {
     return { amount: savings, percentage };
   };
 
-  // ИСПРАВЛЕНО: расплющиваем данные для таблицы сравнения
-  const flattenedFeatures = planComparisonFeatures.flatMap(category =>
-    category.features
-  );
 
   return (
     <section id="pricing" className="section bg-background-secondary">
@@ -56,11 +52,10 @@ const SubscriptionSection: React.FC = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
-            Choose Your Plan
+            Become an insider
           </h2>
           <p className="text-xl text-text-secondary max-w-3xl mx-auto leading-relaxed mb-8">
-            Transparent pricing with no hidden fees. Start with a 14-day free trial,
-            cancel anytime.
+            Gain exclusive access to our position alerts, research insights and our institution-grade portfolio management software.
           </p>
 
           {/* Billing Toggle - ИСПРАВЛЕНО: правильные анимации */}
@@ -87,7 +82,7 @@ const SubscriptionSection: React.FC = () => {
             >
               Annual
               <span className="absolute -top-2 -right-1 bg-status-positive text-white text-xs px-2 py-1 rounded-full">
-                Save 25%
+                Discount
               </span>
             </button>
           </div>
@@ -161,7 +156,7 @@ const SubscriptionSection: React.FC = () => {
                         fullWidth
                         onClick={() => handleSubscribe(plan.id)}
                       >
-                        {isEnterprise ? 'Contact Sales' : 'Start Free Trial'}
+                        {isEnterprise ? 'Contact Sales' : 'Subscribe'}
                       </Button>
                     </div>
 
@@ -194,61 +189,6 @@ const SubscriptionSection: React.FC = () => {
             })}
           </div>
         </div>
-
-        {/* Comparison Table Toggle */}
-        <div className="text-center mb-8">
-          <Button
-            variant="outline"
-            onClick={() => setShowComparison(!showComparison)}
-            icon={showComparison ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          >
-            {showComparison ? 'Hide' : 'Show'} Feature Comparison
-          </Button>
-        </div>
-
-        {/* Feature Comparison Table - ИСПРАВЛЕНО: используем расплющенные данные */}
-        {showComparison && (
-          <Card ocean padding="lg" className="mb-16 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-4 px-4 font-semibold text-text-primary">Features</th>
-                  <th className="text-center py-4 px-4 font-semibold text-text-primary">Essential</th>
-                  <th className="text-center py-4 px-4 font-semibold text-text-primary">Professional</th>
-                </tr>
-              </thead>
-              <tbody>
-                {flattenedFeatures.map((feature, index) => (
-                  <tr key={index} className="border-b border-border hover:bg-background/50 transition-colors duration-200">
-                    <td className="py-4 px-4 font-medium text-text-primary">{feature.name}</td>
-                    <td className="py-4 px-4 text-center">
-                      {typeof feature.essential === 'boolean' ? (
-                        feature.essential ? (
-                          <Check className="w-5 h-5 text-status-positive mx-auto" />
-                        ) : (
-                          <X className="w-5 h-5 text-text-tertiary mx-auto" />
-                        )
-                      ) : (
-                        <span className="text-text-secondary text-sm">{feature.essential}</span>
-                      )}
-                    </td>
-                    <td className="py-4 px-4 text-center">
-                      {typeof feature.professional === 'boolean' ? (
-                        feature.professional ? (
-                          <Check className="w-5 h-5 text-status-positive mx-auto" />
-                        ) : (
-                          <X className="w-5 h-5 text-text-tertiary mx-auto" />
-                        )
-                      ) : (
-                        <span className="text-text-secondary text-sm">{feature.professional}</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </Card>
-        )}
       </div>
     </section>
   );

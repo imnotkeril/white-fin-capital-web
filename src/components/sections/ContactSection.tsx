@@ -26,27 +26,12 @@ const ContactSection: React.FC = () => {
       color: 'bg-primary-500/10 text-primary-500',
     },
     {
-      icon: Phone,
-      title: 'Call Us',
-      description: 'Speak with our team',
-      value: COMPANY.phone,
-      action: `tel:${COMPANY.phone}`,
-      color: 'bg-primary-500/20 text-primary-500',
-    },
-    {
       icon: MapPin,
       title: 'Visit Us',
       description: 'Our office location',
       value: `${COMPANY.address.street}, ${COMPANY.address.city}`,
       action: `https://maps.google.com/?q=${encodeURIComponent(COMPANY.address.street + ', ' + COMPANY.address.city)}`,
       color: 'bg-dark-blue/10 text-dark-blue dark:bg-light-blue/20 dark:text-light-blue',
-    },
-    {
-      icon: Clock,
-      title: 'Business Hours',
-      description: 'Monday - Friday',
-      value: '9:00 AM - 6:00 PM EST',
-      color: 'bg-light-blue/20 text-dark-blue dark:bg-primary-500/20 dark:text-white',
     },
   ];
 
@@ -61,11 +46,6 @@ const ContactSection: React.FC = () => {
       url: SOCIAL_LINKS.twitter,
       description: 'Daily market commentary',
     },
-    {
-      name: 'Telegram',
-      url: SOCIAL_LINKS.telegram,
-      description: 'Real-time alerts and discussions',
-    },
   ];
 
   const handleContactMethodClick = (action?: string) => {
@@ -79,17 +59,12 @@ const ContactSection: React.FC = () => {
       <div className="container">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-3 glass rounded-full px-6 py-3 mb-6">
-            <MessageCircle className="w-5 h-5 text-primary-500" />
-            <span className="text-text-primary font-medium">Contact Us</span>
-          </div>
 
           <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
             Get In Touch
           </h2>
           <p className="text-xl text-text-secondary max-w-3xl mx-auto leading-relaxed">
-            Ready to elevate your investment strategy? We&apos;re here to help.
-            Reach out for consultations, questions, or partnership opportunities.
+            Contact us for additional information.
           </p>
         </div>
 

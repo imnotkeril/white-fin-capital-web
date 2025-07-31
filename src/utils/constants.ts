@@ -5,8 +5,8 @@ export const COMPANY = {
   name: 'White Fin Capital',
   tagline: 'Where Deep Research Meets Financial Markets',
   description: 'Professional financial research and analysis for sophisticated investors',
-  email: 'info@whitefincapital.com',
-  phone: '+1 (555) 123-4567',
+  email: 'office@whitefincapital.com',
+  phone: ' ',
   address: {
     street: '123 Financial District',
     city: 'New York',
@@ -20,9 +20,8 @@ export const COMPANY = {
 export const NAVIGATION_ITEMS = [
   { id: 'home', label: 'Home', href: '#home', section: 'hero' },
   { id: 'performance', label: 'Performance', href: '#performance', section: 'performance' },
-  { id: 'services', label: 'Services', href: '#services', section: 'services' },
-  { id: 'pricing', label: 'Pricing', href: '#pricing', section: 'pricing' },
-  { id: 'contact', label: 'Contact', href: '#contact', section: 'contact' },
+  { id: 'pricing', label: 'Sales (“Choose you plan”)', href: '#pricing', section: 'pricing' },
+  { id: 'contact', label: 'Get In Touch', href: '#contact', section: 'contact' },
 ] as const;
 
 // Theme Settings
@@ -104,7 +103,7 @@ export const FILE_UPLOAD = {
 // Social Media Links
 export const SOCIAL_LINKS = {
   linkedin: 'https://linkedin.com/company/whitefincapital',
-  twitter: 'https://twitter.com/whitefincapital',
+  twitter: 'https://x.com/WhiteFinCapital',
   telegram: 'https://t.me/whitefincapital',
   youtube: 'https://youtube.com/@whitefincapital',
   instagram: 'https://instagram.com/whitefincapital',
@@ -128,31 +127,7 @@ export const PERFORMANCE_METRICS = {
   minSharpeRatio: 1.5, // Minimum Sharpe ratio
 } as const;
 
-// Subscription Features
-export const SUBSCRIPTION_FEATURES = {
-  basic: [
-    'Weekly Market Analysis',
-    'Monthly Performance Reports',
-    'Email Support',
-    'Basic Research Access',
-  ],
-  professional: [
-    'Real-time Trade Alerts',
-    'Daily Market Updates',
-    'Advanced Research Reports',
-    'Video Analysis',
-    'Priority Support',
-    'Risk Management Tools',
-  ],
-  enterprise: [
-    'Custom Research Projects',
-    'Direct Analyst Access',
-    'Institutional Reports',
-    'CSV Data Access',
-    'Dedicated Account Manager',
-    'Custom Integration Support',
-  ],
-} as const;
+
 
 // Breakpoints (must match Tailwind config)
 export const BREAKPOINTS = {

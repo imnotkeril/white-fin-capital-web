@@ -306,34 +306,6 @@ const ContactForm: React.FC = () => {
         </p>
       </div>
 
-      {/* Alternative Contact Methods */}
-      <div className="border-t border-border pt-6 mt-8">
-        <p className="text-sm text-text-secondary text-center mb-4">
-          Prefer to contact us directly?
-        </p>
-        
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            fullWidth
-            onClick={() => window.open('mailto:info@whitefincapital.com', '_blank')}
-            icon={<Mail className="w-4 h-4" />}
-          >
-            Email Us
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            fullWidth
-            onClick={() => window.open('tel:+15551234567', '_blank')}
-            icon={<User className="w-4 h-4" />}
-          >
-            Call Us
-          </Button>
-        </div>
-      </div>
     </form>
   );
 };
