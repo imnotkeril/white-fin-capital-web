@@ -13,8 +13,6 @@ import {
 import {
   subscriptionPlans,
   annualSubscriptionPlans,
-  planComparisonFeatures,
-  pricingFAQs,
 } from '@/data/subscriptionPlans';
 import { formatCurrency } from '@/utils/formatting';
 import { cn } from '@/utils/helpers';
