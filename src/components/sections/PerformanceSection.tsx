@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, AlertCircle, FileText } from 'lucide-react';
+import { RefreshCw, AlertCircle, FileText, DollarSign, Shield, Target } from 'lucide-react';
 import { formatDate } from '@/utils/formatting';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
@@ -30,6 +30,13 @@ interface BenchmarkPoint {
 }
 
 const PerformanceSection: React.FC = () => {
+
+// Иконки для KPI карточек
+  const kpiIcons = [
+    <DollarSign className="w-10 h-10 text-primary-500" />, // Ann. Portfolio Return
+    <Shield className="w-10 h-10 text-primary-500" />,     // Max. Portfolio Drawdown
+    <Target className="w-10 h-10 text-primary-500" />      // Win Rate
+  ];
   // Simplified state
   const [showTradeJournal, setShowTradeJournal] = useState(false);
   const [kpiData, setKpiData] = useState<KPIData[]>([]);
@@ -235,13 +242,16 @@ const PerformanceSection: React.FC = () => {
               <Card
                 key={index}
                 ocean
-                padding="md"
+                padding="lg"
                 className="text-center transition-all duration-200 hover:-translate-y-1"
               >
-                <div className="text-text-secondary text-xs mb-1 font-medium">
+                <div className="flex justify-center mb-4">
+                  {kpiIcons[index]}
+                </div>
+                <div className="text-text-secondary text-sm mb-2 font-medium">
                   {kpi.label}
                 </div>
-                <div className="text-xl font-bold mb-1 text-white">
+                <div className="text-3xl font-bold mb-1 text-text-primary">
                   {formatValue(kpi.value, kpi.format)}
                 </div>
               </Card>
@@ -251,19 +261,15 @@ const PerformanceSection: React.FC = () => {
 
         {/* Open Trade Journal Button */}
         <div className="mb-8">
-
-            <div className="flex justify-center">
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={handleToggleTradeJournal}
-                icon={<FileText className="w-4 h-4" />}
-                className="px-6 py-2 text-sm"
-              >
-                {showTradeJournal ? 'Close Trade Journal' : 'Open Trade Journal'}
-              </Button>
+          <div
+            onClick={handleToggleTradeJournal}
+            className="w-full cursor-pointer bg-background-secondary border-2 border-border rounded-lg px-6 py-4 hover:bg-background-tertiary hover:border-primary-500/50 transition-all duration-200 text-center"
+          >
+            <div className="flex items-center justify-center gap-2 text-text-primary font-medium">
+              <FileText className="w-4 h-4" />
+              {showTradeJournal ? 'Close Trade Journal' : 'Open Trade Journal'}
             </div>
-
+          </div>
         </div>
 
         {/* Trade Journal - ПОЛНОРАЗМЕРНАЯ ТАБЛИЦА КАК В ОРИГИНАЛЕ */}
@@ -273,7 +279,7 @@ const PerformanceSection: React.FC = () => {
             <Card ocean padding="lg">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-semibold text-text-primary">
-                  2023-2025 ({allTrades.length} trades)
+                  2024-2025 ({allTrades.length} trades)
                 </h3>
               </div>
 
