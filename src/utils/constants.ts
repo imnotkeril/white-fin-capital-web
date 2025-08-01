@@ -20,7 +20,7 @@ export const COMPANY = {
 export const NAVIGATION_ITEMS = [
   { id: 'home', label: 'Home', href: '#home', section: 'hero' },
   { id: 'performance', label: 'Performance', href: '#performance', section: 'performance' },
-  { id: 'pricing', label: 'Sales (“Choose you plan”)', href: '#pricing', section: 'pricing' },
+  { id: 'pricing', label: 'Memberships', href: '#pricing', section: 'pricing' },
   { id: 'contact', label: 'Get In Touch', href: '#contact', section: 'contact' },
 ] as const;
 

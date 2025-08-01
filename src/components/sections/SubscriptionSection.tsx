@@ -20,7 +20,7 @@ import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 
 const SubscriptionSection: React.FC = () => {
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('annual');
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const [showComparison, setShowComparison] = useState(false);
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
 

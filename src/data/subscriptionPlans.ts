@@ -6,7 +6,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     name: 'Professional',
     price: 49.90,
     period: 'monthly',
-    description: 'Partner level access to our research, insights and positions',
+    description: 'Access to our research, insights and positions',
     features: [
       'Position Alerts',
       'Supporting Research and Analysis',
@@ -22,10 +22,13 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     name: 'Premium',
     price: 89.90,
     period: 'monthly',
-    description: 'Access to White Fin Capital Platform our proprietary portfolio & risk management platform, including portfolio analytics and integrated AI analysis tools',
+    description: 'Access to White Fin Capital Platform',
     features: [
       'Everything in Professional',
-      'White Fin Capital Platform',
+      'Our proprietary portfolio & risk management platform',
+      'Portfolio analytics',
+      'Integrated AI analysis tools',
+      'Priority Email Support',
     ],
     isPopular: true,
   },
@@ -39,7 +42,7 @@ export const annualSubscriptionPlans: SubscriptionPlan[] = [
     price: 499.90,
     originalPrice: 598.80, // 49.90 * 12
     period: 'yearly',
-    description: 'Partner level access to our research, insights and positions',
+    description: 'Access to our research, insights and positions',
     features: [
       'Position Alerts',
       'Supporting Research and Analysis',
@@ -56,10 +59,13 @@ export const annualSubscriptionPlans: SubscriptionPlan[] = [
     price: 949.90,
     originalPrice: 1078.80, // 89.90 * 12
     period: 'yearly',
-    description: 'Access to White Fin Capital Platform our proprietary portfolio & risk management platform, including portfolio analytics and integrated AI analysis tools',
+    description: 'Access to White Fin Capital Platform',
     features: [
       'Everything in Professional',
-      'White Fin Capital Platform',
+      'Our proprietary portfolio & risk management platform',
+      'Portfolio analytics',
+      'Integrated AI analysis tools',
+      'Priority Email Support',
     ],
     isPopular: true,
   },

@@ -45,6 +45,14 @@ const PerformanceSection: React.FC = () => {
     loadAllData();
   }, []);
 
+  // Format date as dd/mm/yyyy
+  const formatDateDDMMYYYY = (date: Date): string => {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   const loadAllData = async () => {
     setIsLoading(true);
     setError(null);
@@ -87,7 +95,7 @@ const PerformanceSection: React.FC = () => {
       ];
       setKpiData(kpis);
 
-      // 4. Создаем данные ВСЕХ трейдов для таблицы (без ограничения)
+      // 4. Создаем данные ВСЕХ трейдов для таблицы (с новым форматом дат)
       const tradesForTable = trades
         .sort((a, b) => b.exitDate.getTime() - a.exitDate.getTime())
         .map(trade => ({
@@ -96,10 +104,10 @@ const PerformanceSection: React.FC = () => {
           type: trade.position,
           entryPrice: trade.avgPrice,
           exitPrice: trade.exitPrice,
-          pnl: trade.pnlPercent * trade.portfolioExposure * 10000,
+          pnl: 0, // Убираем PnL в долларах
           return: trade.pnlPercent,
-          closedAt: trade.exitDate.toLocaleDateString(),
-          entryDate: trade.entryDate.toLocaleDateString()
+          closedAt: formatDateDDMMYYYY(trade.exitDate),
+          entryDate: formatDateDDMMYYYY(trade.entryDate)
         }));
       setAllTrades(tradesForTable);
 
@@ -241,9 +249,9 @@ const PerformanceSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Open Trade Journal Button - В ДЛИННОЙ РАМКЕ КАК В ОРИГИНАЛЕ */}
+        {/* Open Trade Journal Button */}
         <div className="mb-8">
-          <Card ocean padding="lg">
+
             <div className="flex justify-center">
               <Button
                 variant="outline"
@@ -255,7 +263,7 @@ const PerformanceSection: React.FC = () => {
                 {showTradeJournal ? 'Close Trade Journal' : 'Open Trade Journal'}
               </Button>
             </div>
-          </Card>
+
         </div>
 
         {/* Trade Journal - ПОЛНОРАЗМЕРНАЯ ТАБЛИЦА КАК В ОРИГИНАЛЕ */}
@@ -265,7 +273,7 @@ const PerformanceSection: React.FC = () => {
             <Card ocean padding="lg">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-semibold text-text-primary">
-                  Trade Journal ({allTrades.length} trades)
+                  2023-2025 ({allTrades.length} trades)
                 </h3>
               </div>
 
@@ -275,35 +283,33 @@ const PerformanceSection: React.FC = () => {
                   <table className="w-full">
                     <thead className="sticky top-0 bg-background-secondary/90 backdrop-blur-sm">
                       <tr className="border-b-2 border-border">
-                        <th className="text-left text-text-secondary font-medium pb-3 pt-3 px-4">Date</th>
-                        <th className="text-left text-text-secondary font-medium pb-3 pt-3 px-4">Symbol</th>
-                        <th className="text-center text-text-secondary font-medium pb-3 pt-3 px-4">Type</th>
-                        <th className="text-right text-text-secondary font-medium pb-3 pt-3 px-4">Entry</th>
-                        <th className="text-right text-text-secondary font-medium pb-3 pt-3 px-4">Exit</th>
-                        <th className="text-right text-text-secondary font-medium pb-3 pt-3 px-4">P&L ($)</th>
-                        <th className="text-right text-text-secondary font-medium pb-3 pt-3 px-4">Return</th>
+                        <th className="text-center text-text-secondary font-medium pb-3 pt-3 px-4 w-20">Ticker</th>
+                        <th className="text-center text-text-secondary font-medium pb-3 pt-3 px-4 w-24">Direction</th>
+                        <th className="text-center text-text-secondary font-medium pb-3 pt-3 px-4 w-28">Entry Date</th>
+                        <th className="text-center text-text-secondary font-medium pb-3 pt-3 px-4 w-36">Avg. Entry Price</th>
+                        <th className="text-center text-text-secondary font-medium pb-3 pt-3 px-4 w-28">Exit Date</th>
+                        <th className="text-center text-text-secondary font-medium pb-3 pt-3 px-4 w-28">Exit Price</th>
+                        <th className="text-center text-text-secondary font-medium pb-3 pt-3 px-4 w-24">PnL %</th>
                       </tr>
                     </thead>
                     <tbody>
                       {allTrades.map((trade, index) => (
                         <tr key={trade.id} className="border-b border-border hover:bg-background-secondary/30 transition-colors duration-200">
-                          <td className="py-3 px-4 text-text-secondary text-sm">{trade.closedAt}</td>
-                          <td className="py-3 px-4 font-medium text-white">{trade.symbol}</td>
-                          <td className="py-3 px-4 text-center">
-                            <span className="px-2 py-1 rounded-md text-xs font-medium uppercase bg-background-secondary/50 text-white border border-border">
+                          <td className="py-3 px-4 font-medium text-text-primary text-center w-20">{trade.symbol}</td>
+                          <td className="py-3 px-4 text-center w-24">
+                            <span className="px-2 py-1 rounded-md text-xs font-medium uppercase bg-background-secondary/50 text-text-primary border border-border">
                               {trade.type}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-white text-right">
-                            ${trade.entryPrice.toFixed(2)}
+                          <td className="py-3 px-4 text-text-secondary text-sm text-center w-28">{trade.entryDate}</td>
+                          <td className="py-3 px-4 text-text-primary text-center w-36">
+                            {trade.entryPrice.toFixed(2)}
                           </td>
-                          <td className="py-3 px-4 text-white text-right">
-                            ${trade.exitPrice.toFixed(2)}
+                          <td className="py-3 px-4 text-text-secondary text-sm text-center w-28">{trade.closedAt}</td>
+                          <td className="py-3 px-4 text-text-primary text-center w-28">
+                            {trade.exitPrice.toFixed(2)}
                           </td>
-                          <td className="py-3 px-4 font-medium text-right text-white">
-                            {trade.pnl >= 0 ? '+' : ''}${Math.abs(trade.pnl).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </td>
-                          <td className="py-3 px-4 font-medium text-right text-white">
+                          <td className="py-3 px-4 font-medium text-center text-text-primary w-24">
                             {trade.return >= 0 ? '+' : ''}{trade.return.toFixed(1)}%
                           </td>
                         </tr>
