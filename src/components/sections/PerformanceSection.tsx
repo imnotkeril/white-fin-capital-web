@@ -286,36 +286,36 @@ const PerformanceSection: React.FC = () => {
               {/* ПОЛНОРАЗМЕРНАЯ Scrollable Table - ТОЧНО КАК В ПЕРВОМ ИЗОБРАЖЕНИИ */}
               <div className="max-h-[600px] overflow-y-auto">
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full table-fixed">
                     <thead className="sticky top-0 bg-background-secondary/90 backdrop-blur-sm">
                       <tr className="border-b-2 border-border">
-                        <th className="text-right text-text-secondary font-medium pb-3 pt-3 px-4 w-20">Ticker</th>
-                        <th className="text-right text-text-secondary font-medium pb-3 pt-3 px-4 w-24">Direction</th>
-                        <th className="text-right text-text-secondary font-medium pb-3 pt-3 px-4 w-28">Entry Date</th>
-                        <th className="text-right text-text-secondary font-medium pb-3 pt-3 px-4 w-36">Avg. Entry Price</th>
-                        <th className="text-right text-text-secondary font-medium pb-3 pt-3 px-4 w-28">Exit Date</th>
-                        <th className="text-right text-text-secondary font-medium pb-3 pt-3 px-4 w-28">Exit Price</th>
-                        <th className="text-right text-text-secondary font-medium pb-3 pt-3 px-4 w-24">PnL %</th>
+                        <th className="text-center text-text-secondary font-medium pb-3 pt-3 px-4">Ticker</th>
+                        <th className="text-center text-text-secondary font-medium pb-3 pt-3 px-4">Direction</th>
+                        <th className="text-center text-text-secondary font-medium pb-3 pt-3 px-4">Entry Date</th>
+                        <th className="text-right text-text-secondary font-medium pb-3 pt-3 px-4">Avg. Entry Price</th>
+                        <th className="text-center text-text-secondary font-medium pb-3 pt-3 px-4">Exit Date</th>
+                        <th className="text-right text-text-secondary font-medium pb-3 pt-3 px-4">Exit Price</th>
+                        <th className="text-right text-text-secondary font-medium pb-3 pt-3 px-4">PnL %</th>
                       </tr>
                     </thead>
                     <tbody>
                       {allTrades.map((trade, index) => (
                         <tr key={trade.id} className="border-b border-border hover:bg-background-secondary/30 transition-colors duration-200">
-                          <td className="py-3 px-4 font-medium text-text-primary text-right w-20">{trade.symbol}</td>
-                          <td className="py-3 px-4 text-right w-24">
+                          <td className="py-3 px-4 font-medium text-text-primary text-center">{trade.symbol}</td>
+                          <td className="py-3 px-4 text-center">
                             <span className="px-2 py-1 rounded-md text-xs font-medium uppercase bg-background-secondary/50 text-text-primary border border-border">
                               {trade.type}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-text-secondary text-sm text-right w-28">{trade.entryDate}</td>
-                          <td className="py-3 px-4 text-text-primary text-right w-36">
+                          <td className="py-3 px-4 text-text-secondary text-sm text-center">{trade.entryDate}</td>
+                          <td className="py-3 px-4 text-text-primary text-right">
                             ${trade.entryPrice.toFixed(2)}
                           </td>
-                          <td className="py-3 px-4 text-text-secondary text-sm text-right w-28">{trade.closedAt}</td>
-                          <td className="py-3 px-4 text-text-primary text-right w-28">
+                          <td className="py-3 px-4 text-text-secondary text-sm text-center">{trade.closedAt}</td>
+                          <td className="py-3 px-4 text-text-primary text-right">
                             ${trade.exitPrice.toFixed(2)}
                           </td>
-                          <td className="py-3 px-4 font-medium text-right text-text-primary w-24">
+                          <td className="py-3 px-4 font-medium text-right text-text-primary">
                             {trade.return >= 0 ? '+' : ''}{trade.return.toFixed(1)}%
                           </td>
                         </tr>
