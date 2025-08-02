@@ -47,31 +47,9 @@ const HeroSection: React.FC = () => {
       className="relative min-h-screen pt-20 flex items-center justify-center overflow-hidden"
     >
       {/* Background with blur */}
-      <div className="absolute inset-0 z-0">
-        <div
-          className={cn(
-            "absolute inset-0 transition-opacity duration-500",
-            actualTheme === 'light' ? 'opacity-100' : 'opacity-0'
-          )}
-          style={{
-            backgroundImage: 'url("/images/ocean-light2.jpg")',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center center',
-            filter: 'blur(1.5px)',
-          }}
-        />
-        <div
-          className={cn(
-            "absolute inset-0 transition-opacity duration-500",
-            actualTheme === 'dark' ? 'opacity-100' : 'opacity-0'
-          )}
-          style={{
-            backgroundImage: 'url("/images/ocean2.jpg")',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center center',
-            filter: 'blur(1.5px)',
-          }}
-        />
+      <div className="absolute inset-0 z-0 hero-background">
+        {/* Additional overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background/50 to-background/30" />
       </div>
       {/* Main Content */}
       <div className="relative z-20 max-w-6xl mx-auto px-6 text-center">
